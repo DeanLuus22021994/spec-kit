@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  workspace:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        - USERNAME=vscode
+        - USER_UID=1000
+        - USER_GID=1000
+    user: vscode
+    working_dir: /workspaces/spec-kit
+    init: true
+    tty: true
+    command: /bin/bash -c "sleep infinity"
+    environment:
+      - UV_NO_EMOJI=1
+    volumes:
+      - ..:/workspaces/spec-kit:cached
+      - uv-cache:/home/vscode/.cache/uv
+      - pip-cache:/home/vscode/.cache/pip
+
+volumes:
+  uv-cache:
+  pip-cache:
