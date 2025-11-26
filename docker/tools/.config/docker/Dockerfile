@@ -86,6 +86,9 @@ COPY .config/scripts/ ./.config/scripts/
 
 # Copy validation rules and configuration
 COPY .config/validation/rules/ ./.config/validation/rules/
+COPY .config/validation/profiles/ ./.config/validation/profiles/
+COPY .config/validation/schemas/ ./.config/validation/schemas/
+COPY .config/validation/core/ ./.config/validation/core/
 
 # Create directories for caches and reports
 RUN mkdir -p /app/tools/.mypy_cache \
