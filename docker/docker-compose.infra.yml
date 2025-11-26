@@ -30,7 +30,10 @@ services:
 
   redis:
     container_name: spec-kit-redis
-    image: redis:alpine
+    image: localhost:5000/spec-kit/redis:latest
+    build:
+      context: ../src/local
+      dockerfile: dockerfiles/redis.Dockerfile
     ports:
       - "6379:6379"
     volumes:
@@ -51,6 +54,7 @@ services:
 
   database:
     container_name: spec-kit-database
+    image: localhost:5000/spec-kit/database:latest
     build:
       context: ../src/local
       dockerfile: dockerfiles/database.Dockerfile
@@ -193,5 +197,5 @@ volumes:
 
 networks:
   spec-kit-infra:
-    driver: bridge
+    external: true
     name: spec-kit-infra
