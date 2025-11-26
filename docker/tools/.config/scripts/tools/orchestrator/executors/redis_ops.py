@@ -17,7 +17,7 @@ import os
 import time
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any
+from typing import Any, cast
 
 import redis  # noqa: E501  # pylint: disable=import-error
 
@@ -76,7 +76,7 @@ class RedisClientPool:
     """Singleton Redis client pool."""
 
     _instance: RedisClientPool | None = None
-    _client: redis.Redis[str] | None = None
+    _client: redis.Redis | None = None
     _config: RedisConfig | None = None
 
     def __new__(cls) -> RedisClientPool:
@@ -85,7 +85,7 @@ class RedisClientPool:
         return cls._instance
 
     @classmethod
-    def get_client(cls, config: RedisConfig | None = None) -> redis.Redis[str]:
+    def get_client(cls, config: RedisConfig | None = None) -> redis.Redis:
         """Get or create Redis client."""
         if cls._client is None or (config and config != cls._config):
             cfg = config or RedisConfig.from_env()
@@ -205,7 +205,9 @@ class RedisUpsertExecutor(TaskExecutor):
         # Register Lua scripts
         self._upsert_script = self.redis.register_script(UPSERT_LUA_SCRIPT)
 
-    def _serialize_data(self, data: Any, data_type: RedisDataType) -> str | dict[str, str]:
+    def _serialize_data(
+        self, data: Any, data_type: RedisDataType
+    ) -> str | dict[str, str]:
         """Serialize data based on type."""
         if data_type == RedisDataType.JSON:
             if isinstance(data, str):
@@ -213,7 +215,10 @@ class RedisUpsertExecutor(TaskExecutor):
             return json.dumps(data, default=str)
         if data_type == RedisDataType.HASH:
             if isinstance(data, dict):
-                return {str(k): json.dumps(v) if not isinstance(v, str) else v for k, v in data.items()}
+                return {
+                    str(k): json.dumps(v) if not isinstance(v, str) else v
+                    for k, v in data.items()
+                }
             raise ValueError("HASH type requires dict data")
         if data_type == RedisDataType.STRING:
             return str(data)
@@ -237,12 +242,12 @@ class RedisUpsertExecutor(TaskExecutor):
         try:
             if data_type == RedisDataType.HASH and isinstance(data, dict):
                 # Use HSET for hash data
-                existed = self.redis.exists(key) > 0
+                existed = int(self.redis.exists(key)) > 0
                 serialized = self._serialize_data(data, data_type)
 
                 pipe = self.redis.pipeline()
                 pipe.delete(key)  # Clear existing hash
-                pipe.hset(key, mapping=serialized)
+                pipe.hset(key, mapping=cast(dict[str, str], serialized))
                 if effective_ttl:
                     pipe.expire(key, effective_ttl)
                 if self.enable_metadata:
@@ -267,7 +272,7 @@ class RedisUpsertExecutor(TaskExecutor):
                 result = self._upsert_script(
                     keys=[key],
                     args=[
-                        serialized,
+                        cast(str, serialized),
                         str(effective_ttl or 0),
                         "1" if nx else "0",
                         "1" if xx else "0",
@@ -310,7 +315,9 @@ class RedisUpsertExecutor(TaskExecutor):
                 "error": str(e),
             }
 
-    def _upsert_batch_pipelined(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:  # pylint: disable=too-many-locals
+    def _upsert_batch_pipelined(
+        self, items: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:  # pylint: disable=too-many-locals
         """Execute batch upsert using Redis pipeline for efficiency."""
         timestamp = time.time()
         results: list[dict[str, Any]] = []
@@ -434,7 +441,10 @@ class RedisUpsertExecutor(TaskExecutor):
         if not isinstance(payload, dict) or "items" not in payload:
             return False
         items = payload["items"]
-        return isinstance(items, list) and all(isinstance(item, dict) and "target" in item and "data" in item for item in items)
+        return isinstance(items, list) and all(
+            isinstance(item, dict) and "target" in item and "data" in item
+            for item in items
+        )
 
 
 class RedisDownsertExecutor(TaskExecutor):
@@ -464,7 +474,9 @@ class RedisDownsertExecutor(TaskExecutor):
         # Register Lua script
         self._downsert_script = self.redis.register_script(DOWNSERT_LUA_SCRIPT)
 
-    def _downsert_single(self, key: str, publish_channel: str | None = None) -> dict[str, Any]:
+    def _downsert_single(
+        self, key: str, publish_channel: str | None = None
+    ) -> dict[str, Any]:
         """Delete single key with metadata cleanup."""
         start = time.perf_counter()
         timestamp = time.time()

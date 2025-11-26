@@ -8,6 +8,9 @@ COPY docker/tests/package.json docker/tests/package-lock.json* ./
 # Install dependencies
 RUN npm ci
 
+# Install Playwright browsers and dependencies
+RUN npx playwright install --with-deps
+
 # Copy test source code
 COPY docker/tests/ .
 
