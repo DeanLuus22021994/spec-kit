@@ -7,15 +7,16 @@ param(
     [string[]]$FeatureDescription
 )
 
-# Defensive Programming
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/common.ps1"
 
-# Load Logger
-. "$PSScriptRoot/Logger.ps1"
-$logger = [SpecKitLogger]::new("Create-New-Feature")
+Invoke-SpecKitBlock -Name "Create-New-Feature" -ScriptBlock {
+    param($logger)
 
-try {
+    # Access outer scope variables explicitly if needed, or pass them in.
+    # PowerShell scriptblocks inherit scope, but let's be safe.
+    $FeatureDescription = $using:FeatureDescription
+    $Json = $using:Json
+
     if (-not $FeatureDescription -or $FeatureDescription.Count -eq 0) {
         $logger.Error("Usage: ./create-new-feature.ps1 [-Json] <feature description>")
         exit 1
@@ -65,9 +66,3 @@ try {
         $logger.Info("SPEC_FILE: $specFile")
         $logger.Info("FEATURE_NUM: $featureNum")
     }
-}
-catch {
-    $logger.Error("An unexpected error occurred: $_")
-    exit 1
-}
-

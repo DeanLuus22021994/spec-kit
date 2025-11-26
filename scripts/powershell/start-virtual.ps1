@@ -1,13 +1,9 @@
 #!/usr/bin/env pwsh
-# Defensive Programming
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/common.ps1"
 
-# Load Logger
-. "$PSScriptRoot/Logger.ps1"
-$logger = [SpecKitLogger]::new("Start-Virtual")
+Invoke-SpecKitBlock -Name "Start-Virtual" -ScriptBlock {
+    param($logger)
 
-try {
     $ScriptDir = Split-Path $MyInvocation.MyCommand.Path
     $DockerDir = Join-Path $ScriptDir "../../docker"
 
@@ -15,8 +11,5 @@ try {
     docker compose -f (Join-Path $DockerDir "docker-compose.yml") up -d
     $logger.Success("Virtual Application is running.")
 }
-catch {
-    $logger.Error("Failed to start virtual application: $_")
-    exit 1
-}
+
 

@@ -4,17 +4,12 @@ param(
     [switch]$Json
 )
 
-# Defensive Programming
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-
-# Source common functions
+# Source common functions (which imports the module)
 . "$PSScriptRoot/common.ps1"
 
-# Dependency Injection: Initialize Logger
-$logger = [SpecKitLogger]::new("Check-Spec-Prereqs")
+Invoke-SpecKitBlock -Name "Check-Spec-Prereqs" -ScriptBlock {
+    param($logger)
 
-try {
     # Get paths
     $paths = Get-FeaturePathsEnv
 
@@ -38,8 +33,5 @@ try {
         $logger.Info("BRANCH: $($paths.CURRENT_BRANCH)")
     }
 }
-catch {
-    $logger.Error("An unexpected error occurred: $_")
-    exit 1
-}
+
 

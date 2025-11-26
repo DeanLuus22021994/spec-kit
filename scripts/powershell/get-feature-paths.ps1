@@ -1,16 +1,11 @@
 #!/usr/bin/env pwsh
 param()
 
-# Defensive Programming
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-
 . "$PSScriptRoot/common.ps1"
 
-# Dependency Injection: Initialize Logger
-$logger = [SpecKitLogger]::new("Get-Feature-Paths")
+Invoke-SpecKitBlock -Name "Get-Feature-Paths" -ScriptBlock {
+    param($logger)
 
-try {
     $paths = Get-FeaturePathsEnv
     if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -Logger $logger)) { exit 1 }
 
@@ -21,8 +16,5 @@ try {
     Write-Output "IMPL_PLAN: $($paths.IMPL_PLAN)"
     Write-Output "TASKS: $($paths.TASKS)"
 }
-catch {
-    $logger.Error("An unexpected error occurred: $_")
-    exit 1
-}
+
 

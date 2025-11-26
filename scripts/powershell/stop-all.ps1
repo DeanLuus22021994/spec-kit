@@ -1,13 +1,9 @@
 #!/usr/bin/env pwsh
-# Defensive Programming
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/common.ps1"
 
-# Load Logger
-. "$PSScriptRoot/Logger.ps1"
-$logger = [SpecKitLogger]::new("Stop-All")
+Invoke-SpecKitBlock -Name "Stop-All" -ScriptBlock {
+    param($logger)
 
-try {
     $ScriptDir = Split-Path $MyInvocation.MyCommand.Path
     $DockerDir = Join-Path $ScriptDir "../../docker"
 
@@ -19,8 +15,5 @@ try {
 
     $logger.Success("All services stopped.")
 }
-catch {
-    $logger.Error("Failed to stop services: $_")
-    exit 1
-}
+
 

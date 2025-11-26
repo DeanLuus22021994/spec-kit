@@ -2,19 +2,15 @@
 [CmdletBinding()]
 param([string]$AgentType)
 
-# Defensive Programming: Strict Mode and Error Handling
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/common.ps1"
 
-# Load Logger
-. "$PSScriptRoot/Logger.ps1"
-$logger = [SpecKitLogger]::new("Update-Agent-Context")
+Invoke-SpecKitBlock -Name "Update-Agent-Context" -ScriptBlock {
+    param($logger)
 
-# Constants
-$MaxFileSize = 1MB
-$RegexTimeout = [TimeSpan]::FromSeconds(2)
+    $AgentType = $using:AgentType
+    $MaxFileSize = 1MB
+    $RegexTimeout = [TimeSpan]::FromSeconds(2)
 
-try {
     # Validate Git Environment
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
         throw "Git is not installed or not in the PATH."
@@ -35,7 +31,7 @@ try {
 
     if (-not (Test-Path $newPlan)) {
         $logger.Warning("No plan.md found at $newPlan. Skipping context update.")
-        exit 0
+        return
     }
 
     # Define Agent Files
@@ -215,8 +211,5 @@ try {
     if ($newDb -and $newDb -ne 'N/A') { $logger.Info("- Added database: $newDb") }
 
 }
-catch {
-    $logger.Error("Critical Error: $_")
-    exit 1
-}
+
 

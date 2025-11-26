@@ -2,16 +2,11 @@
 [CmdletBinding()]
 param([switch]$Json)
 
-# Defensive Programming
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-
 . "$PSScriptRoot/common.ps1"
 
-# Dependency Injection: Initialize Logger
-$logger = [SpecKitLogger]::new("Check-Task-Prereqs")
+Invoke-SpecKitBlock -Name "Check-Task-Prereqs" -ScriptBlock {
+    param($logger)
 
-try {
     $paths = Get-FeaturePathsEnv
     if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -Logger $logger)) { exit 1 }
 
@@ -42,8 +37,5 @@ try {
         Test-FileExists -Path $paths.QUICKSTART -Description 'quickstart.md' -Logger $logger | Out-Null
     }
 }
-catch {
-    $logger.Error("An unexpected error occurred: $_")
-    exit 1
-}
+
 

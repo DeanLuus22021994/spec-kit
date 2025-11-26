@@ -1,13 +1,9 @@
 #!/usr/bin/env pwsh
-# Defensive Programming
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/common.ps1"
 
-# Load Logger
-. "$PSScriptRoot/Logger.ps1"
-$logger = [SpecKitLogger]::new("Start-Local")
+Invoke-SpecKitBlock -Name "Start-Local" -ScriptBlock {
+    param($logger)
 
-try {
     $ScriptDir = Split-Path $MyInvocation.MyCommand.Path
     $DockerDir = Join-Path $ScriptDir "../../docker"
 
@@ -15,8 +11,5 @@ try {
     docker compose -f (Join-Path $DockerDir "docker-compose.infra.yml") up -d
     $logger.Success("Local Infrastructure is running.")
 }
-catch {
-    $logger.Error("Failed to start local infrastructure: $_")
-    exit 1
-}
+
 
