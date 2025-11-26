@@ -716,6 +716,34 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  playwright:
+    build:
+      context: ..
+      dockerfile: docker/dockerfiles/playwright.Dockerfile
+    working_dir: /app
+    volumes:
+      - ./docker/tests:/app
+      - /app/node_modules
+      - playwright-report:/app/playwright-report
+      - test-results:/app/test-results
+    networks:
+      - frontend-network
+      - backend-network
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    environment:
+      - BASE_URL=http://frontend:3000
+      - CI=true
+    ipc: host
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 networks:
   frontend-network:
     driver: bridge
@@ -853,4 +881,10 @@ volumes:
 
   # Jaeger tracing volumes
   jaeger-data:
+    driver: local
+
+  # Playwright volumes
+  playwright-report:
+    driver: local
+  test-results:
     driver: local

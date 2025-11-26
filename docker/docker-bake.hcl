@@ -93,6 +93,25 @@ target "development" {
 }
 
 # ============================================================================
+# PLAYWRIGHT TARGET - E2E Testing
+# ============================================================================
+target "playwright" {
+  dockerfile = "docker/dockerfiles/playwright.Dockerfile"
+  context = "."
+  tags = [
+    "${REGISTRY}/playwright:${VERSION}",
+    "${REGISTRY}/playwright:latest"
+  ]
+  cache-from = [
+    "type=local,src=.buildx-cache/playwright"
+  ]
+  cache-to = [
+    "type=local,dest=.buildx-cache/playwright,mode=max"
+  ]
+  platforms = ["linux/amd64"]
+}
+
+# ============================================================================
 # GROUP DEFINITIONS
 # ============================================================================
 group "default" {
