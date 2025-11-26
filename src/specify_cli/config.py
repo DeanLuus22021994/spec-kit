@@ -24,7 +24,7 @@ def load_config(config_name: str) -> dict[str, Any]:
         try:
             with open(config_path, encoding="utf-8") as f:
                 return yaml.safe_load(f) or {}
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             console.print(
                 f"[yellow]Warning: Failed to load {config_name}: {e}[/yellow]"
             )
