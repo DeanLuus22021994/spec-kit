@@ -32,10 +32,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     podman \
     fuse-overlayfs \
     slirp4netns \
+    uidmap \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user with home directory
-RUN groupadd -r toolsuser && useradd -r -g toolsuser -u 1001 -m toolsuser
+# Create non-root user with home directory (normal user for subuid/subgid)
+RUN groupadd toolsuser && useradd -g toolsuser -u 1001 -m toolsuser
 
 # Configure Podman for rootless operation
 RUN mkdir -p /home/toolsuser/.config/containers && \
