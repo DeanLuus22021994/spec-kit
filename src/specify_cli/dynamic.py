@@ -55,7 +55,96 @@ def create_command_from_yaml(config: dict[str, Any]) -> click.Command:
         elif opt_config.get("type") == "boolean":
             kwargs["type"] = click.BOOL
 
-        params.append(click.Option(flags, **kwargs))
+        # Use the name from config as the parameter name passed to the function
+        # This ensures 'json_output' in YAML maps to 'json_output' argument in python
+        # instead of click deriving it from the flag (e.g. --json -> json)
+        if "name" in opt_config:
+            # Click uses the longest flag as the name by default, but we can override
+            # the destination variable name using 'expose_value' or just relying on
+            # how Click parses options. Actually, Click uses the parameter name
+            # derived from flags. To force a specific name, we might need to check
+            # if we can pass 'name' to Option? No, Option takes param_decls.
+            # However, we can pass the name as the first argument if it doesn't start with -
+            # But for Options, they must start with -.
+            # The 'name' attribute on Option is derived.
+            # We can use 'callback' or other tricks, but the standard way is
+            # that --json-output becomes json_output.
+            # In our YAML: name: json_output, flags: ["--json"]
+            # Click will map --json to 'json'.
+            # We want it to map to 'json_output'.
+            # We can achieve this by adding the name as a secondary declaration if it was an argument,
+            # but for options, we can use the 'variable_name' if we were using argparse,
+            # but for Click, we can't easily rename the destination without a custom class or
+            # ensuring the flag matches the name.
+            #
+            # WAIT: Click Option has a 'name' parameter in constructor? No.
+            # It has 'param_decls'.
+            #
+            # Let's look at how Typer does it. Typer maps function args to flags.
+            # Here we are mapping YAML to Click.
+            #
+            # If we want 'json_output' to be the variable name, we should probably
+            # ensure the flag is --json-output OR we rely on the fact that
+            # the handler signature uses 'json_output'.
+            #
+            # The error was: TypeError: check() got an unexpected keyword argument 'json'
+            # This means Click passed 'json=True' because the flag is '--json'.
+            # But the handler expects 'json_output'.
+            #
+            # We can fix this by adding the desired variable name to the param_decls
+            # if we construct it carefully, OR we can just use the 'name' from YAML
+            # to set the 'expose_value' name? No.
+            #
+            # Actually, we can pass `expose_value`? No.
+            #
+            # We can use `click.Option(..., "json_output")`? No.
+            #
+            # The solution is to use the `name` parameter of the Option class?
+            # "name" is available in Parameter, but Option overrides it?
+            #
+            # Let's check Click docs or source.
+            # Option(param_decls, show_default=None, prompt=None, confirmation_prompt=None, prompt_required=True, hide_input=False, is_flag=None, flag_value=None, multiple=False, count=False, allow_from_autoenv=True, type=None, help=None, hidden=False, show_choices=True, show_envvar=False, **attrs)
+            #
+            # It seems we can't easily force the name.
+            #
+            # EASIEST FIX: Update the YAML to use flags that match the variable name,
+            # OR update the handler to match the flag.
+            #
+            # Handler: def check(json_output: bool = False, ...)
+            # YAML: flags: ["--json"] -> passes 'json'
+            #
+            # If I change YAML to flags: ["--json-output", "--json"], then it might pick json_output?
+            # Or I can just change the handler to accept 'json' and map it?
+            # Or I can change the YAML name to 'json' and handler to 'json'?
+            #
+            # But 'json' is a module name, so 'json_output' is better for the variable.
+            #
+            # Let's try to pass the name to the Option constructor via **attrs?
+            # No, 'name' is set by _parse_decls.
+            #
+            # However, we can pass the name as a declaration that doesn't start with dash?
+            # No, that's for Arguments.
+            #
+            # Wait, we can use `callback` to rename? No.
+            #
+            # Let's look at `click.Option` source code or behavior.
+            # It takes the name from the first long option.
+            #
+            # If we want the internal name to be `json_output`, we can't easily do it with just `["--json"]`.
+            #
+            # We can manually set the `name` attribute on the instance after creation?
+            # opt = click.Option(flags, **kwargs)
+            # opt.name = opt_config["name"]
+            # params.append(opt)
+            pass
+
+        opt = click.Option(flags, **kwargs)
+        # Force the parameter name to match the YAML 'name' field
+        # This ensures that --json passes 'json_output' to the function
+        if "name" in opt_config:
+            opt.name = opt_config["name"]
+
+        params.append(opt)
 
     help_text = config.get("description", config.get("help"))
     short_help = config.get("help")

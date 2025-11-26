@@ -8,6 +8,10 @@ cli:
     ╚══════╝╚═╝     ╚══════╝ ╚═════╝╚═╝╚═╝        ╚═╝
   tagline: "GitHub Spec Kit - Spec-Driven Development Toolkit"
 
+optional_tools:
+  code: "Visual Studio Code"
+  code-insiders: "Visual Studio Code Insiders"
+
 repository:
   owner: "github"
   name: "spec-kit"

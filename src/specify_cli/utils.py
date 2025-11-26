@@ -44,7 +44,7 @@ def run_command(
         return None
 
 
-def check_tool(tool: str, tracker: StepTracker | None = None) -> bool:
+def check_tool(tool: str, tracker: StepTracker | None = None) -> str | None:
     """Check if a tool is installed. Optionally update tracker.
 
     Args:
@@ -52,7 +52,7 @@ def check_tool(tool: str, tracker: StepTracker | None = None) -> bool:
         tracker: Optional StepTracker to update with results
 
     Returns:
-        True if tool is found, False otherwise
+        Path to the tool if found, None otherwise
     """
     # Special handling for Claude CLI after `claude migrate-installer`
     # See: https://github.com/github/spec-kit/issues/123
@@ -63,17 +63,17 @@ def check_tool(tool: str, tracker: StepTracker | None = None) -> bool:
         if CLAUDE_LOCAL_PATH.exists() and CLAUDE_LOCAL_PATH.is_file():
             if tracker:
                 tracker.complete(tool, "available")
-            return True
+            return str(CLAUDE_LOCAL_PATH)
 
-    found = shutil.which(tool) is not None
+    found_path = shutil.which(tool)
 
     if tracker:
-        if found:
+        if found_path:
             tracker.complete(tool, "available")
         else:
             tracker.error(tool, "not found")
 
-    return found
+    return found_path
 
 
 def merge_json_files(
