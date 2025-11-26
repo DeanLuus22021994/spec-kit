@@ -83,7 +83,21 @@ This eliminates the need for special-case mappings throughout the codebase.
 - `install_url`: Installation documentation URL (set to `None` for IDE-based agents)
 - `requires_cli`: Whether the agent requires a CLI tool check during initialization
 
-#### 2. Update CLI Help Text
+#### 2. Update Command Configuration
+
+If adding a new command or modifying an existing one, update `.config/agent_commands.yaml`.
+
+**Example:**
+
+```yaml
+new-command:
+  description: "Description of the new command"
+  scripts:
+    sh: scripts/bash/new-command.sh
+    ps: scripts/powershell/new-command.ps1
+```
+
+#### 3. Update CLI Help Text
 
 Update the `--ai` parameter help text in the `init()` command to include the new agent:
 
@@ -93,7 +107,7 @@ ai_assistant: str = typer.Option(None, "--ai", help="AI assistant to use: claude
 
 Also update any function docstrings, examples, and error messages that list available agents.
 
-#### 3. Update README Documentation
+#### 4. Update README Documentation
 
 Update the **Supported AI Agents** section in `README.md` to include the new agent:
 
@@ -102,7 +116,7 @@ Update the **Supported AI Agents** section in `README.md` to include the new age
 - Add any relevant notes about the agent's implementation
 - Ensure the table formatting remains aligned and consistent
 
-#### 4. Update Release Package Script
+#### 5. Update Release Package Script
 
 Modify `.github/workflows/scripts/create-release-packages.sh`:
 
@@ -123,7 +137,7 @@ case $agent in
 esac
 ```
 
-#### 4. Update GitHub Release Script
+#### 6. Update GitHub Release Script
 
 Modify `.github/workflows/scripts/create-github-release.sh` to include the new agent's packages:
 
@@ -135,7 +149,7 @@ gh release create "$VERSION" \
   # Add new agent packages here
 ```
 
-#### 5. Update Agent Context Scripts
+#### 7. Update Agent Context Scripts
 
 ##### Bash script (`scripts/bash/update-agent-context.sh`)
 
@@ -151,7 +165,7 @@ Add to case statement:
 case "$AGENT_TYPE" in
   # ... existing cases ...
   windsurf) update_agent_file "$WINDSURF_FILE" "Windsurf" ;;
-  "") 
+  "")
     # ... existing checks ...
     [ -f "$WINDSURF_FILE" ] && update_agent_file "$WINDSURF_FILE" "Windsurf";
     # Update default creation condition
@@ -185,7 +199,7 @@ switch ($AgentType) {
 }
 ```
 
-#### 6. Update CLI Tool Checks (Optional)
+#### 8. Update CLI Tool Checks (Optional)
 
 For agents that require CLI tools, add checks in the `check()` command and agent validation:
 
@@ -253,7 +267,7 @@ AGENT_CONFIG = {
 - Reduces the chance of bugs when adding new agents
 - Tool checking "just works" without additional mappings
 
-#### 7. Update Devcontainer files (Optional)
+#### 9. Update Devcontainer files (Optional)
 
 For agents that have VS Code extensions or require CLI installation, update the devcontainer configuration files:
 
@@ -305,7 +319,7 @@ echo "✅ Done"
 Require a command-line tool to be installed:
 
 - **Claude Code**: `claude` CLI
-- **Gemini CLI**: `gemini` CLI  
+- **Gemini CLI**: `gemini` CLI
 - **Cursor**: `cursor-agent` CLI
 - **Qwen Code**: `qwen` CLI
 - **opencode**: `opencode` CLI
@@ -323,40 +337,60 @@ Work within integrated development environments:
 
 ## Command File Formats
 
-### Markdown Format
+### Configuration + Template Split
 
-Used by: Claude, Cursor, opencode, Windsurf, Amazon Q Developer, Amp, SHAI
+Spec Kit uses a split architecture for agent commands:
 
-**Standard format:**
+1.  **Configuration**: Metadata (description, scripts, handoffs) is stored in `.config/agent_commands.yaml`.
+2.  **Content**: The prompt template itself is stored in `templates/commands/*.md` as pure Markdown (no frontmatter).
+
+### Configuration Format (`.config/agent_commands.yaml`)
+
+```yaml
+command_name:
+  description: "Command description"
+  scripts:
+    sh: scripts/bash/command-script.sh --arg
+    ps: scripts/powershell/command-script.ps1 -Arg
+  handoffs:
+    - label: Next Step
+      agent: speckit.next
+      prompt: Prompt for the next agent...
+```
+
+### Template Format (`templates/commands/*.md`)
+
+```markdown
+## Command Title
+
+Command content with {SCRIPT} and $ARGUMENTS placeholders.
+
+## Context
+
+{ARGS}
+```
+
+### Legacy Formats (Reference)
+
+Some older or specific agent integrations might still use these formats, but the core system has migrated to the split architecture above.
+
+**Markdown with Frontmatter (Deprecated for core commands):**
 
 ```markdown
 ---
 description: "Command description"
 ---
 
-Command content with {SCRIPT} and $ARGUMENTS placeholders.
+Command content...
 ```
 
-**GitHub Copilot Chat Mode format:**
-
-```markdown
----
-description: "Command description"
-mode: speckit.command-name
----
-
-Command content with {SCRIPT} and $ARGUMENTS placeholders.
-```
-
-### TOML Format
-
-Used by: Gemini, Qwen
+**TOML Format (Gemini/Qwen):**
 
 ```toml
 description = "Command description"
 
 prompt = """
-Command content with {SCRIPT} and {{args}} placeholders.
+Command content...
 """
 ```
 
@@ -387,12 +421,13 @@ Different agents use different argument placeholders:
 
 ## Common Pitfalls
 
-1. **Using shorthand keys instead of actual CLI tool names**: Always use the actual executable name as the AGENT_CONFIG key (e.g., `"cursor-agent"` not `"cursor"`). This prevents the need for special-case mappings throughout the codebase.
-2. **Forgetting update scripts**: Both bash and PowerShell scripts must be updated when adding new agents.
-3. **Incorrect `requires_cli` value**: Set to `True` only for agents that actually have CLI tools to check; set to `False` for IDE-based agents.
-4. **Wrong argument format**: Use correct placeholder format for each agent type (`$ARGUMENTS` for Markdown, `{{args}}` for TOML).
-5. **Directory naming**: Follow agent-specific conventions exactly (check existing agents for patterns).
-6. **Help text inconsistency**: Update all user-facing text consistently (help strings, docstrings, README, error messages).
+1.  **Forgetting to update `.config/agent_commands.yaml`**: The command templates are now pure Markdown. All metadata (scripts, descriptions) must be in the config file.
+2.  **Using shorthand keys instead of actual CLI tool names**: Always use the actual executable name as the AGENT_CONFIG key (e.g., `"cursor-agent"` not `"cursor"`). This prevents the need for special-case mappings throughout the codebase.
+3.  **Forgetting update scripts**: Both bash and PowerShell scripts must be updated when adding new agents.
+4.  **Incorrect `requires_cli` value**: Set to `True` only for agents that actually have CLI tools to check; set to `False` for IDE-based agents.
+5.  **Wrong argument format**: Use correct placeholder format for each agent type (`$ARGUMENTS` for Markdown, `{{args}}` for TOML).
+6.  **Directory naming**: Follow agent-specific conventions exactly (check existing agents for patterns).
+7.  **Help text inconsistency**: Update all user-facing text consistently (help strings, docstrings, README, error messages).
 
 ## Future Considerations
 

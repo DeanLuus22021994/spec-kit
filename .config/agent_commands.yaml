@@ -1,0 +1,87 @@
+analyze:
+  description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
+  scripts:
+    sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+    ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks
+
+checklist:
+  description: Generate a custom checklist for the current feature based on user requirements.
+  scripts:
+    sh: scripts/bash/check-prerequisites.sh --json
+    ps: scripts/powershell/check-prerequisites.ps1 -Json
+
+clarify:
+  description: Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec.
+  handoffs:
+    - label: Build Technical Plan
+      agent: speckit.plan
+      prompt: Create a plan for the spec. I am building with...
+  scripts:
+    sh: scripts/bash/check-prerequisites.sh --json --paths-only
+    ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+
+constitution:
+  description: Create or update the project constitution from interactive or provided principle inputs, ensuring all dependent templates stay in sync.
+  handoffs:
+    - label: Build Specification
+      agent: speckit.specify
+      prompt: Implement the feature specification based on the updated constitution. I want to build...
+
+implement:
+  description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
+  scripts:
+    sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+    ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks
+
+plan:
+  description: Execute the implementation planning workflow using the plan template to generate design artifacts.
+  handoffs:
+    - label: Create Tasks
+      agent: speckit.tasks
+      prompt: Break the plan into tasks
+      send: true
+    - label: Create Checklist
+      agent: speckit.checklist
+      prompt: Create a checklist for the following domain...
+  scripts:
+    sh: scripts/bash/setup-plan.sh --json
+    ps: scripts/powershell/setup-plan.ps1 -Json
+  agent_scripts:
+    sh: scripts/bash/update-agent-context.sh __AGENT__
+    ps: scripts/powershell/update-agent-context.ps1 -AgentType __AGENT__
+
+specify:
+  description: Create or update the feature specification from a natural language feature description.
+  handoffs:
+    - label: Build Technical Plan
+      agent: speckit.plan
+      prompt: Create a plan for the spec. I am building with...
+    - label: Clarify Spec Requirements
+      agent: speckit.clarify
+      prompt: Clarify specification requirements
+      send: true
+  scripts:
+    sh: scripts/bash/create-new-feature.sh --json "{ARGS}"
+    ps: scripts/powershell/create-new-feature.ps1 -Json "{ARGS}"
+
+tasks:
+  description: Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts.
+  handoffs:
+    - label: Analyze For Consistency
+      agent: speckit.analyze
+      prompt: Run a project analysis for consistency
+      send: true
+    - label: Implement Project
+      agent: speckit.implement
+      prompt: Start the implementation in phases
+      send: true
+  scripts:
+    sh: scripts/bash/check-prerequisites.sh --json
+    ps: scripts/powershell/check-prerequisites.ps1 -Json
+
+taskstoissues:
+  description: Convert existing tasks into actionable, dependency-ordered GitHub issues for the feature based on available design artifacts.
+  tools: ["github/github-mcp-server/issue_write"]
+  scripts:
+    sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
+    ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks

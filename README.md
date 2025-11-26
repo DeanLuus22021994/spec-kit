@@ -218,6 +218,7 @@ Our research and experimentation focus on:
 
 - **[Complete Spec-Driven Development Methodology](./spec-driven.md)** - Deep dive into the full process
 - **[Detailed Walkthrough](#-detailed-process)** - Step-by-step implementation guide
+- **[Upgrade Guide](./docs/upgrade.md)** - Instructions for upgrading existing projects
 
 ---
 

@@ -62,9 +62,13 @@ When working on spec-kit:
 3. Test script functionality in the `scripts/` directory
 4. Ensure memory files (`memory/constitution.md`) are updated if major process changes are made
 
+> [!NOTE]
+> Command templates are located in `templates/commands/` and their configuration (description, scripts, handoffs) is centralized in `.config/agent_commands.yaml`.
+> See [AGENTS.md](AGENTS.md) for detailed instructions on adding or modifying agents and commands.
+
 ### Testing template and command changes locally
 
-Running `uv run specify init` pulls released packages, which won’t include your local changes.  
+Running `uv run specify init` pulls released packages, which won’t include your local changes.
 To test your templates, commands, and other changes locally, follow these steps:
 
 1. **Create release packages**
@@ -122,7 +126,7 @@ When submitting AI-assisted contributions, please ensure they include:
 
 - **Clear disclosure of AI use** - You are transparent about AI use and degree to which you're using it for the contribution
 - **Human understanding and testing** - You've personally tested the changes and understand what they do
-- **Clear rationale** - You can explain why the change is needed and how it fits within Spec Kit's goals  
+- **Clear rationale** - You can explain why the change is needed and how it fits within Spec Kit's goals
 - **Concrete evidence** - Include test cases, scenarios, or examples that demonstrate the improvement
 - **Your own analysis** - Share your thoughts on the end-to-end developer experience
 

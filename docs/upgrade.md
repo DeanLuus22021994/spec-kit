@@ -53,6 +53,7 @@ Running `specify init --here --force` will update:
 - ✅ **Slash command files** (`.claude/commands/`, `.github/prompts/`, etc.)
 - ✅ **Script files** (`.specify/scripts/`)
 - ✅ **Template files** (`.specify/templates/`)
+- ✅ **Configuration files** (`.config/agent_commands.yaml`)
 - ✅ **Shared memory files** (`.specify/memory/`) - **⚠️ See warnings below**
 
 ### What stays safe?

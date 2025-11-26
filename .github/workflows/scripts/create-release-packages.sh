@@ -40,55 +40,57 @@ rewrite_paths() {
 generate_commands() {
   local agent=$1 ext=$2 arg_format=$3 output_dir=$4 script_variant=$5
   mkdir -p "$output_dir"
+
+  # Read the config file
+  local config_file=".config/agent_commands.yaml"
+
   for template in templates/commands/*.md; do
     [[ -f "$template" ]] || continue
     local name description script_command agent_script_command body
     name=$(basename "$template" .md)
-    
+
     # Normalize line endings
     file_content=$(tr -d '\r' < "$template")
-    
-    # Extract description and script command from YAML frontmatter
-    description=$(printf '%s\n' "$file_content" | awk '/^description:/ {sub(/^description:[[:space:]]*/, ""); print; exit}')
-    script_command=$(printf '%s\n' "$file_content" | awk -v sv="$script_variant" '/^[[:space:]]*'"$script_variant"':[[:space:]]*/ {sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, ""); print; exit}')
-    
+
+    # Extract description from config file
+    description=$(awk -v cmd="$name" '
+      $0 ~ "^"cmd":" { in_cmd=1; next }
+      in_cmd && /^  description:/ { sub(/^  description:[[:space:]]*/, ""); print; exit }
+      in_cmd && /^[a-zA-Z]/ { exit }
+    ' "$config_file")
+
+    # Extract script command from config file
+    script_command=$(awk -v cmd="$name" -v sv="$script_variant" '
+      $0 ~ "^"cmd":" { in_cmd=1; next }
+      in_cmd && /^  scripts:/ { in_scripts=1; next }
+      in_scripts && /^[[:space:]]*'"$script_variant"':/ { sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, ""); print; exit }
+      in_scripts && (/^  [a-zA-Z]/ || /^[a-zA-Z]/) { exit }
+    ' "$config_file")
+
     if [[ -z $script_command ]]; then
-      echo "Warning: no script command found for $script_variant in $template" >&2
+      echo "Warning: no script command found for $script_variant in $template (config: $name)" >&2
       script_command="(Missing script command for $script_variant)"
     fi
-    
-    # Extract agent_script command from YAML frontmatter if present
-    agent_script_command=$(printf '%s\n' "$file_content" | awk '
-      /^agent_scripts:$/ { in_agent_scripts=1; next }
-      in_agent_scripts && /^[[:space:]]*'"$script_variant"':[[:space:]]*/ {
-        sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, "")
-        print
-        exit
-      }
-      in_agent_scripts && /^[a-zA-Z]/ { in_agent_scripts=0 }
-    ')
-    
+
+    # Extract agent_script command from config file
+    agent_script_command=$(awk -v cmd="$name" -v sv="$script_variant" '
+      $0 ~ "^"cmd":" { in_cmd=1; next }
+      in_cmd && /^  agent_scripts:/ { in_agent_scripts=1; next }
+      in_agent_scripts && /^[[:space:]]*'"$script_variant"':/ { sub(/^[[:space:]]*'"$script_variant"':[[:space:]]*/, ""); print; exit }
+      in_agent_scripts && (/^  [a-zA-Z]/ || /^[a-zA-Z]/) { exit }
+    ' "$config_file")
+
     # Replace {SCRIPT} placeholder with the script command
     body=$(printf '%s\n' "$file_content" | sed "s|{SCRIPT}|${script_command}|g")
-    
+
     # Replace {AGENT_SCRIPT} placeholder with the agent script command if found
     if [[ -n $agent_script_command ]]; then
       body=$(printf '%s\n' "$body" | sed "s|{AGENT_SCRIPT}|${agent_script_command}|g")
     fi
-    
-    # Remove the scripts: and agent_scripts: sections from frontmatter while preserving YAML structure
-    body=$(printf '%s\n' "$body" | awk '
-      /^---$/ { print; if (++dash_count == 1) in_frontmatter=1; else in_frontmatter=0; next }
-      in_frontmatter && /^scripts:$/ { skip_scripts=1; next }
-      in_frontmatter && /^agent_scripts:$/ { skip_scripts=1; next }
-      in_frontmatter && /^[a-zA-Z].*:/ && skip_scripts { skip_scripts=0 }
-      in_frontmatter && skip_scripts && /^[[:space:]]/ { next }
-      { print }
-    ')
-    
+
     # Apply other substitutions
     body=$(printf '%s\n' "$body" | sed "s/{ARGS}/$arg_format/g" | sed "s/__AGENT__/$agent/g" | rewrite_paths)
-    
+
     case $ext in
       toml)
         body=$(printf '%s\n' "$body" | sed 's/\\/\\\\/g')
@@ -104,14 +106,14 @@ generate_commands() {
 generate_copilot_prompts() {
   local agents_dir=$1 prompts_dir=$2
   mkdir -p "$prompts_dir"
-  
+
   # Generate a .prompt.md file for each .agent.md file
   for agent_file in "$agents_dir"/speckit.*.agent.md; do
     [[ -f "$agent_file" ]] || continue
-    
+
     local basename=$(basename "$agent_file" .agent.md)
     local prompt_file="$prompts_dir/${basename}.prompt.md"
-    
+
     # Create prompt file with agent frontmatter
     cat > "$prompt_file" <<EOF
 ---
@@ -126,13 +128,13 @@ build_variant() {
   local base_dir="$GENRELEASES_DIR/sdd-${agent}-package-${script}"
   echo "Building $agent ($script) package..."
   mkdir -p "$base_dir"
-  
+
   # Copy base structure but filter scripts by variant
   SPEC_DIR="$base_dir/.specify"
   mkdir -p "$SPEC_DIR"
-  
+
   [[ -d memory ]] && { cp -r memory "$SPEC_DIR/"; echo "Copied memory -> .specify"; }
-  
+
   # Only copy the relevant script variant directory
   if [[ -d scripts ]]; then
     mkdir -p "$SPEC_DIR/scripts"
@@ -149,9 +151,9 @@ build_variant() {
         ;;
     esac
   fi
-  
+
   [[ -d templates ]] && { mkdir -p "$SPEC_DIR/templates"; find templates -type f -not -path "templates/commands/*" -not -name "vscode-settings.json" -exec cp --parents {} "$SPEC_DIR"/ \; ; echo "Copied templates -> .specify/templates"; }
-  
+
   # NOTE: We substitute {ARGS} internally. Outward tokens differ intentionally:
   #   * Markdown/prompt (claude, copilot, cursor-agent, opencode): $ARGUMENTS
   #   * TOML (gemini, qwen): {{args}}

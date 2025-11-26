@@ -150,6 +150,8 @@ specify init demo --skip-tls --ai gemini --ignore-agent-tools --script ps
 | Git branch uvx | `uvx --from git+URL@branch specify ...` |
 | Build wheel | `uv build` |
 
+> **Note:** If you modify command templates in `templates/commands/`, remember that their metadata (scripts, descriptions) is now stored in `.config/agent_commands.yaml`. See `AGENTS.md` for details.
+
 ## 11. Cleaning Up
 
 Remove build artifacts / virtual env quickly:
