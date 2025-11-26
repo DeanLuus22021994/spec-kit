@@ -5,7 +5,7 @@
 context:
   directory: "semantic/vector/.config/"
   purpose: "Configuration for Qdrant vector database"
-  pattern: "Aligns with tests/.config/, tools/.config/, src/frontend/.config/, semantic/embeddings/.config/"
+  pattern: "Aligns with tests/.config/, tools/.config/, src/virtual/src/frontend/.config/, semantic/embeddings/.config/"
 
 service:
   name: "vector-database"
@@ -97,7 +97,7 @@ file_structure:
         +-- config.yml     # Qdrant configuration
 
 benefits:
-  - "Pattern consistency with tests/.config/, tools/.config/, frontend/.config/, embeddings/.config/"
+  - "Pattern consistency with tests/.config/, tools/.config/, src/virtual/src/frontend/.config/, embeddings/.config/"
   - "Cleaner vector/ directory (config separated)"
   - "GitHub Copilot semantic search enabled"
   - "Easier configuration discovery and management"
@@ -115,5 +115,5 @@ related_services:
 related_configs:
   - "tests/.config/ - Test configuration"
   - "tools/.config/ - Python tools configuration"
-  - "src/frontend/.config/ - Frontend build configuration"
+  - "src/virtual/src/frontend/.config/ - Frontend build configuration"
   - "semantic/embeddings/.config/ - Embeddings service configuration"

@@ -87,7 +87,7 @@ architecture:
 
 file_structure:
   before_refactoring: |
-    src/frontend/
+    src/virtual/src/frontend/
     +-- .eslintrc.json      # Config at root
     +-- .prettierrc         # Config at root
     +-- webpack.config.js   # Config at root
@@ -97,7 +97,7 @@ file_structure:
     +-- src/
 
   after_refactoring: |
-    src/frontend/
+    src/virtual/src/frontend/
     +-- .config/            # Centralized configuration
     |   +-- copilot/
     |   |   +-- index.yml   # This file
@@ -111,7 +111,7 @@ file_structure:
 
 benefits:
   - "Consistent with tests/.config/ and tools/.config/ patterns"
-  - "Cleaner frontend/ root (4 config files to 1 directory)"
+  - "Cleaner src/virtual/src/frontend/ root (4 config files to 1 directory)"
   - "Easier configuration discovery and maintenance"
   - "GitHub Copilot semantic search enabled via this context file"
   - "Separation of concerns (code vs. configuration)"
