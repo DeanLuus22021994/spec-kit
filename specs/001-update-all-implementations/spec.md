@@ -1,115 +1,51 @@
-# Feature Specification: [FEATURE NAME]
+# Feature Specification: Update All Implementations to Support Local/Virtual Architecture
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
-**Input**: User description: "$ARGUMENTS"
+**Feature Branch**: `001-update-all-implementations`
+**Created**: 2025-11-26
+**Status**: Draft
+**Input**: User description: "Update all implementations to support the new src/local and src/virtual architecture."
 
 ## User Scenarios & Testing *(mandatory)*
 
-<!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
--->
+### User Story 1 - Update Templates to Reflect New Architecture (Priority: P1)
 
-### User Story 1 - [Brief Title] (Priority: P1)
+The project templates used by the CLI must reflect the new architecture where infrastructure lives in `src/local` and application code lives in `src/virtual`.
 
-[Describe this user journey in plain language]
+**Why this priority**: The templates are the source of truth for new projects and plans. If they are outdated, the AI will generate incorrect plans.
 
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: Generate a new plan using `/speckit.plan` and verify the "Project Structure" section includes the Local/Virtual option.
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** the `plan-template.md` file, **When** inspected, **Then** it should include an option for the "Local/Virtual" structure (`src/local`, `src/virtual`).
+2. **Given** the `tasks-template.md` file, **When** inspected, **Then** the "Path Conventions" section should mention `src/virtual/src` and `src/local`.
 
 ---
 
-### User Story 2 - [Brief Title] (Priority: P2)
+### User Story 2 - Update CLI Logic for Project Detection (Priority: P2)
 
-[Describe this user journey in plain language]
+The CLI commands (like `init` or `check`) might need to detect if a project is using the new structure.
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: To ensure the tools work correctly in the new environment.
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: Run `specify check` (or similar) in a project with the new structure and ensure it reports correctly.
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** a project with `src/local` and `src/virtual`, **When** running CLI commands, **Then** they should recognize the project structure.
 
 ---
-
-### User Story 3 - [Brief Title] (Priority: P3)
-
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-[Add more user stories as needed, each with an assigned priority]
-
-### Edge Cases
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
-
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
 
 ## Requirements *(mandatory)*
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
-
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-*Example of marking unclear requirements:*
-
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
-
-### Key Entities *(include if feature involves data)*
-
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- **FR-001**: `src/specify_cli/templates/plan-template.md` MUST include the `src/local` and `src/virtual` structure in the "Project Structure" section.
+- **FR-002**: `src/specify_cli/templates/tasks-template.md` MUST include path conventions for the new structure.
 
 ## Success Criteria *(mandatory)*
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: Templates accurately reflect the new architecture.
+
