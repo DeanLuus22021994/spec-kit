@@ -12,7 +12,7 @@ The Engine service is the core processing component that implements Microsoft's 
 ## Project Structure
 
 ```
-src/engine/
+src/virtual/src/engine/
 ├── Factories/            # Factory classes for kernel creation
 ├── kernels/              # Kernel configurations
 ├── Planners/             # Planner implementations
