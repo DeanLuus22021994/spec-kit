@@ -40,8 +40,8 @@ RUN mkdir -p /var/lib/registry \
     && mkdir -p /var/log/registry
 
 # Copy configuration files (baked in from .config)
-COPY docker/.config/docker/registry/config.yml /etc/docker/registry/config.yml
-COPY docker/.config/docker/registry/gc-config.yml /etc/docker/registry/gc-config.yml
+COPY .config/docker/registry/config.yml /etc/docker/registry/config.yml
+COPY .config/docker/registry/gc-config.yml /etc/docker/registry/gc-config.yml
 
 # Set proper permissions (use numeric IDs to avoid user lookup issues)
 RUN chown -R 1000:1000 /var/lib/registry \
