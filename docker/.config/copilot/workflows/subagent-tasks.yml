@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=../../schemas/config.schema.json
+# Subagent Tasks Configuration
+# Definitions for parallel subagent workflows
+
+metadata: &metadata
+  name: "subagent-tasks"
+  description: "Configuration for parallel subagent tasks"
+  version: "1.0.0"
+  updated: "2025-11-26"
+  category: workflow
+  keywords:
+    - subagents
+    - parallel-execution
+    - automation
+    - validation
+    - inventory
+
+<<: *metadata
+
+description: |
+  Configuration for subagent tasks that can be executed in parallel by the
+  orchestrator. These tasks are designed to be independent and context-free
+  where possible to maximize parallelism.
+
+# =============================================================================
+# Subagent Task Definitions
+# =============================================================================
+subagent_tasks:
+  pre_commit_validation:
+    description: "Run before every commit to ensure codebase integrity"
+    parallel_calls:
+      - "Validate all YAML files in .config/"
+      - "Check for duplicate anchor names in YAML files"
+      - "Verify Dockerfile base images match versions.yml"
+      - "Run Pylint on all Python files in tools/"
+    context_required: false
+
+  docker_health_check:
+    description: "Pre-deployment validation of Docker environment"
+    parallel_calls:
+      - "Check all services are healthy"
+      - "Verify volume mounts exist and are writable"
+      - "Validate GPU availability and driver status"
+      - "Check for port conflicts in docker-compose.yml"
+    context_required: false
+
+  codebase_inventory:
+    description: "Generate comprehensive project overview"
+    parallel_calls:
+      - "Count files by extension and language"
+      - "List all service definitions in docker-compose files"
+      - "Extract version numbers from all configuration files"
+      - "Map service dependencies from depends_on"
+    context_required: false
+
+  documentation_audit:
+    description: "Audit documentation for consistency and freshness"
+    parallel_calls:
+      - "Check all README files for broken links"
+      - "Verify code blocks in markdown files are valid"
+      - "Ensure all config files have corresponding documentation"
+      - "Check for outdated dates in metadata blocks"
+    context_required: false
+
+# =============================================================================
+# Execution Profiles
+# =============================================================================
+execution_profiles:
+  ci_pipeline:
+    tasks: ["pre_commit_validation", "documentation_audit"]
+    max_parallel: 8
+    timeout_seconds: 300
+
+  deployment:
+    tasks: ["docker_health_check"]
+    max_parallel: 4
+    timeout_seconds: 120
+
+  nightly_report:
+    tasks: ["codebase_inventory", "documentation_audit"]
+    max_parallel: 4
+    timeout_seconds: 600
+
+# =============================================================================
+# Related Documentation
+# =============================================================================
+related_documentation:
+  - ".config/scripts/tools/orchestrator/README.md: Orchestrator documentation"
+  - ".config/optimization-toggles.yml: Performance settings"

@@ -3,7 +3,7 @@
 # PRECOMPILED: All dependencies baked in
 
 # Stage 1: Base with dependencies
-FROM python:3.13-slim AS base
+FROM nvidia/cuda:13.0-cudnn-runtime-ubuntu24.04 AS base
 
 # Standard Build Arguments
 ARG VERSION=latest
@@ -24,11 +24,18 @@ LABEL performance.optimized="true"
 
 WORKDIR /app
 
-# Install build dependencies (slim uses apt, not apk)
+# Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
+    python3 \
+    python3-pip \
+    python3-venv \
     && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies
 RUN pip install --no-cache-dir \
@@ -43,7 +50,7 @@ RUN pip install --no-cache-dir \
     pyyaml==6.0.2
 
 # Stage 2: Runtime
-FROM python:3.13-slim AS runtime
+FROM nvidia/cuda:13.0-cudnn-runtime-ubuntu24.04 AS runtime
 
 WORKDIR /app
 
@@ -51,13 +58,16 @@ WORKDIR /app
 RUN groupadd -r -g 1001 appuser && \
     useradd -r -u 1001 -g appuser appuser
 
-# Install wget for healthchecks
-RUN apt-get update && apt-get install -y --no-install-recommends wget && \
-    rm -rf /var/lib/apt/lists/*
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    python3 \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from base
-COPY --from=base /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
-COPY --from=base /usr/local/bin /usr/local/bin
+# Copy virtual environment from base
+COPY --from=base /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy embedding service configuration and application
 COPY --chown=appuser:appuser semantic/embeddings/.config/config.yml /app/config/config.yml

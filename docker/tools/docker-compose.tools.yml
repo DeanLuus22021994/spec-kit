@@ -30,7 +30,7 @@ services:
       - LABEL_SELECTOR=${LABEL_SELECTOR:-}
     volumes:
       # Mount source code for analysis (read-only)
-      - ..:/app:ro
+      - tools-workspace:/app:ro
 
       # Named volumes for validation reports (persistent)
       - validation-reports:/app/tools/.config/validation/reports
@@ -40,7 +40,7 @@ services:
       - pytest-cache:/app/tools/.pytest_cache
 
       # Mount validation test data for local development (read-write)
-      - ./.config/validation/test-data:/app/tools/.config/validation/test-data:rw
+      - tools-validation-test-data:/app/tools/.config/validation/test-data:rw
 
       # Shared reports volume for integration
       - shared-reports:/app/reports
@@ -80,6 +80,14 @@ services:
       - tools-network
 
 volumes:
+  tools-workspace:
+    driver: local
+    name: semantic-kernel-app-tools-workspace
+
+  tools-validation-test-data:
+    driver: local
+    name: semantic-kernel-app-tools-validation-test-data
+
   validation-reports:
     driver: local
     name: semantic-kernel-app-validation-reports

@@ -31,7 +31,7 @@ services:
     # Volume mounts
     volumes:
       # Mount workspace for analysis (read-only for security)
-      - .:/workspace:ro
+      - validation-workspace:/workspace:ro
 
       # Named volume for validation reports (persistent)
       - validation-reports:/workspace/.config/validation/reports
@@ -44,7 +44,7 @@ services:
       # - /var/run/docker.sock:/var/run/docker.sock:ro
 
       # Test data for development (read-write for testing)
-      - ./tools/.config/validation/test-data:/workspace/.config/validation/test-data:rw
+      - validation-test-data:/workspace/.config/validation/test-data:rw
 
     # Environment configuration
     environment:
@@ -107,6 +107,18 @@ services:
 
 # Named volumes
 volumes:
+  validation-workspace:
+    driver: local
+    name: semantic-kernel-validation-workspace
+    labels:
+      description: "Workspace volume for validation service"
+
+  validation-test-data:
+    driver: local
+    name: semantic-kernel-validation-test-data
+    labels:
+      description: "Test data volume for validation service"
+
   validation-reports:
     driver: local
     name: semantic-kernel-validation-reports
