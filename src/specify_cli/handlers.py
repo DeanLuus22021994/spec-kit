@@ -1,7 +1,8 @@
-"""Init command for Specify CLI."""
+"""Command handlers for Specify CLI."""
 
 from __future__ import annotations
 
+import importlib.metadata
 import os
 import shlex
 import shutil
@@ -31,76 +32,19 @@ ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
 
 def init(
-    project_name: str | None = typer.Argument(
-        None,
-        help="Name for your new project directory (optional if using --here, or use '.' for current directory)",
-    ),
-    ai_assistant: str = typer.Option(
-        None,
-        "--ai",
-        help=(
-            "AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, "
-            "opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, or q"
-        ),
-    ),
-    script_type: str = typer.Option(
-        None, "--script", help="Script type to use: sh or ps"
-    ),
-    ignore_agent_tools: bool = typer.Option(
-        False,
-        "--ignore-agent-tools",
-        help="Skip checks for AI agent tools like Claude Code",
-    ),
-    no_git: bool = typer.Option(
-        False, "--no-git", help="Skip git repository initialization"
-    ),
-    here: bool = typer.Option(
-        False,
-        "--here",
-        help="Initialize project in the current directory instead of creating a new one",
-    ),
-    force: bool = typer.Option(
-        False,
-        "--force",
-        help="Force merge/overwrite when using --here (skip confirmation)",
-    ),
-    skip_tls: bool = typer.Option(
-        False, "--skip-tls", help="Skip SSL/TLS verification (not recommended)"
-    ),
-    debug: bool = typer.Option(
-        False,
-        "--debug",
-        help="Show verbose diagnostic output for network and extraction failures",
-    ),
-    github_token: str = typer.Option(
-        None,
-        "--github-token",
-        help="GitHub token to use for API requests (or set GH_TOKEN or GITHUB_TOKEN environment variable)",
-    ),
+    project_name: str | None = None,
+    ai: str | None = None,
+    script: str | None = None,
+    ignore_agent_tools: bool = False,
+    no_git: bool = False,
+    here: bool = False,
+    force: bool = False,
+    skip_tls: bool = False,
+    debug: bool = False,
+    github_token: str | None = None,
 ) -> None:
     """
     Initialize a new Specify project from the latest template.
-
-    This command will:
-    1. Check that required tools are installed (git is optional)
-    2. Let you choose your AI assistant
-    3. Download the appropriate template from GitHub
-    4. Extract the template to a new project directory or current directory
-    5. Initialize a fresh git repository (if not --no-git and no existing repo)
-    6. Optionally set up AI assistant commands
-
-    Examples:
-        specify init my-project
-        specify init my-project --ai claude
-        specify init my-project --ai copilot --no-git
-        specify init --ignore-agent-tools my-project
-        specify init . --ai claude         # Initialize in current directory
-        specify init .                     # Initialize in current directory (interactive AI selection)
-        specify init --here --ai claude    # Alternative syntax for current directory
-        specify init --here --ai codex
-        specify init --here --ai codebuddy
-        specify init --here
-        specify init --here --force  # Skip confirmation when current directory not empty
     """
 
     show_banner()
@@ -181,13 +125,13 @@ def init(
                 "[yellow]Git not found - will skip repository initialization[/yellow]"
             )
 
-    if ai_assistant:
-        if ai_assistant not in AGENT_CONFIG:
+    if ai:
+        if ai not in AGENT_CONFIG:
             console.print(
-                f"[red]Error:[/red] Invalid AI assistant '{ai_assistant}'. Choose from: {', '.join(AGENT_CONFIG.keys())}"
+                f"[red]Error:[/red] Invalid AI assistant '{ai}'. Choose from: {', '.join(AGENT_CONFIG.keys())}"
             )
             raise typer.Exit(1)
-        selected_ai = ai_assistant
+        selected_ai = ai
     else:
         # Create options dict for selection (agent_key: display_name)
         ai_choices = {key: config["name"] for key, config in AGENT_CONFIG.items()}
@@ -213,13 +157,13 @@ def init(
                 console.print(error_panel)
                 raise typer.Exit(1)
 
-    if script_type:
-        if script_type not in SCRIPT_TYPE_CHOICES:
+    if script:
+        if script not in SCRIPT_TYPE_CHOICES:
             console.print(
-                f"[red]Error:[/red] Invalid script type '{script_type}'. Choose from: {', '.join(SCRIPT_TYPE_CHOICES.keys())}"
+                f"[red]Error:[/red] Invalid script type '{script}'. Choose from: {', '.join(SCRIPT_TYPE_CHOICES.keys())}"
             )
             raise typer.Exit(1)
-        selected_script = script_type
+        selected_script = script
     else:
         default_script = "ps" if os.name == "nt" else "sh"
 
@@ -432,3 +376,56 @@ def init(
     )
     console.print()
     console.print(enhancements_panel)
+
+
+def check() -> None:
+    """Check that all required tools are installed."""
+    show_banner()
+    console.print("[bold]Checking for installed tools...[/bold]\n")
+
+    tracker = StepTracker("Check Available Tools")
+
+    tracker.add("git", "Git version control")
+    git_ok = check_tool("git", tracker=tracker)
+
+    agent_results = {}
+    for agent_key, agent_config in AGENT_CONFIG.items():
+        agent_name = agent_config["name"]
+        requires_cli = agent_config["requires_cli"]
+
+        tracker.add(agent_key, agent_name)
+
+        if requires_cli:
+            agent_results[agent_key] = check_tool(agent_key, tracker=tracker)
+        else:
+            # IDE-based agent - skip CLI check and mark as optional
+            tracker.skip(agent_key, "IDE-based, no CLI check")
+            # Don't count IDE agents as "found"
+            agent_results[agent_key] = False
+
+    # Check VS Code variants (not in agent config)
+    tracker.add("code", "Visual Studio Code")
+    check_tool("code", tracker=tracker)
+
+    tracker.add("code-insiders", "Visual Studio Code Insiders")
+    check_tool("code-insiders", tracker=tracker)
+
+    console.print(tracker.render())
+
+    console.print("\n[bold green]Specify CLI is ready to use![/bold green]")
+
+    if not git_ok:
+        console.print("[dim]Tip: Install git for repository management[/dim]")
+
+    if not any(agent_results.values()):
+        console.print("[dim]Tip: Install an AI assistant for the best experience[/dim]")
+
+
+def version() -> None:
+    """Show version information."""
+    show_banner()
+    try:
+        ver = importlib.metadata.version("specify-cli")
+    except importlib.metadata.PackageNotFoundError:
+        ver = "unknown"
+    console.print(f"Specify CLI version: [bold cyan]{ver}[/bold cyan]")

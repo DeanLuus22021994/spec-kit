@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from typing import cast
+
+import click
 import typer
 
-from specify_cli.commands.check import check
-from specify_cli.commands.init import init
-from specify_cli.commands.version import version
+from specify_cli.dynamic import load_commands
 
 app = typer.Typer(
     name="specify",
@@ -14,14 +15,18 @@ app = typer.Typer(
     add_completion=False,
 )
 
-app.command()(init)
-app.command()(check)
-app.command()(version)
-
 
 def main() -> None:
     """Execute the CLI application."""
-    app()
+    # Convert Typer app to Click Group
+    cli = cast(click.Group, typer.main.get_command(app))
+
+    # Load and register dynamic commands
+    for cmd in load_commands():
+        cli.add_command(cmd)
+
+    # Run the Click CLI
+    cli()
 
 
 if __name__ == "__main__":
