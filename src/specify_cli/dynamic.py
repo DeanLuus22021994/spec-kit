@@ -131,8 +131,8 @@ def create_command_from_yaml(config: dict[str, Any]) -> click.Command:
 
 def load_commands() -> list[click.Command]:
     """Load all commands defined in the YAML configuration."""
-    # src/specify_cli/dynamic.py -> src/specify_cli -> src -> root
-    config_path = Path(__file__).parent.parent.parent / ".config" / "commands.yaml"
+    # Config is now inside the package: src/specify_cli/config/
+    config_path = Path(__file__).parent / "config" / "commands.yaml"
 
     if not config_path.exists():
         return []

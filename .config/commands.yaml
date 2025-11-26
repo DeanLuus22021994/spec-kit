@@ -1,4 +1,0 @@
-commands:
-  - !include commands/init.yaml
-  - !include commands/check.yaml
-  - !include commands/version.yaml

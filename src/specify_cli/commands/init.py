@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 
-from specify_cli.config import AGENT_CONFIG, SCRIPT_TYPE_CHOICES
+from specify_cli.config import AGENT_CONFIG, COMMANDS_INIT_YAML, SCRIPT_TYPE_CHOICES
 from specify_cli.git import init_git_repo, is_git_repo
 from specify_cli.template import (
     download_and_extract_template,
@@ -127,7 +127,8 @@ def init(
     if ai_assistant:
         if ai_assistant not in AGENT_CONFIG:
             console.print(
-                f"[red]Error:[/red] Invalid AI assistant '{ai_assistant}'. Choose from: {', '.join(AGENT_CONFIG.keys())}"
+                f"[red]Error:[/red] Invalid AI assistant '{ai_assistant}'. "
+                f"Choose from: {', '.join(AGENT_CONFIG.keys())}"
             )
             raise typer.Exit(1)
         selected_ai = ai_assistant
@@ -333,17 +334,18 @@ def init(
         )
         step_num += 1
 
-    steps_lines.append(f"{step_num}. Start using slash commands with your AI agent:")
+    next_steps_header = (
+        COMMANDS_INIT_YAML.get("messages", {})
+        .get("next_steps", {})
+        .get("header", "Start using slash commands with your AI agent:")
+    )
+    steps_lines.append(f"{step_num}. {next_steps_header}")
 
-    steps_lines.append(
-        "   2.1 [cyan]/speckit.constitution[/] - Establish project principles"
+    next_steps_items = (
+        COMMANDS_INIT_YAML.get("messages", {}).get("next_steps", {}).get("items", [])
     )
-    steps_lines.append(
-        "   2.2 [cyan]/speckit.specify[/] - Create baseline specification"
-    )
-    steps_lines.append("   2.3 [cyan]/speckit.plan[/] - Create implementation plan")
-    steps_lines.append("   2.4 [cyan]/speckit.tasks[/] - Generate actionable tasks")
-    steps_lines.append("   2.5 [cyan]/speckit.implement[/] - Execute implementation")
+    for item in next_steps_items:
+        steps_lines.append(f"   {item}")
 
     steps_panel = Panel(
         "\n".join(steps_lines), title="Next Steps", border_style="cyan", padding=(1, 2)
@@ -351,27 +353,25 @@ def init(
     console.print()
     console.print(steps_panel)
 
-    enhancement_lines = [
-        "Optional commands that you can use for your specs [bright_black](improve quality & confidence)[/bright_black]",
-        "",
-        (
-            "○ [cyan]/speckit.clarify[/] [bright_black](optional)[/bright_black] - "
-            "Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/speckit.plan[/] if used)"
-        ),
-        (
-            "○ [cyan]/speckit.analyze[/] [bright_black](optional)[/bright_black] - "
-            "Cross-artifact consistency & alignment report (after [cyan]/speckit.tasks[/], before [cyan]/speckit.implement[/])"
-        ),
-        (
-            "○ [cyan]/speckit.checklist[/] [bright_black](optional)[/bright_black] - "
-            "Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/speckit.plan[/])"
-        ),
-    ]
-    enhancements_panel = Panel(
-        "\n".join(enhancement_lines),
-        title="Enhancement Commands",
-        border_style="cyan",
-        padding=(1, 2),
+    enhancement_header = (
+        COMMANDS_INIT_YAML.get("messages", {}).get("enhancements", {}).get("header", "")
     )
-    console.print()
-    console.print(enhancements_panel)
+    enhancement_items = (
+        COMMANDS_INIT_YAML.get("messages", {}).get("enhancements", {}).get("items", [])
+    )
+
+    if enhancement_header and enhancement_items:
+        enhancement_lines = [
+            enhancement_header,
+            "",
+        ]
+        enhancement_lines.extend(enhancement_items)
+
+        enhancements_panel = Panel(
+            "\n".join(enhancement_lines),
+            title="Enhancement Commands",
+            border_style="cyan",
+            padding=(1, 2),
+        )
+        console.print()
+        console.print(enhancements_panel)

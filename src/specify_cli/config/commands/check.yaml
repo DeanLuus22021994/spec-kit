@@ -10,3 +10,13 @@ options:
     flags: ["--verbose"]
     type: boolean
     help: "Show detailed paths of found tools"
+
+messages:
+  checking_header: "[bold]Checking for installed tools...[/bold]\n"
+  tracker_title: "Check Available Tools"
+  git_label: "Git version control"
+  ide_skip: "IDE-based, no CLI check"
+  success: "\n[bold green]Specify CLI is ready to use![/bold green]"
+  tips:
+    git: "[dim]Tip: Install git for repository management[/dim]"
+    ai: "[dim]Tip: Install an AI assistant for the best experience[/dim]"

@@ -46,42 +46,42 @@ uvx --from git+https://github.com/github/spec-kit.git specify init <PROJECT_NAME
 
 ### 2. Establish project principles
 
-Use the **`/constitution`** command to create your project's governing principles and development guidelines that will guide all subsequent development.
+Use the **`/speckit.constitution`** command to create your project's governing principles and development guidelines that will guide all subsequent development.
 
 ```bash
-/constitution Create principles focused on code quality, testing standards, user experience consistency, and performance requirements
+/speckit.constitution Create principles focused on code quality, testing standards, user experience consistency, and performance requirements
 ```
 
 ### 3. Create the spec
 
-Use the **`/specify`** command to describe what you want to build. Focus on the **what** and **why**, not the tech stack.
+Use the **`/speckit.specify`** command to describe what you want to build. Focus on the **what** and **why**, not the tech stack.
 
 ```bash
-/specify Build an application that can help me organize my photos in separate photo albums. Albums are grouped by date and can be re-organized by dragging and dropping on the main page. Albums are never in other nested albums. Within each album, photos are previewed in a tile-like interface.
+/speckit.specify Build an application that can help me organize my photos in separate photo albums. Albums are grouped by date and can be re-organized by dragging and dropping on the main page. Albums are never in other nested albums. Within each album, photos are previewed in a tile-like interface.
 ```
 
 ### 4. Create a technical implementation plan
 
-Use the **`/plan`** command to provide your tech stack and architecture choices.
+Use the **`/speckit.plan`** command to provide your tech stack and architecture choices.
 
 ```bash
-/plan The application uses Vite with minimal number of libraries. Use vanilla HTML, CSS, and JavaScript as much as possible. Images are not uploaded anywhere and metadata is stored in a local SQLite database.
+/speckit.plan The application uses Vite with minimal number of libraries. Use vanilla HTML, CSS, and JavaScript as much as possible. Images are not uploaded anywhere and metadata is stored in a local SQLite database.
 ```
 
 ### 5. Break down into tasks
 
-Use **`/tasks`** to create an actionable task list from your implementation plan.
+Use **`/speckit.tasks`** to create an actionable task list from your implementation plan.
 
 ```bash
-/tasks
+/speckit.tasks
 ```
 
 ### 6. Execute implementation
 
-Use **`/implement`** to execute all tasks and build your feature according to the plan.
+Use **`/speckit.implement`** to execute all tasks and build your feature according to the plan.
 
 ```bash
-/implement
+/speckit.implement
 ```
 
 For detailed step-by-step instructions, see our [comprehensive guide](./spec-driven.md).
@@ -155,13 +155,13 @@ specify check
 
 After running `specify init`, your AI coding agent will have access to these slash commands for structured development:
 
-| Command         | Description                                                              |
-| --------------- | ------------------------------------------------------------------------ |
-| `/constitution` | Create or update project governing principles and development guidelines |
-| `/specify`      | Define what you want to build (requirements and user stories)            |
-| `/plan`         | Create technical implementation plans with your chosen tech stack        |
-| `/tasks`        | Generate actionable task lists for implementation                        |
-| `/implement`    | Execute all tasks to build the feature according to the plan             |
+| Command | Description |
+| ------- | ----------- |
+| `/speckit.constitution` | Create or update project governing principles and development guidelines |
+| `/speckit.specify` | Define what you want to build (requirements and user stories) |
+| `/speckit.plan` | Create technical implementation plans with your chosen tech stack |
+| `/speckit.tasks` | Generate actionable task lists for implementation |
+| `/speckit.implement` | Execute all tasks to build the feature according to the plan |
 
 ## 📚 Core philosophy
 
@@ -209,10 +209,24 @@ Our research and experimentation focus on:
 ## 🔧 Prerequisites
 
 - **Linux/macOS** (or WSL2 on Windows)
-- AI coding agent: [Claude Code](https://www.anthropic.com/claude-code), [GitHub Copilot](https://code.visualstudio.com/), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Cursor](https://cursor.sh/), [Qwen CLI](https://github.com/QwenLM/qwen-code), [opencode](https://opencode.ai/), [Codex CLI](https://github.com/openai/codex), or [Windsurf](https://windsurf.com/)
 - [uv](https://docs.astral.sh/uv/) for package management
 - [Python 3.11+](https://www.python.org/downloads/)
 - [Git](https://git-scm.com/downloads)
+
+### Supported AI Agents
+
+| Agent | Type | Website |
+|-------|------|---------|
+| **Claude Code** | CLI | [anthropic.com](https://www.anthropic.com/claude-code) |
+| **GitHub Copilot** | IDE | [github.com](https://github.com/features/copilot) |
+| **Gemini CLI** | CLI | [github.com](https://github.com/google-gemini/gemini-cli) |
+| **Cursor** | CLI | [cursor.sh](https://cursor.sh/) |
+| **Qwen Code** | CLI | [github.com](https://github.com/QwenLM/qwen-code) |
+| **opencode** | CLI | [opencode.ai](https://opencode.ai/) |
+| **Codex CLI** | CLI | [github.com](https://github.com/openai/codex) |
+| **Windsurf** | IDE | [windsurf.com](https://windsurf.com/) |
+| **CodeBuddy** | CLI | [codebuddy.ai](https://codebuddy.ai/) |
+| **Amazon Q** | CLI | [aws.amazon.com](https://aws.amazon.com/q/developer/) |
 
 ## 📖 Learn more
 
@@ -269,19 +283,19 @@ Go to the project folder and run your AI agent. In our example, we're using `cla
 
 ![Bootstrapping Claude Code environment](./media/bootstrap-claude-code.gif)
 
-You will know that things are configured correctly if you see the `/constitution`, `/specify`, `/plan`, `/tasks`, and `/implement` commands available.
+You will know that things are configured correctly if you see the `/speckit.constitution`, `/speckit.specify`, `/speckit.plan`, `/speckit.tasks`, and `/speckit.implement` commands available.
 
-The first step should be establishing your project's governing principles using the `/constitution` command. This helps ensure consistent decision-making throughout all subsequent development phases:
+The first step should be establishing your project's governing principles using the `/speckit.constitution` command. This helps ensure consistent decision-making throughout all subsequent development phases:
 
 ```text
-/constitution Create principles focused on code quality, testing standards, user experience consistency, and performance requirements. Include governance for how these principles should guide technical decisions and implementation choices.
+/speckit.constitution Create principles focused on code quality, testing standards, user experience consistency, and performance requirements. Include governance for how these principles should guide technical decisions and implementation choices.
 ```
 
 This step creates or updates the `/memory/constitution.md` file with your project's foundational guidelines that the AI agent will reference during specification, planning, and implementation phases.
 
 ### **STEP 2:** Create project specifications
 
-With your project principles established, you can now create the functional specifications. Use the `/specify` command and then provide the concrete requirements for the project you want to develop.
+With your project principles established, you can now create the functional specifications. Use the `/speckit.specify` command and then provide the concrete requirements for the project you want to develop.
 
 > [!IMPORTANT]
 > Be as explicit as possible about _what_ you are trying to build and _why_. **Do not focus on the tech stack at this point**.
@@ -357,7 +371,7 @@ It's important to use the interaction with Claude Code as an opportunity to clar
 
 ### **STEP 4:** Generate a plan
 
-You can now be specific about the tech stack and other technical requirements. You can use the `/plan` command that is built into the project template with a prompt like this:
+You can now be specific about the tech stack and other technical requirements. You can use the `/speckit.plan` command that is built into the project template with a prompt like this:
 
 ```text
 We are going to generate this using .NET Aspire, using Postgres as the database. The frontend should use
@@ -441,13 +455,13 @@ You can also ask Claude Code (if you have the [GitHub CLI](https://docs.github.c
 
 ### STEP 6: Implementation
 
-Once ready, use the `/implement` command to execute your implementation plan:
+Once ready, use the `/speckit.implement` command to execute your implementation plan:
 
 ```text
-/implement
+/speckit.implement
 ```
 
-The `/implement` command will:
+The `/speckit.implement` command will:
 
 - Validate that all prerequisites are in place (constitution, spec, plan, and tasks)
 - Parse the task breakdown from `tasks.md`

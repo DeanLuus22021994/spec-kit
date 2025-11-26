@@ -105,7 +105,7 @@ to be doing that are obvious from reading this. Because I don't know if there's 
 Finally, implement the solution:
 
 ```text
-implement specs/002-create-taskify/plan.md
+/speckit.implement
 ```
 
 ## Key Principles

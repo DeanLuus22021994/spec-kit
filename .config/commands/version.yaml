@@ -1,3 +1,0 @@
-name: version
-handler: specify_cli.commands.version:version
-help: "Show version information."

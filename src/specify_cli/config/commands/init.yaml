@@ -63,3 +63,20 @@ options:
     flags: ["--github-token"]
     type: string
     help: "GitHub token to use for API requests (or set GH_TOKEN or GITHUB_TOKEN environment variable)"
+
+messages:
+  next_steps:
+    header: "Start using slash commands with your AI agent:"
+    items:
+      - "2.1 [cyan]/speckit.constitution[/] - Establish project principles"
+      - "2.2 [cyan]/speckit.specify[/] - Create baseline specification"
+      - "2.3 [cyan]/speckit.plan[/] - Create implementation plan"
+      - "2.4 [cyan]/speckit.tasks[/] - Generate actionable tasks"
+      - "2.5 [cyan]/speckit.implement[/] - Execute implementation"
+
+  enhancements:
+    header: "Optional commands that you can use for your specs [bright_black](improve quality & confidence)[/bright_black]"
+    items:
+      - "○ [cyan]/speckit.clarify[/] [bright_black](optional)[/bright_black] - Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/speckit.plan[/] if used)"
+      - "○ [cyan]/speckit.analyze[/] [bright_black](optional)[/bright_black] - Cross-artifact consistency & alignment report (after [cyan]/speckit.tasks[/], before [cyan]/speckit.implement[/])"
+      - "○ [cyan]/speckit.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/speckit.plan[/])"

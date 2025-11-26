@@ -1,3 +1,5 @@
 name: version
 handler: specify_cli.commands.version:version
 help: "Show version information."
+messages:
+  output_format: "Specify CLI version: [bold cyan]{version}[/bold cyan]"
