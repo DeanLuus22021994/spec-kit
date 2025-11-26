@@ -12,7 +12,7 @@ The Backend API is an ASP.NET Core Web API service that provides the primary RES
 ## Project Structure
 
 ```
-src/backend/
+src/virtual/src/backend/
 ├── Controllers/          # API endpoints
 ├── Models/              # Data transfer objects
 ├── Services/            # Business logic services
@@ -65,10 +65,10 @@ The API uses the following configuration hierarchy:
 
 ```bash
 # Build the project
-dotnet build src/backend/backend.csproj
+dotnet build src/virtual/src/backend/backend.csproj
 
 # Run locally
-dotnet run --project src/backend/backend.csproj
+dotnet run --project src/virtual/src/backend/backend.csproj
 ```
 
 ### Running in Docker
