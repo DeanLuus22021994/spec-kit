@@ -4,9 +4,22 @@
 
 FROM registry:2.8.3
 
-LABEL maintainer="Semantic Kernel Team"
-LABEL description="Local Docker registry with caching and garbage collection"
-LABEL version="1.0.0"
+# Standard Build Arguments
+ARG VERSION=latest
+ARG BUILD_DATE
+ARG BUILDKIT_INLINE_CACHE=1
+ARG DOCKER_BUILDKIT=1
+
+# OCI Labels
+LABEL org.opencontainers.image.title="spec-kit-registry"
+LABEL org.opencontainers.image.description="Local Docker registry with caching and garbage collection"
+LABEL org.opencontainers.image.source="https://github.com/github/spec-kit"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.vendor="GitHub"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL cache.version="1.0"
+LABEL performance.optimized="true"
 
 # Install additional tools for maintenance
 USER root
@@ -26,9 +39,9 @@ RUN mkdir -p /var/lib/registry \
     && mkdir -p /etc/docker/registry \
     && mkdir -p /var/log/registry
 
-# Copy configuration files
-COPY .config/docker/registry/config.yml /etc/docker/registry/config.yml
-COPY .config/docker/registry/gc-config.yml /etc/docker/registry/gc-config.yml
+# Copy configuration files (baked in from .config)
+COPY docker/.config/docker/registry/config.yml /etc/docker/registry/config.yml
+COPY docker/.config/docker/registry/gc-config.yml /etc/docker/registry/gc-config.yml
 
 # Set proper permissions (use numeric IDs to avoid user lookup issues)
 RUN chown -R 1000:1000 /var/lib/registry \
