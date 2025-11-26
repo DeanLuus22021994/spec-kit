@@ -121,26 +121,38 @@ class SubagentConfig:
         if config_path is None:
             config_path = base_path / "subagent-config.yml"
 
-        # Load base config
-        if not config_path.exists():
-            cls._config = cls._get_defaults()
-        else:
-            with open(config_path, encoding="utf-8") as f:
-                cls._config = yaml.safe_load(f) or {}
+        yaml_content = []
 
-        # Load decomposed definitions
+        # Load base config content
+        if config_path.exists():
+            try:
+                with open(config_path, encoding="utf-8") as f:
+                    yaml_content.append(f.read())
+            except Exception as e:  # pylint: disable=broad-except
+                print(f"Warning: Failed to load base config {config_path}: {e}")
+
+        # Load decomposed definitions content
         definitions_dir = base_path / "definitions"
         if definitions_dir.exists():
-            for def_file in definitions_dir.glob("*.yml"):
+            # Sort files to ensure consistent order (important for anchors)
+            for def_file in sorted(definitions_dir.glob("*.yml")):
                 try:
                     with open(def_file, encoding="utf-8") as f:
-                        partial_config = yaml.safe_load(f) or {}
-                        # Deep merge or top-level update?
-                        # For now, top-level update is sufficient as files are distinct sections
-                        cls._config.update(partial_config)
+                        yaml_content.append(f.read())
                 except Exception as e:  # pylint: disable=broad-except
-                    # Log warning but continue? We don't have logger here yet.
                     print(f"Warning: Failed to load definition {def_file}: {e}")
+
+        if not yaml_content:
+            cls._config = cls._get_defaults()
+        else:
+            # Concatenate all YAML content and load as a single stream
+            # This enables cross-file anchors/aliases
+            full_yaml = "\n".join(yaml_content)
+            try:
+                cls._config = yaml.safe_load(full_yaml) or {}
+            except yaml.YAMLError as e:
+                print(f"Error parsing combined YAML configuration: {e}")
+                cls._config = cls._get_defaults()
 
         cls.validate(cls._config)
         return cls._config

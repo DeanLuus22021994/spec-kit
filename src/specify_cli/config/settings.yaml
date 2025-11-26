@@ -1,3 +1,19 @@
+_definitions:
+  telemetry_defaults: &telemetry_defaults
+    enabled: false
+    provider: "opentelemetry"
+    endpoint: "http://localhost:4318"
+    sampling_ratio: 1.0
+
+  performance_defaults: &performance_defaults
+    concurrency:
+      max_workers: 4
+      network_timeout: 30
+    caching:
+      enabled: true
+      ttl_seconds: 3600
+      directory: ".specify/cache"
+
 cli:
   banner_text: |
     ███████╗██████╗ ███████╗ ██████╗██╗███████╗██╗   ██╗
@@ -17,20 +33,10 @@ features:
     new_parser: true
 
 telemetry:
-  enabled: false
-  provider: "opentelemetry"
-  endpoint: "http://localhost:4318"
-  sampling_ratio: 1.0
+  <<: *telemetry_defaults
   service_name: "specify-cli"
 
-performance:
-  concurrency:
-    max_workers: 4
-    network_timeout: 30
-  caching:
-    enabled: true
-    ttl_seconds: 3600
-    directory: ".specify/cache"
+performance: *performance_defaults
 
 security:
   secret_patterns:

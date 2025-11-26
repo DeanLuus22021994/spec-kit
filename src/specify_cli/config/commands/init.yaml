@@ -1,3 +1,12 @@
+_definitions:
+  options:
+    boolean_flag: &bool_flag
+      type: boolean
+      required: false
+    string_flag: &str_flag
+      type: string
+      required: false
+
 name: init
 handler: specify_cli.commands.init:init
 help: "Initialize a new Specify project from the latest template."
@@ -29,39 +38,39 @@ arguments:
 options:
   - name: ai_assistant
     flags: ["--ai"]
-    type: string
+    <<: *str_flag
     help: "AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, or q"
   - name: script_type
     flags: ["--script"]
-    type: string
+    <<: *str_flag
     help: "Script type to use: sh or ps"
   - name: ignore_agent_tools
     flags: ["--ignore-agent-tools"]
-    type: boolean
+    <<: *bool_flag
     help: "Skip checks for AI agent tools like Claude Code"
   - name: no_git
     flags: ["--no-git"]
-    type: boolean
+    <<: *bool_flag
     help: "Skip git repository initialization"
   - name: here
     flags: ["--here"]
-    type: boolean
+    <<: *bool_flag
     help: "Initialize project in the current directory instead of creating a new one"
   - name: force
     flags: ["--force"]
-    type: boolean
+    <<: *bool_flag
     help: "Force merge/overwrite when using --here (skip confirmation)"
   - name: skip_tls
     flags: ["--skip-tls"]
-    type: boolean
+    <<: *bool_flag
     help: "Skip SSL/TLS verification (not recommended)"
   - name: debug
     flags: ["--debug"]
-    type: boolean
+    <<: *bool_flag
     help: "Show verbose diagnostic output for network and extraction failures"
   - name: github_token
     flags: ["--github-token"]
-    type: string
+    <<: *str_flag
     help: "GitHub token to use for API requests (or set GH_TOKEN or GITHUB_TOKEN environment variable)"
 
 messages:

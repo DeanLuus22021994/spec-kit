@@ -1,5 +1,9 @@
+_definitions:
+  messages:
+    version_fmt: &ver_fmt "Specify CLI version: [bold cyan]{version}[/bold cyan]"
+
 name: version
 handler: specify_cli.commands.version:version
 help: "Show version information."
 messages:
-  output_format: "Specify CLI version: [bold cyan]{version}[/bold cyan]"
+  output_format: *ver_fmt

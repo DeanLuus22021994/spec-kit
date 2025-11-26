@@ -25,6 +25,7 @@ xml_templates:
         <workspace_root>{{workspace_root}}</workspace_root>
         <target_files>{{target_files}}</target_files>
         <validation_profile>{{profile}}</validation_profile>
+        <feature_description>{{feature_description}}</feature_description>
       </context>
       <objectives>
         <primary>Validate files against profile rules</primary>
@@ -73,6 +74,7 @@ xml_templates:
         <operation>{{operation}}</operation>
         <pattern>{{pattern}}</pattern>
         <replacement>{{replacement}}</replacement>
+        <feature_description>{{feature_description}}</feature_description>
       </context>
       <objectives>
         <primary>Apply batch edits across files</primary>

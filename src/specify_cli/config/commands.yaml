@@ -1,3 +1,8 @@
+_definitions:
+  command_lists:
+    core: &core_cmds ["init", "check", "version"]
+    agents: &agent_cmds ["specify", "plan", "tasks", "implement"]
+
 commands:
   - !include commands/init.yaml
   - !include commands/check.yaml
@@ -6,10 +11,10 @@ commands:
 groups:
   project_management:
     name: "Project Management"
-    commands: ["init", "check", "version"]
+    commands: *core_cmds
   ai_agents:
     name: "AI Agents"
-    commands: ["specify", "plan", "tasks", "implement"]
+    commands: *agent_cmds
 
 aliases:
   i: "init"

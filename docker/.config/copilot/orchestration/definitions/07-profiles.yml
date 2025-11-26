@@ -1,31 +1,31 @@
 # Profiles for different execution contexts
 profiles:
   development:
-    max_parallel_agents: 8 # Increased for dev
-    timeout_seconds: 60
-    retry_attempts: 5
+    <<: *performance_targets
+    max_parallel_agents: 8 # Override: Reduced for dev
+    timeout_seconds: 60 # Override: Longer timeout
+    retry_attempts: 5 # Override: More retries
     verbose_logging: true
-    target_utilization: 0.80
-    safety_overhead: 0.05
-    effective_utilization: 0.75
-    batch_size: 10
+    batch_size: 10 # Override
 
   ci_cd:
-    max_parallel_agents: 16 # High parallelism for CI
-    timeout_seconds: 30
-    retry_attempts: 2
+    <<: *performance_targets
+    # Inherits max_parallel_agents: 16
+    # Inherits timeout_seconds: 30
+    retry_attempts: 2 # Override
     fail_fast: true
-    target_utilization: 0.90
-    safety_overhead: 0.02
-    effective_utilization: 0.88
-    batch_size: 20
+    target_utilization: 0.90 # Override
+    safety_overhead: 0.02 # Override
+    effective_utilization: 0.88 # Override
+    # Inherits batch_size: 20
 
   production:
-    max_parallel_agents: 12
-    timeout_seconds: 45
-    retry_attempts: 3
+    <<: *performance_targets
+    max_parallel_agents: 12 # Override
+    timeout_seconds: 45 # Override
+    # Inherits retry_attempts: 3
     circuit_breaker: true
-    target_utilization: 0.70
-    safety_overhead: 0.10
-    effective_utilization: 0.60
-    batch_size: 15
+    target_utilization: 0.70 # Override
+    safety_overhead: 0.10 # Override
+    effective_utilization: 0.60 # Override
+    batch_size: 15 # Override

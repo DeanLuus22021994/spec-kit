@@ -1,14 +1,20 @@
+_definitions:
+  options:
+    boolean_flag: &bool_flag
+      type: boolean
+      required: false
+
 name: check
 handler: specify_cli.commands.check:check
 help: "Check that all required tools are installed."
 options:
   - name: json_output
     flags: ["--json"]
-    type: boolean
+    <<: *bool_flag
     help: "Output results as JSON"
   - name: verbose
     flags: ["--verbose"]
-    type: boolean
+    <<: *bool_flag
     help: "Show detailed paths of found tools"
 
 messages:
