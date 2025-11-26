@@ -29,9 +29,6 @@ services:
       - RUN_MODE=local
       - LABEL_SELECTOR=${LABEL_SELECTOR:-}
     volumes:
-      # Mount source code for analysis (read-only)
-      - tools-workspace:/app:ro
-
       # Named volumes for validation reports (persistent)
       - validation-reports:/app/tools/.config/validation/reports
 
