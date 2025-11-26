@@ -62,6 +62,7 @@ services:
     container_name: semantic-kernel-app-validation
     depends_on:
       - tools
+    privileged: true
     volumes:
       # Override workspace mount to use parent directory
       - ..:/workspace:ro
