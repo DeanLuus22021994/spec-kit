@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ErrorInfo, ReactNode } from "react";
 import { Container, Header, Icon, Message, Segment } from "semantic-ui-react";
 
 interface ErrorBoundaryProps {

@@ -121,7 +121,7 @@ storage:
 gpu:
   device:
     name: "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
-    index: 0
+    index: "0"
     architecture: "Ampere"
     compute_capability: "8.6"
 
