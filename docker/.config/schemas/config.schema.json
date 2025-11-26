@@ -72,6 +72,34 @@
         "^[a-zA-Z0-9_-]+$": { "$ref": "definitions/toggles.schema.json#/definitions/profile" }
       }
     },
+    "subagent_tasks": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "properties": {
+            "description": { "type": "string" },
+            "parallel_calls": { "type": "array", "items": { "type": "string" } },
+            "context_required": { "type": "boolean" }
+          },
+          "required": ["description", "parallel_calls"]
+        }
+      }
+    },
+    "execution_profiles": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "properties": {
+            "tasks": { "type": "array", "items": { "type": "string" } },
+            "max_parallel": { "type": "integer" },
+            "timeout_seconds": { "type": "integer" }
+          },
+          "required": ["tasks"]
+        }
+      }
+    },
     "env_template": { "type": "string" },
     "quick_reference": { "type": "object" },
 
