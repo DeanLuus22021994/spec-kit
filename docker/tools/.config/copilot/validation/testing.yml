@@ -1,0 +1,490 @@
+metadata: &metadata
+  name: "validation-testing-guide"
+  description: "Testing guide and best practices for YAML validation framework"
+  version: "2.0.0"
+  category: "validation-testing"
+  updated: "2025-11-25"
+
+<<: *metadata
+
+overview: |
+  This guide covers the test harness infrastructure, writing test fixtures, running tests,
+  CI/CD integration, and troubleshooting test failures for the YAML validation framework.
+
+test_harness:
+  architecture:
+    description: "Modular test harness for validating rules in isolation"
+    components:
+      - runner: "Test execution orchestration"
+      - fixtures: "Sample YAML files for testing"
+      - assertions: "Validation result assertions"
+    location: "tools/.config/validation/test-harness/"
+
+  modules:
+    runner:
+      file: "runner.py"
+      purpose: "Execute validation tests against fixtures"
+      capabilities:
+        - "Load test fixtures from directories"
+        - "Run validation rules against fixtures"
+        - "Collect and report test results"
+        - "Support parallel test execution"
+      usage: |
+        from test_harness.runner import TestRunner
+
+        runner = TestRunner()
+        results = runner.run_tests('packages/metadata')
+        assert results.all_passed()
+
+    fixtures:
+      file: "fixtures.py"
+      purpose: "Generate and manage test fixtures"
+      capabilities:
+        - "Create positive test cases (valid YAML)"
+        - "Create negative test cases (invalid YAML)"
+        - "Template-based fixture generation"
+        - "Fixture validation"
+      usage: |
+        from test_harness.fixtures import FixtureGenerator
+
+        gen = FixtureGenerator()
+        gen.create_positive_fixture('metadata-valid.yml')
+        gen.create_negative_fixture('metadata-invalid.yml')
+
+    assertions:
+      file: "assertions.py"
+      purpose: "Custom assertions for validation results"
+      capabilities:
+        - "Assert rule violations detected"
+        - "Assert no violations for valid input"
+        - "Assert specific violation messages"
+        - "Assert violation counts"
+      usage: |
+        from test_harness.assertions import ValidationAssertions
+
+        assert_violations(result, expected_count=1)
+        assert_no_violations(result)
+        assert_violation_message(result, 'Missing metadata')
+
+test_fixtures:
+  structure:
+    description: "Organized test fixtures for each package and rule"
+    directory_layout: |
+      tools/.config/validation/test-harness/fixtures/
+      ├── metadata/
+      │   ├── valid/
+      │   │   ├── basic-metadata.yml
+      │   │   ├── with-anchors.yml
+      │   │   └── complete-metadata.yml
+      │   └── invalid/
+      │       ├── missing-fields.yml
+      │       ├── invalid-version.yml
+      │       └── bad-anchors.yml
+      ├── syntax/
+      │   ├── valid/
+      │   │   ├── proper-indentation.yml
+      │   │   ├── consistent-quoting.yml
+      │   │   └── multiline-strings.yml
+      │   └── invalid/
+      │       ├── mixed-indentation.yml
+      │       ├── wrong-quotes.yml
+      │       └── bad-multiline.yml
+      └── [other packages...]
+
+  naming_conventions:
+    valid_fixtures: "descriptive-name.yml (what pattern is valid)"
+    invalid_fixtures: "violation-type.yml (what rule is violated)"
+    examples:
+      - "metadata-complete.yml (valid)"
+      - "metadata-missing-version.yml (invalid)"
+      - "syntax-consistent-indent.yml (valid)"
+      - "syntax-mixed-indent.yml (invalid)"
+
+  fixture_templates:
+    positive_test: |
+      # Positive test fixture: metadata-valid-complete.yml
+      # Tests: metadata-block-structure, metadata-required-fields
+      # Expected: No violations
+
+      metadata: &metadata
+        name: "test-fixture"
+        description: "Complete valid metadata block"
+        version: "1.0.0"
+        category: "test"
+        updated: "2025-11-25"
+        maintainer: "Test Team"
+
+      <<: *metadata
+
+      content:
+        key: "value"
+
+    negative_test: |
+      # Negative test fixture: metadata-missing-required.yml
+      # Tests: metadata-required-fields
+      # Expected: 3 violations (missing name, description, version)
+
+      metadata: &metadata
+        category: "test"
+        updated: "2025-11-25"
+
+      <<: *metadata
+
+      content:
+        key: "value"
+
+writing_tests:
+  test_structure:
+    description: "Standard structure for validation rule tests"
+    template: |
+      import pytest
+      from test_harness.runner import TestRunner
+      from test_harness.assertions import *
+
+      class TestMetadataRules:
+          @pytest.fixture
+          def runner(self):
+              return TestRunner(package='metadata')
+
+          def test_valid_metadata_passes(self, runner):
+              result = runner.run_fixture('valid/basic-metadata.yml')
+              assert_no_violations(result)
+
+          def test_missing_fields_detected(self, runner):
+              result = runner.run_fixture('invalid/missing-fields.yml')
+              assert_violations(result, expected_count=3)
+              assert_violation_contains(result, 'Missing required field')
+
+          def test_invalid_version_format(self, runner):
+              result = runner.run_fixture('invalid/invalid-version.yml')
+              assert_violations(result, expected_count=1)
+              assert_violation_rule(result, 'metadata-version-format')
+
+  test_organization:
+    by_package: |
+      # Test file per package
+      tests/validation/test_metadata_package.py
+      tests/validation/test_syntax_package.py
+      tests/validation/test_structure_package.py
+
+    by_rule_group: |
+      # Test file per rule group
+      tests/validation/metadata/test_anchor_rules.py
+      tests/validation/syntax/test_indentation_rules.py
+      tests/validation/syntax/test_quoting_rules.py
+
+  best_practices:
+    - "One fixture file per test scenario"
+    - "Clear naming that describes what's tested"
+    - "Include comments explaining expected violations"
+    - "Test both positive and negative cases"
+    - "Use parametrized tests for similar scenarios"
+    - "Keep fixtures minimal and focused"
+
+running_tests:
+  local_execution:
+    pytest_commands:
+      all_tests: "pytest tools/.config/validation/test-harness/"
+      specific_package: "pytest tools/.config/validation/test-harness/test_metadata.py"
+      specific_test: "pytest tools/.config/validation/test-harness/test_metadata.py::test_valid_metadata"
+      with_coverage: "pytest --cov=tools/.config/validation --cov-report=html"
+      verbose: "pytest -v tools/.config/validation/test-harness/"
+      markers: "pytest -m 'mandatory' tools/.config/validation/test-harness/"
+
+    docker_commands:
+      standard: |
+        docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+          pytest tools/.config/validation/test-harness/
+
+      with_coverage: |
+        docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+          pytest --cov=tools/.config/validation --cov-report=html \
+          tools/.config/validation/test-harness/
+
+      specific_package: |
+        docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+          pytest tools/.config/validation/test-harness/test_metadata.py
+
+  vscode_tasks:
+    test_all: |
+      {
+        "label": "Test Validation Rules",
+        "type": "shell",
+        "command": "docker run --rm -v ${workspaceFolder}:/workspace semantic-kernel-tools:latest pytest tools/.config/validation/test-harness/",
+        "group": "test"
+      }
+
+    test_package: |
+      {
+        "label": "Test Validation Package",
+        "type": "shell",
+        "command": "docker run --rm -v ${workspaceFolder}:/workspace semantic-kernel-tools:latest pytest tools/.config/validation/test-harness/test_${input:package}.py",
+        "group": "test"
+      }
+
+  continuous_testing:
+    watch_mode: |
+      # Install pytest-watch
+      pip install pytest-watch
+
+      # Run tests in watch mode
+      ptw tools/.config/validation/test-harness/ --runner "pytest -v"
+
+    pre_commit: |
+      # Add to .pre-commit-config.yaml
+      - repo: local
+        hooks:
+          - id: test-validation-rules
+            name: Test Validation Rules
+            entry: pytest tools/.config/validation/test-harness/
+            language: python
+            pass_filenames: false
+
+ci_cd_integration:
+  github_actions:
+    workflow_file: ".github/workflows/validation-tests.yml"
+    workflow_content: |
+      name: Validation Tests
+
+      on: [push, pull_request]
+
+      jobs:
+        test:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v3
+
+            - name: Build tools container
+              run: docker-compose -f docker-compose.tools.yml build
+
+            - name: Run validation tests
+              run: |
+                docker run --rm -v $PWD:/workspace semantic-kernel-tools:latest \
+                  pytest --cov=tools/.config/validation \
+                  --cov-report=xml \
+                  --cov-report=html \
+                  tools/.config/validation/test-harness/
+
+            - name: Upload coverage
+              uses: codecov/codecov-action@v3
+              with:
+                files: ./coverage.xml
+
+            - name: Check coverage threshold
+              run: |
+                docker run --rm -v $PWD:/workspace semantic-kernel-tools:latest \
+                  python -m coverage report --fail-under=80
+
+  quality_gates:
+    coverage_threshold: "80% minimum coverage required"
+    test_pass_rate: "100% tests must pass"
+    performance_threshold: "Tests must complete within 5 minutes"
+
+    enforcement: |
+      # In GitHub Actions
+      - name: Enforce quality gates
+        run: |
+          pytest tools/.config/validation/test-harness/ || exit 1
+          coverage report --fail-under=80 || exit 1
+
+test_coverage:
+  current_status:
+    overall_coverage: "92%"
+    package_coverage:
+      metadata: "95%"
+      syntax: "90%"
+      structure: "93%"
+      mta: "88%"
+      quality: "94%"
+      vscode: "85%"
+
+  coverage_goals:
+    target: "95% overall coverage"
+    mandatory_rules: "100% coverage"
+    optional_rules: "90% coverage"
+    edge_cases: "80% coverage"
+
+  gap_analysis:
+    uncovered_areas:
+      - "Complex XPath expressions in MTA rules"
+      - "Edge cases in multiline string handling"
+      - "Advanced anchor reference patterns"
+
+    improvement_plan:
+      - "Add fixtures for complex XPath scenarios"
+      - "Test all multiline string edge cases"
+      - "Cover circular anchor references"
+
+assertions_reference:
+  basic_assertions:
+    assert_no_violations: |
+      assert_no_violations(result)
+      # Asserts that validation result has zero violations
+
+    assert_violations: |
+      assert_violations(result, expected_count=3)
+      # Asserts specific number of violations detected
+
+    assert_violation_contains: |
+      assert_violation_contains(result, 'Missing required field')
+      # Asserts violation message contains specific text
+
+  advanced_assertions:
+    assert_violation_rule: |
+      assert_violation_rule(result, 'metadata-required-fields')
+      # Asserts specific rule was violated
+
+    assert_violation_line: |
+      assert_violation_line(result, line_number=5)
+      # Asserts violation on specific line
+
+    assert_violation_severity: |
+      assert_violation_severity(result, severity='error')
+      # Asserts violation severity level
+
+  custom_assertions:
+    example: |
+      def assert_metadata_complete(result):
+          """Custom assertion for complete metadata validation"""
+          assert_no_violations(result)
+          assert result.metadata_present
+          assert result.all_required_fields_present
+
+troubleshooting:
+  common_issues:
+    test_failures:
+      symptom: "Tests fail unexpectedly"
+      causes:
+        - "Fixture format incorrect"
+        - "Rule definition changed"
+        - "Test assertion too strict"
+      solutions:
+        - "Validate fixture YAML syntax"
+        - "Check rule version compatibility"
+        - "Review and update assertions"
+
+    fixture_errors:
+      symptom: "Fixtures not loading properly"
+      causes:
+        - "File path incorrect"
+        - "YAML syntax errors"
+        - "Missing test markers"
+      solutions:
+        - "Verify fixture file paths"
+        - "Validate YAML with yamllint"
+        - "Add proper test markers"
+
+    coverage_gaps:
+      symptom: "Coverage below threshold"
+      causes:
+        - "Missing test cases"
+        - "Untested edge cases"
+        - "Dead code in validation logic"
+      solutions:
+        - "Identify untested code paths"
+        - "Add edge case fixtures"
+        - "Remove or test dead code"
+
+  debugging_tests:
+    verbose_output: |
+      pytest -v -s tools/.config/validation/test-harness/
+      # Show detailed test output
+
+    debug_mode: |
+      pytest --pdb tools/.config/validation/test-harness/
+      # Drop into debugger on failure
+
+    specific_test: |
+      pytest -k "test_metadata" tools/.config/validation/test-harness/
+      # Run tests matching pattern
+
+  validation_issues:
+    rule_not_triggering:
+      check:
+        - "Verify XPath/pattern is correct"
+        - "Check fixture has expected structure"
+        - "Ensure rule is in active ruleset"
+      debug: |
+        # Add debug logging to rule
+        print(f"Checking rule: {rule_id}")
+        print(f"XPath: {xpath_expression}")
+        print(f"Matches: {matches}")
+
+    false_positives:
+      check:
+        - "Review rule XPath precision"
+        - "Check for edge cases in rule logic"
+        - "Validate fixture represents real scenario"
+      fix: |
+        # Refine XPath to be more specific
+        # Add conditions to rule 'when' clause
+        # Update test expectations
+
+performance_testing:
+  benchmarking:
+    setup: |
+      import pytest
+
+      @pytest.mark.benchmark
+      def test_validation_performance(benchmark):
+          result = benchmark(run_validation, 'large-file.yml')
+          assert result.execution_time < 5.0  # 5 second max
+
+    metrics:
+      - "Execution time per rule"
+      - "Memory usage during validation"
+      - "Cache hit/miss ratio"
+      - "File processing throughput"
+
+  optimization:
+    techniques:
+      - "Cache validation results"
+      - "Parallelize rule execution"
+      - "Optimize XPath expressions"
+      - "Lazy load fixtures"
+
+    targets:
+      single_file: "< 3 seconds for 1000-line YAML"
+      repository: "< 30 seconds for entire repository"
+      ci_cd: "< 5 minutes for full test suite"
+
+best_practices:
+  fixture_design:
+    - "Keep fixtures minimal and focused"
+    - "One violation per negative fixture when possible"
+    - "Use realistic YAML structures"
+    - "Document expected violations in comments"
+    - "Version control all fixtures"
+
+  test_design:
+    - "Test one concept per test function"
+    - "Use descriptive test names"
+    - "Organize tests by package/rule"
+    - "Use parametrized tests for variations"
+    - "Keep tests independent"
+
+  maintenance:
+    - "Update tests when rules change"
+    - "Review coverage reports regularly"
+    - "Refactor duplicate test code"
+    - "Archive obsolete test fixtures"
+    - "Document test patterns"
+
+resources:
+  documentation:
+    - path: "tools/.config/validation/test-harness/README.md"
+      description: "Test harness overview and usage"
+    - path: "tools/.config/validation/test-harness/fixtures/README.md"
+      description: "Fixture creation guide"
+
+  examples:
+    - path: "tools/.config/validation/test-harness/test_metadata.py"
+      description: "Example metadata package tests"
+    - path: "tools/.config/validation/test-harness/test_syntax.py"
+      description: "Example syntax package tests"
+
+  tools:
+    - "pytest: Test framework"
+    - "pytest-cov: Coverage reporting"
+    - "pytest-watch: Continuous testing"
+    - "coverage: Coverage analysis"

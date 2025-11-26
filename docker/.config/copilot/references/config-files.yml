@@ -1,0 +1,98 @@
+# Configuration Files Reference
+# Location and purpose of configuration files
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: reference
+  keywords:
+    - configuration
+    - yaml
+    - json
+    - files
+    - settings
+    - locations
+
+<<: *metadata
+
+copilot_context:
+  primary_index: .config/copilot/index.yml
+  description: Master index for AI context discovery and on-demand loading
+
+  categories:
+    workflows: .config/copilot/workflows/*.yml
+    patterns: .config/copilot/patterns/*.yml
+    standards: .config/copilot/standards/*.yml
+    references: .config/copilot/references/*.yml
+
+github:
+  copilot_instructions: ".github/copilot-instructions.md"
+  workflows: ".github/workflows/*.yml"
+
+vscode:
+  tasks: ".vscode/tasks.json"
+  settings: ".vscode/settings.json"
+  launch: ".vscode/launch.json"
+  extensions: ".vscode/extensions.json"
+  mcp_servers: ".vscode/mcp.json"
+
+project_config:
+  dotnet:
+    global: "global.json"
+    solution: "semantic-kernel-app.sln"
+    backend: "src/backend/appsettings.json"
+    tools: ".config/dotnet-tools.json"
+
+  python:
+    project: "pyproject.toml"
+    requirements: "tools/requirements.txt"
+
+  node:
+    frontend: "src/frontend/package.json"
+    tests: "tests/package.json"
+
+  docker:
+    compose: "docker-compose.yml"
+
+  editor:
+    config: ".editorconfig"
+    gitattributes: ".gitattributes"
+    gitignore: ".gitignore"
+
+  project_settings:
+    cli: ".config/cli.yml"
+    services: ".config/services.yml"
+    infrastructure: ".config/infrastructure.yml"
+    semantic_kernel: ".config/semantic-kernel.yml"
+    pr_validation: ".config/pr-validation.yml"
+    environment: ".config/environment.yml"
+    ports: ".config/ports.yml"
+    versions: ".config/versions.yml"
+
+semantic_configs:
+  embeddings: "semantic/embeddings/.config/config.yml"
+  vector: "semantic/vector/.config/config.yml"
+
+infrastructure_configs:
+  nginx: "infrastructure/nginx/nginx.conf"
+  database_init: "infrastructure/database/init.sql"
+  runner_config: "infrastructure/runner/config"
+
+documentation_configs:
+  mkdocs: "docs/mkdocs.yml"
+  table_of_contents: "docs/toc.yml"
+
+quality_configs:
+  pre_commit: ".pre-commit-config.yaml"
+  pylint_config: "pyproject.toml"
+  playwright: "tests/playwright.config.ts"
+  typescript_frontend: "src/frontend/.config/tsconfig.json"
+  typescript_tests: "tests/tsconfig.json"
+
+reports:
+  pylint_combined: "reports/pylint_report.txt"
+  pylint_tools: "reports/pylint_tools_report.txt"
+
+build_configs:
+  webpack: "src/frontend/.config/webpack.config.js"
+  vite: "src/frontend/vite.config.js (if exists)"

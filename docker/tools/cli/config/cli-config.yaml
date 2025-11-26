@@ -1,0 +1,104 @@
+---
+# CLI Configuration
+# Configuration for YAML validation CLI tool
+
+name: YAML Validation CLI
+version: 1.0.0
+description: Comprehensive YAML validation tooling
+
+# Default settings
+defaults:
+  profile: recommended
+  format: text
+  failOnError: false
+  failOnWarning: false
+
+# Profiles
+profiles:
+  minimal:
+    description: Minimal validation - only critical issues
+    enabledPackages:
+      - metadata
+    disabledRules: []
+
+  recommended:
+    description: Recommended validation for most projects
+    enabledPackages:
+      - metadata
+      - indentation
+      - quoting
+      - anchors
+    disabledRules: []
+
+  strict:
+    description: Strict validation - all rules enabled
+    enabledPackages:
+      - metadata
+      - indentation
+      - quoting
+      - anchors
+      - security
+      - performance
+      - custom
+    disabledRules: []
+
+# Output formats
+outputFormats:
+  text:
+    description: Plain text output
+    extension: .txt
+
+  json:
+    description: JSON format
+    extension: .json
+
+  yaml:
+    description: YAML format
+    extension: .yaml
+
+  html:
+    description: HTML report
+    extension: .html
+
+  markdown:
+    description: Markdown format
+    extension: .md
+
+# Test configuration
+testing:
+  fixturesDir: tools/.config/validation/test-data/fixtures
+  testPattern: "*.test.yaml"
+  mockMode: false
+
+# Scaffolding templates
+scaffolding:
+  defaultPackage: custom
+  defaultCategory: style
+  defaultEffort: 3
+  createTests: true
+  createFixtures: true
+
+# CI/CD integration
+cicd:
+  enabled: true
+  prValidation: true
+  generateBadges: true
+  slackNotifications: false
+
+# Paths
+paths:
+  rulesRoot: tools/.config/validation/packages
+  profilesRoot: tools/.config/validation/profiles
+  reportsRoot: reports/validation
+  badgesRoot: badges
+
+# Logging
+logging:
+  level: INFO
+  format: "%(levelname)s: %(message)s"
+
+# Performance
+performance:
+  parallelValidation: true
+  maxWorkers: 4
+  cacheResults: true

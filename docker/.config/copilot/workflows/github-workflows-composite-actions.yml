@@ -1,0 +1,320 @@
+# GitHub Workflows - Composite Actions
+# Reusable setup and cleanup actions for workflow optimization
+
+metadata: &metadata
+  version: "1.0.0"
+  category: workflow
+  keywords: [composite-actions, github-actions, setup, cleanup, utilities, dotnet, nodejs, docker]
+
+<<: *metadata
+
+overview: |
+  Composite actions provide reusable setup and cleanup logic for workflows.
+  These actions encapsulate common tasks like environment configuration and resource cleanup.
+  Actions are located in .github/workflows/actions/ directory.
+
+composite_actions:
+  setup_dotnet:
+    name: "Setup .NET Environment"
+    file: ".github/workflows/actions/setup-dotnet/action.yml"
+    description: "Configure .NET 10 SDK with tool restoration and verification"
+
+    inputs:
+      dotnet-version:
+        description: ".NET SDK version"
+        type: string
+        required: false
+        default: "10.0.x"
+
+      restore-tools:
+        description: "Restore .NET local tools from .config/dotnet-tools.json"
+        type: boolean
+        required: false
+        default: true
+
+    runs:
+      using: "composite"
+      steps:
+        - name: "Setup .NET SDK"
+          uses: "actions/setup-dotnet@v4"
+          with:
+            dotnet-version: "${{ inputs.dotnet-version }}"
+
+        - name: "Display .NET Info"
+          shell: "pwsh"
+          run: |
+            dotnet --version
+            dotnet --info
+
+        - name: "Restore .NET Tools"
+          condition: "inputs.restore-tools == 'true'"
+          shell: "pwsh"
+          run: "dotnet tool restore"
+
+        - name: "Verify EF Core Tools"
+          condition: "inputs.restore-tools == 'true'"
+          shell: "pwsh"
+          run: |
+            dotnet ef --version
+            dotnet tool list
+
+    usage_example: |-
+      steps:
+        - uses: ./.github/workflows/actions/setup-dotnet
+          with:
+            dotnet-version: "10.0.x"
+            restore-tools: true
+
+    benefits:
+      - "Consistent .NET setup across all workflows"
+      - "Automatic tool restoration (EF Core, etc.)"
+      - "Version verification and diagnostics"
+
+  setup_node:
+    name: "Setup Node.js Environment"
+    file: ".github/workflows/actions/setup-node/action.yml"
+    description: "Configure Node.js 20 with npm caching and configuration"
+
+    inputs:
+      node-version:
+        description: "Node.js version"
+        type: string
+        required: false
+        default: "20"
+
+      cache-dependency-path:
+        description: "Path to package-lock.json for cache key"
+        type: string
+        required: false
+        default: "src/frontend/package-lock.json"
+
+    runs:
+      using: "composite"
+      steps:
+        - name: "Setup Node.js"
+          uses: "actions/setup-node@v4"
+          with:
+            node-version: "${{ inputs.node-version }}"
+            cache: "npm"
+            cache-dependency-path: "${{ inputs.cache-dependency-path }}"
+
+        - name: "Display Node Info"
+          shell: "pwsh"
+          run: |
+            node --version
+            npm --version
+
+        - name: "Configure npm"
+          shell: "pwsh"
+          run: |
+            npm config set progress=false
+            npm config set loglevel=error
+
+    usage_example: |-
+      steps:
+        - uses: ./.github/workflows/actions/setup-node
+          with:
+            node-version: "20"
+            cache-dependency-path: "src/frontend/package-lock.json"
+
+    benefits:
+      - "Automatic npm caching (managed by setup-node@v4)"
+      - "Consistent npm configuration across workflows"
+      - "Version verification and diagnostics"
+
+  docker_cleanup:
+    name: "Docker Cleanup"
+    file: ".github/workflows/actions/docker-cleanup/action.yml"
+    description: "Clean up Docker resources to free disk space on runners"
+
+    inputs:
+      prune-volumes:
+        description: "Prune unused Docker volumes"
+        type: boolean
+        required: false
+        default: false
+
+      prune-images:
+        description: "Prune unused Docker images"
+        type: boolean
+        required: false
+        default: true
+
+    runs:
+      using: "composite"
+      steps:
+        - name: "Stop All Containers"
+          shell: "pwsh"
+          run: |
+            docker ps -q | ForEach-Object { docker stop $_ }
+            docker ps -aq | ForEach-Object { docker rm $_ }
+
+        - name: "Prune Images"
+          condition: "inputs.prune-images == 'true'"
+          shell: "pwsh"
+          run: "docker image prune -af"
+
+        - name: "Prune Volumes"
+          condition: "inputs.prune-volumes == 'true'"
+          shell: "pwsh"
+          run: "docker volume prune -f"
+
+        - name: "Prune Build Cache"
+          shell: "pwsh"
+          run: "docker builder prune -af"
+
+        - name: "Display Disk Usage"
+          shell: "pwsh"
+          run: |
+            Write-Host "Disk space after cleanup:"
+            df -h
+
+    usage_example: |-
+      steps:
+        - uses: ./.github/workflows/actions/docker-cleanup
+          with:
+            prune-volumes: false
+            prune-images: true
+
+    benefits:
+      - "Prevents 'no space left on device' errors"
+      - "Reclaims disk space for subsequent builds"
+      - "Configurable cleanup levels (images, volumes, cache)"
+
+    disk_savings:
+      typical: "2-5 GB per cleanup"
+      with_volumes: "5-10 GB per cleanup"
+      note: "GitHub-hosted runners have ~14GB free space by default"
+
+  gpu_setup:
+    name: "GPU Environment Setup"
+    file: ".github/workflows/actions/gpu-setup/action.yml"
+    description: "Configure CUDA and GPU environment for self-hosted runner"
+
+    inputs:
+      cuda-version:
+        description: "CUDA toolkit version"
+        type: string
+        required: false
+        default: "13.0"
+
+      verify-gpu:
+        description: "Verify GPU is accessible"
+        type: boolean
+        required: false
+        default: true
+
+    runs:
+      using: "composite"
+      steps:
+        - name: "Verify NVIDIA Driver"
+          shell: "pwsh"
+          run: "nvidia-smi"
+
+        - name: "Verify CUDA Toolkit"
+          shell: "pwsh"
+          run: "nvcc --version"
+
+        - name: "Verify PyTorch GPU"
+          condition: "inputs.verify-gpu == 'true'"
+          shell: "pwsh"
+          run: |
+            python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+            python -c "import torch; print(f'GPU: {torch.cuda.get_device_name(0)}')"
+
+    usage_example: |-
+      steps:
+        - uses: ./.github/workflows/actions/gpu-setup
+          with:
+            cuda-version: "13.0"
+            verify-gpu: true
+
+    requirements:
+      - "Self-hosted runner with NVIDIA GPU"
+      - "CUDA 13.0 toolkit pre-installed"
+      - "No token required (runner already registered)"
+    environment_config: ".config/environment.yml"
+
+action_patterns:
+  when_to_use_composite:
+    - "Multiple steps that are reused across workflows"
+    - "Environment setup tasks (installing tools, configuring settings)"
+    - "Cleanup or maintenance operations"
+    - "Logic that doesn't require Docker (use Docker actions for containerized logic)"
+
+  benefits:
+    - "DRY principle: Define once, use everywhere"
+    - "Centralized updates: Change action.yml, all workflows benefit"
+    - "Testable: Can test composite actions in isolation"
+    - "Shareable: Can publish to GitHub Marketplace"
+
+  limitations:
+    - "No outputs (unlike reusable workflows)"
+    - "No secrets (must be passed from calling workflow)"
+    - "No job-level configuration (runs within existing job)"
+
+caching_strategy:
+  managed_by_actions:
+    setup_dotnet:
+      cache_type: "Managed by setup-dotnet@v4"
+      cache_key: "Automatic (based on packages.lock.json)"
+      cache_path: "~/.nuget/packages"
+
+    setup_node:
+      cache_type: "Managed by setup-node@v4"
+      cache_key: "Automatic (based on package-lock.json)"
+      cache_path: "~/.npm"
+
+  manual_caching:
+    note: "For Python or custom dependencies, use actions/cache@v4 directly in workflow"
+    example: |-
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+troubleshooting:
+  docker_disk_space:
+    symptom: "Docker build fails with 'no space left on device'"
+    cause: "Docker images/volumes/cache consuming all disk space"
+    solution:
+      - "Use docker-cleanup action before Docker operations"
+      - "Set prune-volumes: true for more aggressive cleanup"
+      - "Consider larger runner (ubuntu-4-core has ~14GB free)"
+
+  action_not_found:
+    symptom: "Error: Unable to resolve action ./.github/workflows/actions/setup-dotnet"
+    cause: "Relative path incorrect or action.yml missing"
+    solution:
+      - "Verify action.yml exists at specified path"
+      - "Use correct relative path from workflow file"
+      - "Check action.yml has valid 'runs' section"
+
+  condition_not_working:
+    symptom: "Conditional step runs even when condition is false"
+    cause: "GitHub Actions conditions use 'if', not 'condition'"
+    solution:
+      - "Use 'if:' (not 'condition:') in step definition"
+      - "Example: if: inputs.restore-tools == 'true'"
+
+maintenance:
+  weekly_tasks:
+    - "Review action usage across workflows (grep for 'uses: ./.github/workflows/actions')"
+    - "Check for duplicated logic that could be extracted to new action"
+
+  monthly_tasks:
+    - "Update action dependencies (setup-dotnet@v4, setup-node@v4, etc.)"
+    - "Test actions in isolation with workflow_dispatch trigger"
+    - "Review disk cleanup effectiveness (check workflow logs for space savings)"
+
+  versioning:
+    strategy: "No versioning (all workflows use latest)"
+    alternative: "Create versioned tags (v1, v2) for breaking changes"
+    example: "uses: ./.github/workflows/actions/setup-dotnet@v1"
+
+related_documentation:
+  - ".config/copilot/workflows/github-workflows-reusable-jobs.yml: Reusable jobs"
+  - ".config/copilot/workflows/github-workflows-reference.yml: Workflows catalog"
+  - ".config/environment.yml: CUDA, GPU, Python environment variables"
+  - ".github/workflows/actions/: Actual action definitions"
+  - "https://docs.github.com/en/actions/creating-actions/creating-a-composite-action: Official docs"

@@ -1,0 +1,292 @@
+# Multiline String Validation Rules
+# Enforces proper literal (|) and folded (>) block scalar usage
+
+- ruleID: yaml-literal-block-indicator
+  description: |
+    Literal block scalar (|) should be used for multiline strings that preserve newlines.
+    Use when line breaks are semantically significant.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*\\|"
+  message: |
+    Literal block scalar (|) found - verify usage.
+
+    Literal block (|) preserves newlines and trailing spaces:
+
+    description: |
+      Line 1
+      Line 2
+      Line 3
+
+    Output includes all newlines exactly as written.
+
+    For single-line strings or where newlines aren't significant, consider:
+    - Plain scalar: description: Single line text
+    - Folded scalar (>): Joins lines with spaces
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#multiline_strings"
+      title: "YAML Multiline Strings - Literal Block"
+
+- ruleID: yaml-folded-block-indicator
+  description: |
+    Folded block scalar (>) should be used for long text that can wrap across lines.
+    Lines are joined with spaces, preserving paragraph breaks.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*>"
+  message: |
+    Folded block scalar (>) found - verify usage.
+
+    Folded block (>) joins lines with spaces:
+
+    description: >
+      This long paragraph will be joined
+      into a single line with spaces
+      between the original lines.
+
+      Blank lines create paragraph breaks.
+
+    For preserving exact line breaks, use literal block (|).
+    For simple values, use plain scalar.
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#multiline_strings"
+      title: "YAML Multiline Strings - Folded Block"
+
+- ruleID: yaml-block-chomping-strip
+  description: |
+    Block chomping indicator (|-) strips final newlines from multiline strings.
+    Use when trailing newlines are not wanted.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: ":\\s*\\|-"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: ":\\s*>-"
+  message: |
+    Block chomping strip (-) indicator found.
+
+    Strip chomping (- suffix) removes final newlines:
+
+    script: |-
+      echo "Line 1"
+      echo "Line 2"
+
+    Result: "Line 1\\nLine 2" (no trailing newline)
+
+    Compare with:
+    - No chomping (|): Keeps one trailing newline
+    - Keep chomping (|+): Preserves all trailing newlines
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#multiline_strings"
+      title: "YAML Block Chomping - Strip"
+
+- ruleID: yaml-block-chomping-keep
+  description: |
+    Block chomping indicator (|+) preserves all trailing newlines.
+    Use when exact whitespace preservation is required.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: ":\\s*\\|\\+"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: ":\\s*>\\+"
+  message: |
+    Block chomping keep (+) indicator found.
+
+    Keep chomping (+ suffix) preserves all trailing newlines:
+
+    data: |+
+      Content here
+
+
+    Result includes all trailing blank lines.
+
+    Compare with:
+    - No chomping (|): Keeps one trailing newline
+    - Strip chomping (|-): Removes all trailing newlines
+
+    Use keep (+) when exact whitespace matters.
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#multiline_strings"
+      title: "YAML Block Chomping - Keep"
+
+- ruleID: yaml-block-content-indentation
+  description: |
+    Content in block scalars must be indented consistently,
+    at least one space more than the parent key.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*[|>]"
+  message: |
+    Block scalar detected - verify content indentation.
+
+    Block scalar content must be indented consistently:
+
+    Correct:
+    description: |
+      Line 1 (indented 2 spaces from key)
+      Line 2 (same indentation)
+
+    Incorrect:
+    description: |
+    Line 1        # No indentation
+      Line 2      # Inconsistent
+
+    All content lines must:
+    1. Be indented at least 1 space more than the key
+    2. Use consistent indentation throughout
+    3. Follow repository 2-space standard
+  effort: 2
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#multiline_strings"
+      title: "YAML Block Scalar Indentation"
+
+- ruleID: yaml-block-indicator-positioning
+  description: |
+    Block indicators (|, >) should appear immediately after the colon with optional space,
+    followed by newline before content.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: ":\\s*[|>][^\\s-+]"
+  message: |
+    Block indicator with non-standard formatting detected.
+
+    Correct positioning:
+    key: |
+      content
+
+    key: |-
+      content
+
+    key: |+
+      content
+
+    Incorrect:
+    key:|content       # No space/newline
+    key: | content     # Content on same line
+
+    Block indicator should be:
+    1. After colon with optional single space
+    2. Optionally followed by chomping indicator (-, +)
+    3. Followed by newline, then indented content
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#multiline_strings"
+      title: "YAML Block Indicator Syntax"
+
+- ruleID: yaml-multiline-empty-lines
+  description: |
+    Empty lines within block scalars should be consistent with the content indentation.
+    Completely empty lines (no spaces) are preferred for clarity.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*[|>]"
+  message: |
+    Block scalar detected - verify empty line handling.
+
+    Best practice for empty lines in block scalars:
+
+    description: |
+      First paragraph.
+
+      Second paragraph (blank line above is completely empty).
+
+      Third paragraph.
+
+    Avoid:
+    - Partially indented blank lines
+    - Trailing spaces on blank lines
+    - Inconsistent blank line formatting
+
+    Empty lines within content should have no characters.
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#multiline_strings"
+      title: "YAML Multiline String Formatting"
+
+- ruleID: yaml-multiline-trailing-whitespace
+  description: |
+    Avoid trailing whitespace in multiline string content unless semantically required.
+    Literal blocks preserve trailing spaces, which may cause unexpected behavior.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*\\|"
+  message: |
+    Literal block scalar (|) detected - check for trailing whitespace.
+
+    Literal blocks (|) preserve trailing spaces on each line:
+
+    description: |
+      Line 1    # Trailing spaces preserved
+      Line 2    # Also preserved
+
+    This can cause:
+    - Unexpected string lengths
+    - Comparison failures
+    - Visual inconsistencies
+
+    Recommendations:
+    1. Remove trailing whitespace unless required
+    2. Use strip chomping (|-) if trailing newlines not needed
+    3. Configure editor to highlight trailing spaces
+
+    For folded blocks (>), trailing spaces are normalized.
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#multiline_strings"
+      title: "YAML Trailing Whitespace Best Practices"

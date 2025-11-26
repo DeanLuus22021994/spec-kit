@@ -1,0 +1,168 @@
+# VSCode: YAML Schema Compliance Rules
+# Purpose: Ensure YAML files comply with VSCode/Red Hat YAML extension standards
+# Scope: All YAML files in VSCode workspace
+# Package: vscode
+
+---
+- ruleID: vscode-yaml-schema-directive
+  description: |
+    Validates use of YAML schema directives for VSCode.
+
+    VSCode YAML extension uses schema directives to provide:
+    - IntelliSense/autocomplete
+    - Validation
+    - Documentation on hover
+
+    Schema directive format:
+    # yaml-language-server: $schema=<schema-url>
+
+    Common schemas:
+    - https://json.schemastore.org/github-workflow
+    - https://json.schemastore.org/docker-compose.yml
+    - https://json.schemastore.org/azure-pipelines
+
+    Add at top of file for best IDE experience.
+  labels:
+    - "vscode/yaml"
+    - "vscode/schema"
+    - "validation/tooling"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^(?!#\\s*yaml-language-server:)[\\s\\S]*"
+      filePattern: "**/.vscode/*.{yml,yaml}"
+  message: |
+    YAML file in .vscode/ directory lacks schema directive.
+
+    Add schema directive at top of file:
+
+    ```yaml
+    # yaml-language-server: $schema=https://json.schemastore.org/github-workflow
+
+    name: CI Pipeline
+    on: [push, pull_request]
+    ```
+
+    This enables:
+    - Autocomplete in VSCode
+    - Inline validation
+    - Documentation tooltips
+
+    Find schemas at: https://www.schemastore.org/json/
+  effort: 1
+  category: optional
+  links:
+    - url: https://github.com/redhat-developer/vscode-yaml#language-server-settings
+      title: "VSCode YAML Schema Configuration"
+    - url: https://www.schemastore.org/json/
+      title: "JSON Schema Store"
+
+---
+- ruleID: vscode-yaml-settings-schema
+  description: |
+    Ensures VSCode settings.json includes YAML schema associations.
+
+    Configure YAML schemas in .vscode/settings.json:
+
+    ```json
+    {
+      "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow": [
+          ".github/workflows/*.yml"
+        ],
+        "./schema/custom.json": [
+          "config/*.yaml"
+        ]
+      }
+    }
+    ```
+
+    This provides schema validation for matching file patterns
+    without requiring directives in each file.
+  labels:
+    - "vscode/yaml"
+    - "vscode/settings"
+    - "validation/configuration"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^(?![\\s\\S]*yaml\\.schemas)"
+      filePattern: "**/.vscode/settings.json"
+  message: |
+    VSCode settings.json doesn't define yaml.schemas.
+
+    Add YAML schema associations:
+
+    ```json
+    {
+      "yaml.schemas": {
+        "https://json.schemastore.org/docker-compose.yml": [
+          "docker-compose*.yml"
+        ],
+        "./schema/config.json": [
+          "config/**/*.yaml"
+        ]
+      }
+    }
+    ```
+
+    Benefits:
+    - Automatic validation
+    - IntelliSense for all matching files
+    - Consistent schema enforcement
+  effort: 2
+  category: optional
+  links:
+    - url: https://github.com/redhat-developer/vscode-yaml#associating-schemas
+      title: "VSCode YAML Schema Association"
+
+---
+- ruleID: vscode-yaml-validation-enabled
+  description: |
+    Checks that YAML validation is enabled in VSCode settings.
+
+    Ensure these settings are properly configured:
+    - yaml.validate: true (enable validation)
+    - yaml.schemaStore.enable: true (use schema store)
+    - yaml.format.enable: true (enable formatting)
+
+    Add to .vscode/settings.json:
+    ```json
+    {
+      "yaml.validate": true,
+      "yaml.schemaStore.enable": true,
+      "yaml.format.enable": true
+    }
+    ```
+
+    This ensures consistent validation across the team.
+  labels:
+    - "vscode/yaml"
+    - "vscode/validation"
+    - "validation/tooling"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)\"yaml\\.validate\":\\s*false|^(?![\\s\\S]*yaml\\.validate)"
+      filePattern: "**/.vscode/settings.json"
+  message: |
+    YAML validation may be disabled in VSCode settings.
+
+    Enable YAML validation:
+
+    ```json
+    {
+      "yaml.validate": true,
+      "yaml.schemaStore.enable": true,
+      "yaml.format.enable": true,
+      "yaml.customTags": []
+    }
+    ```
+
+    Benefits:
+    - Real-time error detection
+    - Schema-based validation
+    - Consistent formatting
+    - Custom tag support
+  effort: 1
+  category: optional
+  links:
+    - url: https://github.com/redhat-developer/vscode-yaml#extension-settings
+      title: "VSCode YAML Extension Settings"

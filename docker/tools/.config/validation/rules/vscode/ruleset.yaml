@@ -1,0 +1,54 @@
+metadata: &metadata
+  name: "vscode-package-ruleset"
+  description: "Rules for VSCode YAML extension compliance, schemas, and custom tags"
+  version: "1.0.0"
+  category: "validation-rules"
+
+<<: *metadata
+
+# VSCode Package - Ruleset Configuration
+# Validates VSCode YAML extension configuration and usage
+
+package_info:
+  name: "vscode"
+  total_rules: 7
+  rule_files:
+    - compliance.yaml # 3 VSCode YAML extension rules
+    - schemas.yaml # 2 JSON schema rules
+    - tags.yaml # 2 custom tag rules
+
+rule_groups:
+  compliance:
+    description: "VSCode YAML extension configuration"
+    rule_files:
+      - compliance.yaml
+    optional_rules: 3
+
+  schemas:
+    description: "JSON schema definition and documentation"
+    rule_files:
+      - schemas.yaml
+    mandatory_rules: 1
+    optional_rules: 1
+
+  tags:
+    description: "Custom YAML tag configuration"
+    rule_files:
+      - tags.yaml
+    mandatory_rules: 1
+    optional_rules: 1
+
+execution_order:
+  - compliance.yaml # Run first - validate VSCode settings
+  - schemas.yaml # Run second - validate schema definitions
+  - tags.yaml # Run third - validate custom tag configuration
+
+dependencies: [] # No external dependencies
+
+tags:
+  - vscode
+  - yaml-extension
+  - schemas
+  - custom-tags
+  - tooling
+  - ide

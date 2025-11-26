@@ -1,0 +1,43 @@
+# Validation Profiles
+metadata: &metadata
+  name: minimal
+  description: "Minimal validation profile - mandatory rules only"
+  version: "1.0.0"
+
+<<: *metadata
+
+# Rule package configuration
+rules:
+  # Metadata validation - mandatory only
+  metadata:
+    severity: mandatory
+
+  # Syntax validation - mandatory only
+  syntax:
+    severity: mandatory
+
+  # Structure validation - mandatory only
+  structure:
+    severity: mandatory
+
+  # MTA-specific validation - mandatory only
+  mta:
+    severity: mandatory
+
+  # Quality validation - skip
+  quality:
+    severity: mandatory
+
+  # VS Code integration - skip
+  vscode:
+    severity: optional
+
+# Profile options
+options:
+  failOnWarning: false
+  failOnInfo: false
+  maxViolations: 50
+# Description
+# This profile enforces only mandatory rules, allowing maximum flexibility
+# for development and prototyping.
+# Use for: Early development, prototyping, legacy code migration

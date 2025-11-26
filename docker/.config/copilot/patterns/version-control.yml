@@ -1,0 +1,137 @@
+# Version Control Patterns
+# Git branching, commits, and file naming conventions
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: pattern
+  keywords:
+    - git
+    - version control
+    - branches
+    - commits
+    - naming
+    - conventions
+
+<<: *metadata
+
+# File Templates
+tracked_file: &tracked_file
+  path: null
+  purpose: null
+
+tracked_files:
+  configurations:
+    - <<: *tracked_file
+      path: .vscode/mcp.json
+      purpose: MCP server configuration
+    - <<: *tracked_file
+      path: .config/environment.yml
+      purpose: Environment variables for CUDA, Python, Docker, AI/ML
+
+  quality_reports:
+    - <<: *tracked_file
+      path: reports/pylint_report.txt
+      purpose: Combined code quality report
+    - <<: *tracked_file
+      path: reports/pylint_tools_report.txt
+      purpose: Tools-only code quality report
+
+line_endings:
+  enforcement: ".editorconfig defines end_of_line = lf"
+  normalization: ".gitattributes handles CRLF conversion"
+  verification: "git diff should not show line ending changes"
+  rationale: "Consistent line endings across Windows, macOS, Linux"
+
+branch_naming:
+  feature:
+    format: "feature/{feature-name}"
+    example: "feature/qdrant-integration"
+    purpose: "New features and capabilities"
+
+  fix:
+    format: "fix/{bug-name}"
+    example: "fix/database-connection-timeout"
+    purpose: "Bug fixes and corrections"
+
+  docs:
+    format: "docs/{topic}"
+    example: "docs/api-reference"
+    purpose: "Documentation updates and additions"
+
+  refactor:
+    format: "refactor/{component}"
+    example: "refactor/vector-store-factory"
+    purpose: "Code restructuring without behavior changes"
+
+  test:
+    format: "test/{test-type}"
+    example: "test/e2e-authentication"
+    purpose: "Test additions and improvements"
+
+commit_format:
+  structure: "<type>(<scope>): <description>"
+
+  types:
+    feat:
+      description: "New feature"
+      example: "feat(engine): implement Qdrant vector store operations"
+
+    fix:
+      description: "Bug fix"
+      example: "fix(backend): resolve database connection timeout"
+
+    docs:
+      description: "Documentation changes"
+      example: "docs: add GitHub CLI field reference"
+
+    refactor:
+      description: "Code restructuring"
+      example: "refactor(tools): bake dependencies into Dockerfile"
+
+    test:
+      description: "Test additions"
+      example: "test(e2e): add authentication flow tests"
+
+    chore:
+      description: "Maintenance tasks"
+      example: "chore(deps): update black to 25.11.0"
+
+    perf:
+      description: "Performance improvements"
+      example: "perf(engine): optimize vector search queries"
+
+file_naming:
+  python:
+    format: "snake_case.py"
+    examples:
+      - "cli.py"
+      - "docgen.py"
+      - "vector_store_factory.py"
+
+  csharp:
+    format: "PascalCase.cs"
+    examples:
+      - "VectorStoreFactory.cs"
+      - "SemanticKernelFactory.cs"
+      - "Program.cs"
+
+  documentation:
+    format: "kebab-case.md"
+    examples:
+      - "github-cli-reference.md"
+      - "python-package-updates.md"
+      - "copilot-patterns.md"
+
+  configuration:
+    format: "kebab-case.yml or lowercase.yml"
+    examples:
+      - "docker-compose.yml"
+      - "mkdocs.yml"
+      - "cli.yml"
+      - "semantic-kernel.yml"
+
+current_branches:
+  default: "semantic-foundation"
+  working: "docker-enhancements"
+  description: "Main development happens on semantic-foundation, features on named branches"

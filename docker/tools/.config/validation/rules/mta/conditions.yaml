@@ -1,0 +1,262 @@
+# MTA Condition Validation Rules
+# Purpose: Ensure proper use of when/or/and/not condition operators
+# Scope: All MTA ruleset YAML files with conditional logic
+# Package: mta
+
+---
+- ruleID: mta-when-condition-structure
+  description: |
+    Validates proper structure of when conditions in MTA rules.
+
+    The when field defines conditions that must match for a rule to trigger.
+
+    Valid structures:
+    - Simple provider: when: builtin.file: ...
+    - Logical OR: when: or: [condition1, condition2]
+    - Logical AND: when: and: [condition1, condition2]
+    - Negation: when: not: condition
+
+    Each condition must specify a provider (builtin.file, builtin.filecontent,
+    java, go, dotnet, etc.) with proper configuration.
+  labels:
+    - "mta/conditions"
+    - "mta/when"
+    - "validation/structure"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*when:\\s*$|^\\s*when:\\s*\\n\\s*(?!or:|and:|not:|builtin\\.|java:|go:|dotnet:)"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    when condition is empty or improperly structured.
+
+    Use valid condition structures:
+
+    Simple provider:
+    ```yaml
+    when:
+      builtin.file:
+        pattern: "**/*.yaml"
+    ```
+
+    Logical operators:
+    ```yaml
+    when:
+      or:
+        - builtin.file: {pattern: "*.yml"}
+        - builtin.file: {pattern: "*.yaml"}
+    ```
+
+    Must specify a provider or logical operator.
+  effort: 2
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#when-conditions
+      title: "MTA When Condition Documentation"
+
+---
+- ruleID: mta-or-operator-usage
+  description: |
+    Validates proper use of the or operator for alternative conditions.
+
+    Use or when a rule should trigger if ANY condition matches:
+    - Multiple file extensions (.yml OR .yaml)
+    - Different import patterns
+    - Alternative syntax forms
+
+    The or operator takes an array of conditions:
+    ```yaml
+    when:
+      or:
+        - condition1
+        - condition2
+        - condition3
+    ```
+
+    At least 2 conditions required (single condition doesn't need or).
+  labels:
+    - "mta/conditions"
+    - "mta/or-operator"
+    - "validation/logic"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*or:\\s*\\[\\s*\\]|^\\s*or:\\s*$|^\\s*or:\\s*\\n\\s*-\\s*[^\\n]+\\s*$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    or operator has invalid structure or insufficient conditions.
+
+    Provide at least 2 conditions:
+
+    Example:
+    ```yaml
+    when:
+      or:
+        - builtin.file:
+            pattern: "**/*.yml"
+        - builtin.file:
+            pattern: "**/*.yaml"
+    ```
+
+    For single conditions, omit the or operator.
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#or-operator
+      title: "MTA OR Operator Usage"
+
+---
+- ruleID: mta-and-operator-usage
+  description: |
+    Validates proper use of the and operator for combined conditions.
+
+    Use and when a rule should trigger only if ALL conditions match:
+    - File must exist AND contain specific content
+    - Multiple patterns must all be present
+    - Combination of providers
+
+    The and operator takes an array of conditions:
+    ```yaml
+    when:
+      and:
+        - condition1
+        - condition2
+    ```
+
+    At least 2 conditions required. All must match for rule to trigger.
+  labels:
+    - "mta/conditions"
+    - "mta/and-operator"
+    - "validation/logic"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*and:\\s*\\[\\s*\\]|^\\s*and:\\s*$|^\\s*and:\\s*\\n\\s*-\\s*[^\\n]+\\s*$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    and operator has invalid structure or insufficient conditions.
+
+    Provide at least 2 conditions that must all match:
+
+    Example:
+    ```yaml
+    when:
+      and:
+        - builtin.file:
+            pattern: "**/*.yaml"
+        - builtin.filecontent:
+            pattern: "indentation:"
+            filePattern: "**/*.yaml"
+    ```
+
+    For single conditions, omit the and operator.
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#and-operator
+      title: "MTA AND Operator Usage"
+
+---
+- ruleID: mta-not-operator-usage
+  description: |
+    Validates proper use of the not operator for negation.
+
+    Use not to trigger when a condition does NOT match:
+    - Files that don't contain a pattern
+    - Absence of imports/dependencies
+    - Missing configuration
+
+    The not operator wraps a single condition:
+    ```yaml
+    when:
+      not:
+        builtin.filecontent:
+          pattern: "version:"
+          filePattern: "*.yaml"
+    ```
+
+    Useful for detecting missing required elements.
+  labels:
+    - "mta/conditions"
+    - "mta/not-operator"
+    - "validation/logic"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*not:\\s*$|^\\s*not:\\s*\\[.*\\]"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    not operator has invalid structure.
+
+    Wrap a single condition (not an array):
+
+    Correct:
+    ```yaml
+    when:
+      not:
+        builtin.file:
+          pattern: "**/schema.yaml"
+    ```
+
+    Incorrect:
+    ```yaml
+    when:
+      not: []
+      not:
+        - condition1
+        - condition2
+    ```
+
+    Use not with single conditions only.
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#not-operator
+      title: "MTA NOT Operator Usage"
+
+---
+- ruleID: mta-condition-complexity
+  description: |
+    Monitors excessive nesting and complexity in when conditions.
+
+    Complex nested conditions reduce readability and maintainability:
+    - or within and within not
+    - Deep nesting (>3 levels)
+    - Many alternatives (>5 branches)
+
+    Consider simplifying:
+    - Split into multiple rules
+    - Use intermediate conditions
+    - Refactor common patterns
+    - Document complex logic
+
+    This is a warning for review, not a strict error.
+  labels:
+    - "mta/conditions"
+    - "mta/complexity"
+    - "validation/maintainability"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^(\\s+)(or|and|not):\\s*\\n\\1\\s+(or|and|not):\\s*\\n\\1\\s{2,}(or|and|not):"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Condition has deep nesting (3+ levels).
+
+    Consider simplifying:
+
+    Instead of:
+    ```yaml
+    when:
+      or:
+        - and:
+            - not:
+                builtin.file: ...
+    ```
+
+    Consider:
+    - Split into multiple rules
+    - Create separate rules for each concern
+    - Document the intent clearly
+
+    Complex conditions are harder to maintain and debug.
+  effort: 5
+  category: potential
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#condition-best-practices
+      title: "Condition Complexity Guidelines"

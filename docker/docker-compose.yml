@@ -1,0 +1,856 @@
+# yaml-language-server: $schema=./.config/schemas/docker-compose.schema.json
+# Docker Compose Configuration for Semantic Kernel Application
+# All enhancements retained. Metadata blocks removed for YAML compliance.
+
+# =============================================================================
+# Local Registry Services
+# =============================================================================
+services:
+  registry:
+    build:
+      context: .
+      dockerfile: dockerfiles/registry.Dockerfile
+    container_name: semantic-kernel-registry
+    ports:
+      - "${REGISTRY_PORT:-5000}:5000"
+      - "${REGISTRY_DEBUG_PORT:-5001}:5001"
+    volumes:
+      - registry-data:/var/lib/registry
+      - registry-logs:/var/log/registry
+    networks:
+      - internal-network
+      - backend-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+      - REGISTRY_HTTP_DEBUG_ADDR=:5001
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/v2/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  registry-ui:
+    image: joxit/docker-registry-ui:2.5.7
+    container_name: semantic-kernel-registry-ui
+    ports:
+      - "${REGISTRY_UI_PORT:-5080}:80"
+    networks:
+      - internal-network
+      - frontend-network
+    depends_on:
+      registry:
+        condition: service_healthy
+    environment:
+      - REGISTRY_TITLE=Semantic Kernel Registry
+      - REGISTRY_URL=http://registry:5000
+      - SINGLE_REGISTRY=true
+      - DELETE_IMAGES=true
+      - SHOW_CONTENT_DIGEST=true
+      - SHOW_CATALOG_NB_TAGS=true
+      - CATALOG_MIN_BRANCHES=1
+      - CATALOG_MAX_BRANCHES=1
+      - TAGLIST_PAGE_SIZE=100
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  tools:
+    build:
+      context: ./tools
+      dockerfile: .config/docker/Dockerfile
+    image: semantic-kernel-tools:latest
+    container_name: semantic-kernel-tools
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - tools-mypy-cache:/app/tools/.mypy_cache
+      - tools-pytest-cache:/app/tools/.pytest_cache
+      - tools-validation-reports:/app/tools/.config/validation/reports
+      - tools-validation-test-data:/app/tools/.config/validation/test-data
+    networks:
+      - backend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  frontend:
+    build:
+      context: .
+      dockerfile: dockerfiles/frontend.Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - frontend-logs:/var/log/nginx
+      - frontend-cache:/var/cache/nginx
+    networks:
+      - frontend-network
+      - backend-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfiles/backend.Dockerfile
+    ports:
+      - "${BACKEND_PORT:-5200}:80"
+    volumes:
+      - backend-logs:/app/logs
+      - backend-data:/app/data
+    networks:
+      - backend-network
+    depends_on:
+      database:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Database=Host=database;Database=semantic_kernel;Username=user;Password=password
+      # OpenTelemetry Tracing
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_SERVICE_NAME=semantic-kernel-backend
+      - OTEL_TRACES_SAMPLER=parentbased_traceidratio
+      - OTEL_TRACES_SAMPLER_ARG=1.0
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  engine:
+    build:
+      context: .
+      dockerfile: dockerfiles/engine.Dockerfile
+      cache_from:
+        - localhost:5000/semantic-kernel/engine:cache
+    image: localhost:5000/semantic-kernel/engine:latest
+    runtime: nvidia
+    volumes:
+      - engine-plugins:/app/plugins
+      - engine-skills:/app/skills
+      - engine-cache:/app/cache
+      - engine-logs:/app/logs
+    networks:
+      - backend-network
+    depends_on:
+      database:
+        condition: service_healthy
+      vector:
+        condition: service_healthy
+      embeddings:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Database=Host=database;Database=semantic_kernel;Username=user;Password=password
+      - SemanticKernel__ConfigPath=/.config/semantic-kernel.yml
+      - VectorStore__Url=http://vector:6333
+      - Embeddings__Url=http://embeddings:8001
+      # GPU Configuration
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=0
+      - CUDA_MEMORY_FRACTION=0.25
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:256,expandable_segments:True
+      # Optimization Toggles
+      - GPU_ENABLED=${GPU_ENABLED:-true}
+      - CUDA_MIXED_PRECISION=${CUDA_MIXED_PRECISION:-true}
+      - ENABLE_FLASH_ATTENTION=${ENABLE_FLASH_ATTENTION:-true}
+      - CUDA_TF32_ENABLED=${CUDA_TF32_ENABLED:-true}
+      # OpenTelemetry Tracing
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_SERVICE_NAME=semantic-kernel-engine
+      - OTEL_TRACES_SAMPLER=parentbased_traceidratio
+      - OTEL_TRACES_SAMPLER_ARG=1.0
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "1.0"
+          memory: 512M
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    healthcheck:
+      test: [ "CMD", "dotnet", "--info" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  business:
+    build:
+      context: .
+      dockerfile: dockerfiles/business.Dockerfile
+    volumes:
+      - business-logs:/app/logs
+      - business-cache:/app/cache
+    networks:
+      - backend-network
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Database=Host=database;Database=semantic_kernel;Username=user;Password=password
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: [ "CMD", "dotnet", "--info" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: dockerfiles/gateway.Dockerfile
+    ports:
+      - "${GATEWAY_PORT:-8080}:80"
+    volumes:
+      - gateway-logs:/app/logs
+      - gateway-cache:/app/cache
+    networks:
+      - frontend-network
+      - backend-network
+    depends_on:
+      backend:
+        condition: service_healthy
+      engine:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  database:
+    build:
+      context: .
+      dockerfile: dockerfiles/database.Dockerfile
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - database-backups:/backups
+      - database-logs:/var/log/postgresql
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME:-semantic_kernel}
+      - POSTGRES_USER=${DATABASE_USER:-user}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-password}
+      - DATABASE_SEED_ENV=${ENVIRONMENT:-development}
+    networks:
+      - backend-network
+      - internal-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USER:-user} -d ${DATABASE_NAME:-semantic_kernel}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx:
+    build:
+      context: .
+      dockerfile: dockerfiles/nginx.Dockerfile
+    ports:
+      - "80:80"
+    networks:
+      - frontend-network
+    depends_on:
+      frontend:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  runner:
+    build:
+      context: .
+      dockerfile: dockerfiles/runner.Dockerfile
+    container_name: semantic-kernel-app-runner-1
+    networks:
+      - backend-network
+    environment:
+      - RUNNER_NAME=${RUNNER_NAME:-semantic-kernel-runner}
+      - RUNNER_WORKDIR=/runner/_work
+      - RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - REPO_URL=${GITHUB_REPO_URL}
+    volumes:
+      - runner_work:/runner/_work
+      - runner_config:/home/runner
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: [ "CMD", "pgrep", "-f", "Runner.Listener" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  devsite:
+    build:
+      context: .
+      dockerfile: dockerfiles/devsite.Dockerfile
+    ports:
+      - "${DEVSITE_PORT:-8000}:8000"
+    volumes:
+      - devsite-site:/docs/site
+      - devsite-cache:/docs/.cache
+    networks:
+      - frontend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8000" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  vector:
+    build:
+      context: .
+      dockerfile: dockerfiles/vector.Dockerfile
+      cache_from:
+        - localhost:5000/semantic-kernel/vector:cache
+    image: localhost:5000/semantic-kernel/vector:latest
+    runtime: nvidia
+    environment:
+      # GPU Configuration
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=0
+      - CUDA_MEMORY_FRACTION=0.08
+      # Optimization Toggles
+      - GPU_ENABLED=${GPU_ENABLED:-true}
+    ports:
+      - "${VECTOR_PORT:-6333}:6333"
+      - "${VECTOR_PORT2:-6334}:6334"
+    volumes:
+      - vector_data:/qdrant/storage
+      - vector_snapshots:/qdrant/snapshots
+    networks:
+      - backend-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+        reservations:
+          cpus: "1.0"
+          memory: 512M
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:6333/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  embeddings:
+    build:
+      context: .
+      dockerfile: dockerfiles/embeddings.Dockerfile
+      cache_from:
+        - localhost:5000/semantic-kernel/embeddings:cache
+    image: localhost:5000/semantic-kernel/embeddings:latest
+    runtime: nvidia
+    ports:
+      - "${EMBEDDINGS_PORT:-8001}:8001"
+    volumes:
+      - embeddings-cache:/app/cache
+      - embeddings-logs:/app/logs
+      - embeddings-models:/app/models
+    networks:
+      - backend-network
+    depends_on:
+      database:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Database=Host=database;Database=semantic_kernel;Username=user;Password=password
+      # GPU Configuration
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=0
+      - CUDA_MEMORY_FRACTION=0.5
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512,expandable_segments:True
+      # Optimization Toggles
+      - GPU_ENABLED=${GPU_ENABLED:-true}
+      - CUDA_MIXED_PRECISION=${CUDA_MIXED_PRECISION:-true}
+      - ENABLE_FLASH_ATTENTION=${ENABLE_FLASH_ATTENTION:-true}
+      - CUDA_TF32_ENABLED=${CUDA_TF32_ENABLED:-true}
+      - ENABLE_DYNAMIC_BATCHING=${ENABLE_DYNAMIC_BATCHING:-true}
+      # OpenTelemetry Tracing
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_SERVICE_NAME=semantic-kernel-embeddings
+      - OTEL_TRACES_SAMPLER=parentbased_traceidratio
+      - OTEL_TRACES_SAMPLER_ARG=1.0
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8001/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    build:
+      context: .
+      dockerfile: dockerfiles/redis.Dockerfile
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+      - redis-logs:/var/log/redis
+    networks:
+      - backend-network
+      - internal-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redisinsight:
+    build:
+      context: .
+      dockerfile: dockerfiles/redisinsight.Dockerfile
+    ports:
+      - "${REDISINSIGHT_PORT:-5540}:5540"
+    volumes:
+      - redisinsight-data:/data
+      - redisinsight-logs:/var/log/redisinsight
+    networks:
+      - backend-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5540/healthcheck/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # =============================================================================
+  # Tracing Services - OpenTelemetry + Jaeger
+  # =============================================================================
+  jaeger:
+    image: jaegertracing/all-in-one:1.55
+    container_name: semantic-kernel-jaeger
+    user: root
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_OTLP_GRPC_PORT:-4317}:4317"
+      - "${JAEGER_OTLP_HTTP_PORT:-4318}:4318"
+      - "${JAEGER_COLLECTOR_PORT:-14268}:14268"
+      - "${JAEGER_AGENT_PORT:-6831}:6831/udp"
+    volumes:
+      - jaeger-data:/badger
+    networks:
+      - backend-network
+      - internal-network
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY_VALUE=/badger/data
+      - BADGER_DIRECTORY_KEY=/badger/key
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:16686/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  frontend-network:
+    driver: bridge
+    internal: false
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  backend-network:
+    driver: bridge
+    internal: false
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+  internal-network:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24
+
+volumes:
+  # Registry volumes
+  registry-data:
+    driver: local
+  registry-logs:
+    driver: local
+
+  # Tools volumes
+  tools-mypy-cache:
+    driver: local
+  tools-pytest-cache:
+    driver: local
+  tools-validation-reports:
+    driver: local
+  tools-validation-test-data:
+    driver: local
+
+  # Database volumes
+  postgres_data:
+    driver: local
+  database-backups:
+    driver: local
+  database-logs:
+    driver: local
+
+  # Vector store volumes
+  vector_data:
+    driver: local
+  vector_snapshots:
+    driver: local
+
+  # Runner volumes
+  runner_work:
+    driver: local
+  runner_config:
+    driver: local
+
+  # Backend volumes
+  backend-logs:
+    driver: local
+  backend-data:
+    driver: local
+
+  # Gateway volumes
+  gateway-logs:
+    driver: local
+  gateway-cache:
+    driver: local
+
+  # Engine volumes
+  engine-plugins:
+    driver: local
+  engine-skills:
+    driver: local
+  engine-cache:
+    driver: local
+  engine-logs:
+    driver: local
+
+  # Business volumes
+  business-logs:
+    driver: local
+  business-cache:
+    driver: local
+
+  # Frontend volumes
+  frontend-logs:
+    driver: local
+  frontend-cache:
+    driver: local
+
+  # Embeddings volumes
+  embeddings-cache:
+    driver: local
+  embeddings-logs:
+    driver: local
+  embeddings-models:
+    driver: local
+
+  # DevSite volumes
+  devsite-site:
+    driver: local
+  devsite-cache:
+    driver: local
+
+  # GitHub MCP volumes
+  mcp-github-cache:
+    driver: local
+  mcp-github-git:
+    driver: local
+  mcp-github-data:
+    driver: local
+
+  # Redis volumes
+  redis-data:
+    driver: local
+  redis-logs:
+    driver: local
+
+  # RedisInsight volumes
+  redisinsight-data:
+    driver: local
+  redisinsight-logs:
+    driver: local
+
+  # Face-Matcher volumes
+  face-matcher-models:
+    driver: local
+  face-matcher-data:
+    driver: local
+  face-matcher-cache:
+    driver: local
+  face-matcher-logs:
+    driver: local
+
+  # Jaeger tracing volumes
+  jaeger-data:
+    driver: local

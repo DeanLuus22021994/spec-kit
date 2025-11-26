@@ -52,3 +52,16 @@ github_*.txt
 # GitHub PAT patterns (extra protection)
 # Note: These patterns help prevent accidental commits
 # but should not be relied upon as the only security measure
+
+# .NET / Aspire
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.pdb
+*.dll
+artifacts/
+
+# Docker Publish
+docker/publish/

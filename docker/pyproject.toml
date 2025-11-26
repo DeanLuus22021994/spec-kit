@@ -1,0 +1,35 @@
+[tool.black]
+line-length = 150
+target-version = ['py312']  # Python 3.11+ (black max support: py312)
+include = '\\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 150
+
+[tool.flake8]
+max-line-length = 150
+extend-ignore = ["E203", "W503"]
+
+[tool.pylint]
+max-line-length = 150
+
+[tool.pylint.'messages_control']
+# Disable warnings for optional import pattern (_yaml, _jsonschema)
+# These follow Python convention for private/optional module references
+disable = ["C0103"]
+# Re-enable for actual constants but allow lowercase for optional imports
+good-names = ["_yaml", "_jsonschema", "i", "j", "k", "ex", "Run", "_"]
+
+[tool.mypy]
+python_version = "3.14"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit/python"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

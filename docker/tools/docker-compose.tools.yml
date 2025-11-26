@@ -1,0 +1,147 @@
+# yaml-language-server: $schema=../.config/schemas/docker-compose.schema.json
+#
+# Docker Compose configuration for Tools container
+# Provides Python CLI, documentation generation, and YAML validation
+##
+# Metadata block moved to comments for strict YAML compliance.
+#   version: "1.0.0"
+#   category: tools
+#   keywords: tools, validation, kantra, mta, yaml, cli, docker-compose
+#   updated: "2025-11-24"
+#   config_references:
+#     docker_context: ".config/copilot/docker.yml"
+#     validation_context: ".config/copilot/validation.yml"
+#     scripts_context: ".config/copilot/scripts.yml"
+#
+# Follows strict YAML best practices: 2-space indentation, quoted version numbers, comments for documentation.
+version: "3.8"
+
+services:
+  tools:
+    build:
+      context: ..
+      dockerfile: tools/.config/docker/Dockerfile
+    container_name: semantic-kernel-app-tools
+    working_dir: /app/tools
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - RUN_MODE=local
+      - LABEL_SELECTOR=${LABEL_SELECTOR:-}
+    volumes:
+      # Mount source code for analysis (read-only)
+      - ..:/app:ro
+
+      # Named volumes for validation reports (persistent)
+      - validation-reports:/app/tools/.config/validation/reports
+
+      # Named volumes for Python caches (persistent)
+      - mypy-cache:/app/tools/.mypy_cache
+      - pytest-cache:/app/tools/.pytest_cache
+
+      # Mount validation test data for local development (read-write)
+      - ./.config/validation/test-data:/app/tools/.config/validation/test-data:rw
+
+      # Shared reports volume for integration
+      - shared-reports:/app/reports
+
+    networks:
+      - tools-network
+    restart: "no"
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    command: ["/bin/bash"]
+
+  validation:
+    extends:
+      file: ../docker-compose.validation.yml
+      service: validation
+    container_name: semantic-kernel-app-validation
+    depends_on:
+      - tools
+    volumes:
+      # Override workspace mount to use parent directory
+      - ..:/workspace:ro
+
+      # Share validation reports with tools service
+      - validation-reports:/workspace/tools/.config/validation/reports
+
+      # Share reports directory for integration
+      - shared-reports:/workspace/reports
+
+      # Test data for development
+      - ./.config/validation/test-data:/workspace/tools/.config/validation/test-data:rw
+    networks:
+      - tools-network
+
+volumes:
+  validation-reports:
+    driver: local
+    name: semantic-kernel-app-validation-reports
+
+  shared-reports:
+    driver: local
+    name: semantic-kernel-app-shared-reports
+
+  mypy-cache:
+    driver: local
+    name: semantic-kernel-app-mypy-cache
+
+  pytest-cache:
+    driver: local
+    name: semantic-kernel-app-pytest-cache
+
+networks:
+  tools-network:
+    driver: bridge
+    name: semantic-kernel-app-tools-network
+
+# Cross-references and related documentation
+x-cross-references:
+  - ".config/copilot/docker.yml: Docker patterns and baked dependencies"
+  - ".config/copilot/validation.yml: Kantra CLI and MTA validation"
+  - ".config/scripts/validate-yaml.sh: Validation automation script"
+  - ".config/validation/rules/README.md: Rule usage guide"
+
+x-related-documentation:
+  - "../tests/.config/docker/docker-compose.test.yml: Parallel pattern for tests"
+  - ".config/copilot/index.yml: Tools context index"
+  - ".config/docker/Dockerfile: Main container definition"
+
+x-usage:
+  interactive_shell:
+    command: "docker-compose -f tools/docker-compose.tools.yml run --rm tools"
+    description: "Open interactive shell in tools container"
+
+  run_validation:
+    command: "docker-compose -f tools/docker-compose.tools.yml run --rm validation"
+    description: "Run YAML validation with recommended profile"
+
+  run_validation_strict:
+    command: "docker-compose -f tools/docker-compose.tools.yml run --rm validation --profile strict"
+    description: "Run YAML validation with strict profile (zero tolerance)"
+
+  mandatory_only:
+    command: "docker-compose -f tools/docker-compose.tools.yml run --rm validation --mandatory"
+    description: "Run only mandatory validation rules"
+
+  validation_ci_cd:
+    command: "VALIDATION_PROFILE=ci-cd docker-compose -f tools/docker-compose.tools.yml run --rm validation"
+    description: "Run CI/CD optimized validation"
+
+  cleanup:
+    command: "docker-compose -f tools/docker-compose.tools.yml down"
+    description: "Stop and remove tools and validation containers"
+
+  rebuild:
+    command: "docker-compose -f tools/docker-compose.tools.yml build --no-cache"
+    description: "Rebuild tools and validation containers with latest dependencies"
+
+  view_reports:
+    command: "docker volume inspect semantic-kernel-app-validation-reports"
+    description: "Inspect validation reports volume"

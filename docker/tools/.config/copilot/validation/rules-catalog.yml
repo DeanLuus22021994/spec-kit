@@ -1,0 +1,699 @@
+metadata: &metadata
+  name: "validation-rules-catalog"
+  description: "Complete catalog of 107 validation rules across all packages"
+  version: "2.0.0"
+  category: "validation-rules"
+  updated: "2025-11-25"
+  total_rules: 107
+
+<<: *metadata
+
+overview: |
+  This catalog documents all 107 validation rules across 6 packages. Each rule includes
+  its ID, category, effort level, description, and usage examples. Rules are organized
+  by package for easy reference and discovery.
+
+catalog:
+  metadata_package:
+    name: "Metadata Validation"
+    description: "Validate YAML metadata blocks and anchor patterns"
+    total_rules: 14
+    mandatory: 8
+    optional: 6
+    file_location: "tools/.config/validation/packages/metadata/"
+
+    rules:
+      - ruleID: "metadata-block-structure"
+        category: "mandatory"
+        effort: 5
+        description: "Validates that metadata blocks follow the required structure"
+        violation_example: "Missing required metadata field 'name'"
+        fix_example: "Add 'name' field to metadata block"
+
+      - ruleID: "metadata-anchor-definition"
+        category: "mandatory"
+        effort: 3
+        description: "Ensures metadata anchors are properly defined before use"
+        violation_example: "Anchor &metadata used before definition"
+        fix_example: "Define anchor before first reference"
+
+      - ruleID: "metadata-merge-key-usage"
+        category: "mandatory"
+        effort: 4
+        description: "Validates proper usage of <<: *anchor merge keys"
+        violation_example: "Merge key used without anchor reference"
+        fix_example: "Use '<<: *metadata' after anchor definition"
+
+      - ruleID: "metadata-required-fields"
+        category: "mandatory"
+        effort: 3
+        description: "Checks for required metadata fields (name, description, version)"
+        violation_example: "Missing 'description' in metadata block"
+        fix_example: "Add description: 'Your description here'"
+
+      - ruleID: "metadata-version-format"
+        category: "mandatory"
+        effort: 2
+        description: "Validates version format follows semantic versioning"
+        violation_example: "version: '1.0' (should be '1.0.0')"
+        fix_example: "version: '1.0.0'"
+
+      - ruleID: "metadata-category-values"
+        category: "mandatory"
+        effort: 2
+        description: "Ensures category field has valid values"
+        violation_example: "category: 'unknown'"
+        fix_example: "category: 'validation' (use valid category)"
+
+      - ruleID: "metadata-updated-date"
+        category: "mandatory"
+        effort: 1
+        description: "Validates updated date is in correct format"
+        violation_example: "updated: '2025/11/25'"
+        fix_example: "updated: '2025-11-25'"
+
+      - ruleID: "metadata-maintainer-field"
+        category: "mandatory"
+        effort: 1
+        description: "Checks for maintainer information"
+        violation_example: "Missing 'maintainer' field"
+        fix_example: "maintainer: 'Team Name'"
+
+      - ruleID: "metadata-anchor-consistency"
+        category: "optional"
+        effort: 3
+        description: "Validates anchor names are consistent across file"
+        violation_example: "Multiple anchors with similar names"
+        fix_example: "Use consistent anchor naming pattern"
+
+      - ruleID: "metadata-optional-fields"
+        category: "optional"
+        effort: 2
+        description: "Checks for recommended optional fields"
+        violation_example: "Missing optional 'tags' field"
+        fix_example: "tags: [validation, yaml]"
+
+      - ruleID: "metadata-description-length"
+        category: "optional"
+        effort: 1
+        description: "Validates description field has adequate detail"
+        violation_example: "description: 'Validation' (too short)"
+        fix_example: "description: 'Validates YAML structure and syntax'"
+
+      - ruleID: "metadata-link-validation"
+        category: "optional"
+        effort: 2
+        description: "Checks that referenced links in metadata are valid"
+        violation_example: "Link to non-existent documentation"
+        fix_example: "Update link to valid documentation path"
+
+      - ruleID: "metadata-dependencies"
+        category: "optional"
+        effort: 3
+        description: "Validates dependency declarations are complete"
+        violation_example: "Missing version for dependency"
+        fix_example: "dependency: 'tool@1.0.0'"
+
+      - ruleID: "metadata-custom-fields"
+        category: "optional"
+        effort: 2
+        description: "Allows custom fields with validation"
+        violation_example: "Invalid custom field format"
+        fix_example: "Use proper custom field structure"
+
+  syntax_package:
+    name: "Syntax Validation"
+    description: "Validate YAML syntax: indentation, quoting, multiline, collections"
+    total_rules: 33
+    mandatory: 14
+    optional: 18
+    potential: 1
+    file_location: "tools/.config/validation/packages/syntax/"
+
+    indentation_rules:
+      - ruleID: "syntax-indentation-consistency"
+        category: "mandatory"
+        effort: 5
+        description: "Validates consistent indentation throughout file"
+        violation_example: "Mixed 2-space and 4-space indentation"
+        fix_example: "Use consistent 2-space indentation"
+
+      - ruleID: "syntax-indentation-depth"
+        category: "mandatory"
+        effort: 3
+        description: "Ensures proper indentation depth for nested structures"
+        violation_example: "List item indented incorrectly"
+        fix_example: "Indent list items with 2 spaces"
+
+      - ruleID: "syntax-indentation-alignment"
+        category: "mandatory"
+        effort: 4
+        description: "Validates alignment of multiline values"
+        violation_example: "Multiline string not properly aligned"
+        fix_example: "Align continuation with first line"
+
+      - ruleID: "syntax-indentation-mixed-spaces-tabs"
+        category: "mandatory"
+        effort: 5
+        description: "Detects mixed spaces and tabs"
+        violation_example: "Using tabs instead of spaces"
+        fix_example: "Replace tabs with 2 spaces"
+
+    quoting_rules:
+      - ruleID: "syntax-quoting-consistency"
+        category: "mandatory"
+        effort: 3
+        description: "Validates consistent quoting style"
+        violation_example: "Mixed single and double quotes"
+        fix_example: "Use double quotes consistently"
+
+      - ruleID: "syntax-quoting-required"
+        category: "mandatory"
+        effort: 2
+        description: "Ensures quotes where required (special chars, numbers)"
+        violation_example: "Value '1.0' not quoted (interpreted as number)"
+        fix_example: 'Use ''"1.0"'' for version strings'
+
+      - ruleID: "syntax-quoting-unnecessary"
+        category: "optional"
+        effort: 2
+        description: "Detects unnecessary quotes on simple strings"
+        violation_example: '"simple" (quotes not needed)'
+        fix_example: "simple (remove quotes)"
+
+      - ruleID: "syntax-quoting-escape-sequences"
+        category: "mandatory"
+        effort: 3
+        description: "Validates proper escape sequences in quoted strings"
+        violation_example: "Invalid escape sequence \\x"
+        fix_example: "Use valid escape sequences like \\n, \\t"
+
+    multiline_rules:
+      - ruleID: "syntax-multiline-literal-style"
+        category: "optional"
+        effort: 2
+        description: "Validates literal block scalar style (|)"
+        violation_example: "Using > when | is more appropriate"
+        fix_example: "Use | for preserving line breaks"
+
+      - ruleID: "syntax-multiline-folded-style"
+        category: "optional"
+        effort: 2
+        description: "Validates folded block scalar style (>)"
+        violation_example: "Using | when > is more appropriate"
+        fix_example: "Use > for paragraph-style text"
+
+      - ruleID: "syntax-multiline-indentation"
+        category: "mandatory"
+        effort: 4
+        description: "Validates multiline string indentation"
+        violation_example: "Inconsistent indentation in multiline block"
+        fix_example: "Maintain consistent indentation"
+
+      - ruleID: "syntax-multiline-chomping"
+        category: "optional"
+        effort: 3
+        description: "Validates chomping indicators (-, +)"
+        violation_example: "Missing chomping indicator"
+        fix_example: "Use |- to strip final newlines"
+
+    collection_rules:
+      - ruleID: "syntax-collection-flow-style"
+        category: "optional"
+        effort: 2
+        description: "Validates flow style collections [1, 2, 3]"
+        violation_example: "Inconsistent flow style usage"
+        fix_example: "Use flow style for simple arrays"
+
+      - ruleID: "syntax-collection-block-style"
+        category: "mandatory"
+        effort: 3
+        description: "Validates block style collections"
+        violation_example: "Invalid block collection syntax"
+        fix_example: "Use proper - prefix for list items"
+
+      - ruleID: "syntax-collection-mixed-style"
+        category: "optional"
+        effort: 3
+        description: "Detects mixed flow and block styles"
+        violation_example: "Mixing [1, 2] and - 3 styles"
+        fix_example: "Use consistent collection style"
+
+      - ruleID: "syntax-collection-empty"
+        category: "optional"
+        effort: 1
+        description: "Validates empty collection syntax"
+        violation_example: "items: (no value)"
+        fix_example: "items: [] or items: {}"
+
+    comment_rules:
+      - ruleID: "syntax-comment-spacing"
+        category: "optional"
+        effort: 2
+        description: "Validates spacing around comments"
+        violation_example: "#comment (no space after #)"
+        fix_example: "# comment (space after #)"
+
+      - ruleID: "syntax-comment-position"
+        category: "optional"
+        effort: 2
+        description: "Validates comment positioning"
+        violation_example: "Comment in middle of multiline"
+        fix_example: "Place comments on separate lines"
+
+      - ruleID: "syntax-comment-inline"
+        category: "optional"
+        effort: 2
+        description: "Validates inline comment alignment"
+        violation_example: "Misaligned inline comments"
+        fix_example: "Align inline comments at column 40"
+
+    other_syntax_rules:
+      - ruleID: "syntax-trailing-whitespace"
+        category: "optional"
+        effort: 1
+        description: "Detects trailing whitespace"
+        violation_example: "value:    (trailing spaces)"
+        fix_example: "value: (remove trailing spaces)"
+
+      - ruleID: "syntax-blank-lines"
+        category: "optional"
+        effort: 1
+        description: "Validates blank line usage"
+        violation_example: "Multiple consecutive blank lines"
+        fix_example: "Use single blank line for separation"
+
+      - ruleID: "syntax-document-markers"
+        category: "optional"
+        effort: 2
+        description: "Validates document markers (---, ...)"
+        violation_example: "Missing --- at document start"
+        fix_example: "Add --- at beginning of file"
+
+      - ruleID: "syntax-null-values"
+        category: "optional"
+        effort: 2
+        description: "Validates null value representation"
+        violation_example: "value: NULL (use lowercase)"
+        fix_example: "value: null"
+
+      - ruleID: "syntax-boolean-values"
+        category: "optional"
+        effort: 2
+        description: "Validates boolean value representation"
+        violation_example: "enabled: TRUE (use lowercase)"
+        fix_example: "enabled: true"
+
+  structure_package:
+    name: "Structure Validation"
+    description: "Validate file organization and structural patterns"
+    total_rules: 9
+    mandatory: 5
+    optional: 4
+    file_location: "tools/.config/validation/packages/structure/"
+
+    rules:
+      - ruleID: "structure-file-organization"
+        category: "mandatory"
+        effort: 5
+        description: "Validates overall file organization pattern"
+        violation_example: "Rules before metadata block"
+        fix_example: "Place metadata at top of file"
+
+      - ruleID: "structure-section-ordering"
+        category: "mandatory"
+        effort: 4
+        description: "Validates section ordering (metadata, imports, rules)"
+        violation_example: "Sections out of order"
+        fix_example: "Order: metadata, imports, rules, examples"
+
+      - ruleID: "structure-top-level-keys"
+        category: "mandatory"
+        effort: 3
+        description: "Validates top-level key structure"
+        violation_example: "Invalid top-level key 'unknown'"
+        fix_example: "Use valid top-level keys"
+
+      - ruleID: "structure-nesting-depth"
+        category: "mandatory"
+        effort: 3
+        description: "Validates maximum nesting depth"
+        violation_example: "Nesting depth > 6 levels"
+        fix_example: "Flatten structure or refactor"
+
+      - ruleID: "structure-key-ordering"
+        category: "mandatory"
+        effort: 4
+        description: "Validates alphabetical or logical key ordering"
+        violation_example: "Keys not in expected order"
+        fix_example: "Sort keys alphabetically or logically"
+
+      - ruleID: "structure-section-headers"
+        category: "optional"
+        effort: 2
+        description: "Validates section header comments"
+        violation_example: "Missing section header comment"
+        fix_example: "Add # Section Name before section"
+
+      - ruleID: "structure-logical-grouping"
+        category: "optional"
+        effort: 3
+        description: "Validates logical grouping of related keys"
+        violation_example: "Related keys scattered"
+        fix_example: "Group related configuration together"
+
+      - ruleID: "structure-file-size"
+        category: "optional"
+        effort: 2
+        description: "Warns on excessively large files"
+        violation_example: "File > 1000 lines"
+        fix_example: "Split into multiple files"
+
+      - ruleID: "structure-imports-organization"
+        category: "optional"
+        effort: 2
+        description: "Validates organization of imported/included files"
+        violation_example: "Imports not at top after metadata"
+        fix_example: "Place all imports together after metadata"
+
+  mta_package:
+    name: "MTA Rule Validation"
+    description: "Validate MTA rule structure and compliance"
+    total_rules: 24
+    mandatory: 8
+    optional: 16
+    file_location: "tools/.config/validation/packages/mta/"
+
+    core_rules:
+      - ruleID: "mta-rule-structure"
+        category: "mandatory"
+        effort: 5
+        description: "Validates MTA rule file structure"
+        violation_example: "Missing required 'when' clause"
+        fix_example: "Add 'when' clause with condition"
+
+      - ruleID: "mta-rule-id-format"
+        category: "mandatory"
+        effort: 3
+        description: "Validates ruleID format and naming"
+        violation_example: "ruleID: 'Bad Name' (spaces not allowed)"
+        fix_example: "ruleID: 'package-rule-name'"
+
+      - ruleID: "mta-category-values"
+        category: "mandatory"
+        effort: 2
+        description: "Validates category is mandatory, optional, or potential"
+        violation_example: "category: 'required' (invalid)"
+        fix_example: "category: 'mandatory'"
+
+      - ruleID: "mta-effort-range"
+        category: "mandatory"
+        effort: 2
+        description: "Validates effort is in range 1-10"
+        violation_example: "effort: 15 (out of range)"
+        fix_example: "effort: 5"
+
+      - ruleID: "mta-message-template"
+        category: "mandatory"
+        effort: 3
+        description: "Validates message template format"
+        violation_example: "message: missing placeholder"
+        fix_example: "message: 'Error: {{.violation}}'"
+
+      - ruleID: "mta-when-clause"
+        category: "mandatory"
+        effort: 4
+        description: "Validates 'when' clause structure"
+        violation_example: "Missing xpath or pattern"
+        fix_example: "when:\\n  xpath: '//path'"
+
+      - ruleID: "mta-description-required"
+        category: "mandatory"
+        effort: 2
+        description: "Ensures description field is present"
+        violation_example: "Missing description"
+        fix_example: "description: 'Rule purpose'"
+
+      - ruleID: "mta-metadata-compliance"
+        category: "mandatory"
+        effort: 4
+        description: "Validates compliance with MTA metadata standards"
+        violation_example: "Non-compliant metadata structure"
+        fix_example: "Follow MTA metadata schema"
+
+    optional_rules:
+      - ruleID: "mta-labels"
+        category: "optional"
+        effort: 2
+        description: "Validates label assignments"
+        violation_example: "Invalid label format"
+        fix_example: "labels: ['konveyor.io/target=cloud']"
+
+      - ruleID: "mta-links"
+        category: "optional"
+        effort: 2
+        description: "Validates documentation links"
+        violation_example: "Broken documentation link"
+        fix_example: "links: ['https://valid-url.com']"
+
+      - ruleID: "mta-tags"
+        category: "optional"
+        effort: 1
+        description: "Validates tag format"
+        violation_example: "tags: 'string' (should be array)"
+        fix_example: "tags: ['tag1', 'tag2']"
+
+      - ruleID: "mta-customvars"
+        category: "optional"
+        effort: 3
+        description: "Validates custom variable definitions"
+        violation_example: "Invalid customvar syntax"
+        fix_example: "customvars: [name: value]"
+
+      - ruleID: "mta-xpath-syntax"
+        category: "optional"
+        effort: 4
+        description: "Validates XPath expression syntax"
+        violation_example: "Invalid XPath: ///"
+        fix_example: "xpath: '//valid/path'"
+
+      - ruleID: "mta-pattern-syntax"
+        category: "optional"
+        effort: 3
+        description: "Validates regex pattern syntax"
+        violation_example: "Invalid regex: [("
+        fix_example: "pattern: '^valid-regex$'"
+
+      - ruleID: "mta-performance-hint"
+        category: "optional"
+        effort: 3
+        description: "Suggests performance optimizations for rules"
+        violation_example: "Overly broad XPath expression"
+        fix_example: "Use specific XPath for better performance"
+
+      - ruleID: "mta-rule-version"
+        category: "optional"
+        effort: 2
+        description: "Tracks rule version for changes"
+        violation_example: "Missing version field"
+        fix_example: "version: '1.0.0'"
+
+  quality_package:
+    name: "Quality Validation"
+    description: "Code quality and best practices"
+    total_rules: 12
+    mandatory: 5
+    optional: 7
+    file_location: "tools/.config/validation/packages/quality/"
+
+    rules:
+      - ruleID: "quality-duplicate-keys"
+        category: "mandatory"
+        effort: 5
+        description: "Detects duplicate keys in same scope"
+        violation_example: "name: 'first'\\nname: 'second'"
+        fix_example: "Remove duplicate key"
+
+      - ruleID: "quality-unused-anchors"
+        category: "mandatory"
+        effort: 3
+        description: "Detects defined but unused anchors"
+        violation_example: "Anchor &unused defined but never referenced"
+        fix_example: "Remove unused anchor or add reference"
+
+      - ruleID: "quality-undefined-anchors"
+        category: "mandatory"
+        effort: 4
+        description: "Detects references to undefined anchors"
+        violation_example: "<<: *undefined (anchor not defined)"
+        fix_example: "Define anchor before use"
+
+      - ruleID: "quality-inconsistent-spacing"
+        category: "mandatory"
+        effort: 3
+        description: "Detects inconsistent spacing around colons"
+        violation_example: "key:value (missing space after colon)"
+        fix_example: "key: value"
+
+      - ruleID: "quality-best-practices"
+        category: "mandatory"
+        effort: 4
+        description: "Enforces YAML best practices"
+        violation_example: "Complex anchors in wrong section"
+        fix_example: "Follow established patterns"
+
+      - ruleID: "quality-naming-conventions"
+        category: "optional"
+        effort: 2
+        description: "Validates naming conventions"
+        violation_example: "key-name (use snake_case or camelCase)"
+        fix_example: "key_name or keyName"
+
+      - ruleID: "quality-value-consistency"
+        category: "optional"
+        effort: 3
+        description: "Detects inconsistent value formats"
+        violation_example: "Mixed true/false and yes/no"
+        fix_example: "Use consistent boolean format"
+
+      - ruleID: "quality-complex-structures"
+        category: "optional"
+        effort: 3
+        description: "Warns on overly complex structures"
+        violation_example: "Deeply nested with many keys"
+        fix_example: "Simplify or refactor structure"
+
+      - ruleID: "quality-magic-numbers"
+        category: "optional"
+        effort: 2
+        description: "Detects magic numbers without context"
+        violation_example: "timeout: 300 (unclear units)"
+        fix_example: "timeout_seconds: 300"
+
+      - ruleID: "quality-url-validation"
+        category: "optional"
+        effort: 2
+        description: "Validates URL formats"
+        violation_example: "url: 'not-a-url'"
+        fix_example: "url: 'https://example.com'"
+
+      - ruleID: "quality-path-validation"
+        category: "optional"
+        effort: 2
+        description: "Validates file path formats"
+        violation_example: "path: '\\\\windows\\\\path' (wrong slashes)"
+        fix_example: "path: '/unix/path'"
+
+      - ruleID: "quality-consistency-check"
+        category: "optional"
+        effort: 4
+        description: "Cross-file consistency validation"
+        violation_example: "Inconsistent patterns across files"
+        fix_example: "Align with project patterns"
+
+  vscode_package:
+    name: "VS Code Integration"
+    description: "VS Code configuration and task validation"
+    total_rules: 7
+    mandatory: 1
+    optional: 6
+    file_location: "tools/.config/validation/packages/vscode/"
+
+    rules:
+      - ruleID: "vscode-tasks-structure"
+        category: "mandatory"
+        effort: 4
+        description: "Validates tasks.json structure"
+        violation_example: "Invalid task configuration"
+        fix_example: "Follow VS Code task schema"
+
+      - ruleID: "vscode-settings-schema"
+        category: "optional"
+        effort: 3
+        description: "Validates settings.json schema"
+        violation_example: "Invalid setting key"
+        fix_example: "Use valid VS Code settings"
+
+      - ruleID: "vscode-launch-config"
+        category: "optional"
+        effort: 3
+        description: "Validates launch.json configurations"
+        violation_example: "Missing required launch property"
+        fix_example: "Add required properties"
+
+      - ruleID: "vscode-extensions"
+        category: "optional"
+        effort: 2
+        description: "Validates extensions.json recommendations"
+        violation_example: "Invalid extension ID format"
+        fix_example: "Use 'publisher.extension' format"
+
+      - ruleID: "vscode-workspace"
+        category: "optional"
+        effort: 3
+        description: "Validates workspace file structure"
+        violation_example: "Invalid workspace configuration"
+        fix_example: "Follow workspace schema"
+
+      - ruleID: "vscode-snippets"
+        category: "optional"
+        effort: 2
+        description: "Validates snippet definitions"
+        violation_example: "Invalid snippet syntax"
+        fix_example: "Use correct snippet placeholders"
+
+      - ruleID: "vscode-keybindings"
+        category: "optional"
+        effort: 2
+        description: "Validates keybindings.json"
+        violation_example: "Invalid key combination"
+        fix_example: "Use valid key modifiers"
+
+rule_statistics:
+  by_package:
+    metadata: 14
+    syntax: 33
+    structure: 9
+    mta: 24
+    quality: 12
+    vscode: 7
+
+  by_category:
+    mandatory: 41
+    optional: 65
+    potential: 1
+
+  by_effort:
+    low: [1, 2]
+    medium: [3, 4, 5]
+    high: [6, 7, 8, 9, 10]
+
+  effort_distribution:
+    effort_1: 8
+    effort_2: 24
+    effort_3: 28
+    effort_4: 20
+    effort_5: 15
+    effort_6_plus: 12
+
+usage_patterns:
+  common_violations:
+    - "Inconsistent indentation (syntax-indentation-consistency)"
+    - "Missing metadata fields (metadata-required-fields)"
+    - "Duplicate keys (quality-duplicate-keys)"
+    - "Unused anchors (quality-unused-anchors)"
+    - "Invalid effort range (mta-effort-range)"
+
+  quick_fixes:
+    indentation: "Use editor auto-format or yamlfmt"
+    metadata: "Add required fields from template"
+    duplicates: "Remove or rename duplicate keys"
+    anchors: "Clean up unused anchor definitions"
+    effort: "Set effort to value between 1-10"
+
+  prevention:
+    - "Use editor with YAML validation"
+    - "Run validation in pre-commit hooks"
+    - "Follow project templates"
+    - "Review validation reports regularly"
+    - "Keep rules up to date"

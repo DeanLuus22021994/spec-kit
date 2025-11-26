@@ -1,0 +1,286 @@
+# File Organization Validation Rules
+# Enforces proper file structure and documentation
+
+- ruleID: yaml-file-header-comment
+  description: |
+    All YAML files should start with a descriptive header comment explaining purpose.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^[^#]"
+  message: |
+    File appears to start without header comment.
+
+    Best practice: Begin files with descriptive comment:
+
+    # Service Configuration
+    # Defines runtime parameters and dependencies
+
+    metadata: &metadata
+      ...
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML File Organization - Header Comments"
+
+- ruleID: yaml-metadata-block-first
+  description: |
+    Metadata block should be the first element after comments.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^[a-zA-Z_][a-zA-Z0-9_]*:"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^metadata:"
+  message: |
+    File has content before metadata block.
+
+    Correct order per yaml-best-practices.yml:
+    1. File header comment
+    2. metadata: &metadata block
+    3. <<: *metadata merge
+    4. Anchor definitions
+    5. Main content sections
+    6. cross_references
+    7. related_documentation
+  effort: 3
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML File Organization Structure"
+
+- ruleID: yaml-anchors-before-content
+  description: |
+    Anchor definitions should appear before main content sections.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^[a-zA-Z_][a-zA-Z0-9_]*:\\s*&"
+  message: |
+    Anchor definition found - verify placement.
+
+    Recommended order:
+    1. metadata block with anchor
+    2. <<: *metadata merge
+    3. Template anchors (before first use)
+    4. Main content sections
+
+    Example:
+    template_config: &template_config
+      timeout: 30
+      retries: 3
+
+    service_a:
+      <<: *template_config
+      name: "Service A"
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML Anchor Placement Guidelines"
+
+- ruleID: yaml-section-separation
+  description: |
+    Major sections should be separated by blank lines for readability.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^[a-zA-Z_][a-zA-Z0-9_]*:"
+  message: |
+    Section boundary detected - verify blank line separation.
+
+    Best practice:
+    - Separate top-level sections with blank lines
+    - Group related subsections together
+    - Use consistent spacing throughout file
+
+    Example:
+    section_one:
+      item1: value1
+      item2: value2
+
+    section_two:
+      item3: value3
+      item4: value4
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML Section Separation"
+
+- ruleID: yaml-cross-references-section
+  description: |
+    Files should include cross_references section linking related files.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.file:
+      pattern: ".config/.*\\.(yml|yaml)$"
+  message: |
+    Configuration file detected.
+
+    Consider adding cross_references section:
+
+    cross_references:
+      - file: "related/file1.yml"
+        description: "Related configuration"
+
+      - file: "related/file2.yml"
+        description: "Dependent settings"
+
+    This improves discoverability and maintenance.
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML Cross-References Pattern"
+
+- ruleID: yaml-related-documentation-last
+  description: |
+    related_documentation section should always be last in file.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^related_documentation:"
+  message: |
+    related_documentation section found - verify placement.
+
+    This section should be the last element in the file:
+
+    # Main content sections
+    ...
+
+    # Cross-references (optional)
+    cross_references:
+      ...
+
+    # Related documentation (always last)
+    related_documentation:
+      - "path/to/doc1.yml"
+      - "path/to/doc2.yml"
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML Documentation Section Placement"
+
+- ruleID: yaml-alphabetical-sections
+  description: |
+    Main content sections should be in alphabetical or logical order.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^[a-zA-Z_][a-zA-Z0-9_]*:"
+  message: |
+    Top-level section detected.
+
+    Organization options:
+    1. Alphabetical order (default)
+       - backend, database, frontend, gateway
+
+    2. Logical/dependency order
+       - database, backend, business, gateway, frontend
+
+    Choose one approach and apply consistently within file.
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML Section Ordering Guidelines"
+
+- ruleID: yaml-consistent-naming
+  description: |
+    Use consistent naming convention for keys (snake_case or camelCase).
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^[a-z]+[A-Z]"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^[a-z]+_[a-z]+"
+  message: |
+    Key naming detected - verify consistency.
+
+    Choose one convention per file:
+
+    snake_case (recommended for config):
+      service_name: "backend"
+      max_connections: 100
+      retry_timeout: 30
+
+    camelCase (common in application config):
+      serviceName: "backend"
+      maxConnections: 100
+      retryTimeout: 30
+
+    Avoid mixing conventions within same file.
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/naming-conventions.yml"
+      title: "Naming Conventions Standards"
+
+- ruleID: yaml-inline-comments-alignment
+  description: |
+    Inline comments should be aligned for readability when used in lists or sequences.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: ":\\s+[^#]+#"
+  message: |
+    Inline comment detected.
+
+    For multiple inline comments in a section, align them:
+
+    Good alignment:
+      service1: value1   # Comment for service1
+      service2: value2   # Comment for service2
+      longer: value3     # Comment for longer
+
+    Poor alignment:
+      service1: value1 # Comment
+      service2: value2      # Comment
+      longer: value3  # Comment
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#comments"
+      title: "YAML Comment Alignment"

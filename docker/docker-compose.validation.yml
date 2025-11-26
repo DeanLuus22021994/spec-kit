@@ -1,0 +1,199 @@
+# yaml-language-server: $schema=./.config/schemas/docker-compose.schema.json
+##
+# Docker Compose Configuration for YAML Validation Service
+# Dedicated validation service with Kantra CLI and MTA rules
+# Supports both containerless (--run-local) and hybrid modes
+##
+# Metadata block moved to comments for strict YAML compliance.
+#   version: "1.0.0"
+#   category: validation
+#   keywords: validation, kantra, mta, yaml, podman, docker-compose
+#   updated: "2025-11-25"
+#   config_references:
+#     validation_context: ".config/copilot/validation.yml"
+#     docker_context: ".config/copilot/docker.yml"
+#     yaml_best_practices: ".config/copilot/yaml-best-practices.yml"
+#
+# Follows strict YAML best practices: 2-space indentation, quoted version numbers, comments for documentation.
+version: "3.8"
+
+services:
+  validation:
+    build:
+      context: .
+      dockerfile: dockerfiles/validation.Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE:-2025-11-25}
+        - VERSION=${VERSION:-1.0.0}
+    image: semantic-kernel-validation:latest
+    container_name: yaml-validation
+
+    # Volume mounts
+    volumes:
+      # Mount workspace for analysis (read-only for security)
+      - .:/workspace:ro
+
+      # Named volume for validation reports (persistent)
+      - validation-reports:/workspace/.config/validation/reports
+
+      # Mount host Podman socket for hybrid mode (optional)
+      # Uncomment if using hybrid mode with host Podman
+      # - /run/podman/podman.sock:/run/podman/podman.sock:ro
+
+      # Mount Docker socket as alternative (if using Docker instead of Podman)
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+
+      # Test data for development (read-write for testing)
+      - ./tools/.config/validation/test-data:/workspace/.config/validation/test-data:rw
+
+    # Environment configuration
+    environment:
+      # Validation profile: strict, recommended, minimal, ci-cd, development
+      - VALIDATION_PROFILE=${VALIDATION_PROFILE:-recommended}
+
+      # Kantra analysis mode: local (containerless, fastest) or hybrid (uses containers)
+      - RUN_MODE=${RUN_MODE:-local}
+
+      # Report formats: html, yaml, json
+      - REPORT_FORMAT=${REPORT_FORMAT:-html,yaml}
+
+      # Label selector for filtering rules
+      - LABEL_SELECTOR=${LABEL_SELECTOR:-}
+
+      # Fail on warnings (strict mode)
+      - FAIL_ON_WARNING=${FAIL_ON_WARNING:-false}
+
+      # Python environment
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+
+    # Working directory
+    working_dir: /workspace
+
+    # Default command (can be overridden)
+    command: ["--profile=${VALIDATION_PROFILE:-recommended}"]
+
+    # Network configuration
+    networks:
+      - validation-network
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+    # Restart policy
+    restart: "no"
+
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+
+    # Capabilities (minimal required)
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+
+    # Read-only root filesystem (except mounted volumes)
+    read_only: false # Set to true for maximum security, but may require tmpfs mounts
+
+# Named volumes
+volumes:
+  validation-reports:
+    driver: local
+    name: semantic-kernel-validation-reports
+    labels:
+      description: "Persistent storage for YAML validation reports"
+      managed-by: "docker-compose"
+
+# Networks
+networks:
+  validation-network:
+    driver: bridge
+    name: semantic-kernel-validation
+    labels:
+      description: "Network for validation service"
+
+# Cross-references and related documentation
+x-cross-references:
+  - ".config/copilot/validation.yml: Kantra CLI and validation framework"
+  - ".config/copilot/docker.yml: Docker patterns and best practices"
+  - "tools/.config/validation/README.md: Validation framework usage"
+  - "tools/.config/scripts/validate-yaml.sh: Automation script"
+  - "dockerfiles/validation.Dockerfile: Container definition"
+
+x-related-documentation:
+  - "docker-compose.tools.yml: Parallel pattern for tools service"
+  - ".config/copilot/index.yml: Context search index"
+  - "tools/.config/validation/profiles/: Profile definitions"
+
+x-usage-examples:
+  run_default_validation:
+    description: "Run validation with default recommended profile"
+    command: "docker-compose -f docker-compose.validation.yml run --rm validation"
+
+  run_strict_validation:
+    description: "Run validation with strict profile (zero tolerance)"
+    command: "docker-compose -f docker-compose.validation.yml run --rm validation --profile strict"
+
+  run_mandatory_only:
+    description: "Run only mandatory rules"
+    command: "docker-compose -f docker-compose.validation.yml run --rm validation --mandatory"
+
+  run_with_custom_selector:
+    description: "Run validation with custom label selector"
+    command: "LABEL_SELECTOR='category=mandatory' docker-compose -f docker-compose.validation.yml run --rm validation"
+
+  run_ci_cd_profile:
+    description: "Run CI/CD optimized validation"
+    command: "VALIDATION_PROFILE=ci-cd docker-compose -f docker-compose.validation.yml run --rm validation"
+
+  run_hybrid_mode:
+    description: "Run validation in hybrid mode (uses analyzer-lsp containers)"
+    command: "RUN_MODE=hybrid docker-compose -f docker-compose.validation.yml run --rm validation"
+
+  view_reports:
+    description: "Access validation reports volume"
+    command: "docker volume inspect semantic-kernel-validation-reports"
+
+  cleanup:
+    description: "Remove validation container and network"
+    command: "docker-compose -f docker-compose.validation.yml down"
+
+  rebuild:
+    description: "Rebuild validation container with latest changes"
+    command: "docker-compose -f docker-compose.validation.yml build --no-cache"
+
+  interactive_shell:
+    description: "Open interactive shell in validation container"
+    command: "docker-compose -f docker-compose.validation.yml run --rm validation bash"
+
+# Podman compatibility notes
+x-podman-notes:
+  socket_location: "Podman socket is at /run/podman/podman.sock (rootless) or /run/podman/podman.sock (rootful)"
+  enable_socket: "systemctl --user enable --now podman.socket"
+  hybrid_mode: "Requires Podman socket mount for analyzer-lsp containers"
+  containerless_mode: "Use RUN_MODE=local to avoid Podman dependency entirely"
+
+# Mode comparison
+x-mode-comparison:
+  containerless_local:
+    description: "Fastest, no container runtime needed"
+    pros: ["No Podman/Docker dependency", "Fastest execution", "Simpler setup"]
+    cons: ["Requires analyzer-lsp providers on host", "Less isolated"]
+    use_cases: ["Development", "CI/CD", "Fast feedback loops"]
+
+  hybrid:
+    description: "Uses analyzer-lsp containers for analysis"
+    pros: ["Full isolation", "No host dependencies", "Production-ready"]
+    cons:
+      ["Requires Podman/Docker", "Slower than containerless", "More complex"]
+    use_cases: ["Production validation", "Strict isolation requirements"]

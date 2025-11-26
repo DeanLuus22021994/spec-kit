@@ -1,0 +1,231 @@
+# Quoting Validation Rules
+# Enforces proper string quoting practices
+
+- ruleID: yaml-version-numbers-quoted
+  description: |
+    All version numbers must be quoted to prevent float interpretation and precision loss.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "version:\\s+[0-9]+\\.[0-9]+"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "v[0-9]+\\.[0-9]+"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "[0-9]+\\.[0-9]+\\.[0-9]+"
+  customVariables:
+    - pattern: "([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)"
+      name: versionNumber
+  message: |
+    Unquoted version number detected: {{ versionNumber }}
+
+    YAML interprets numbers as floats:
+    - 1.0 becomes 1.0 (loses trailing zero)
+    - 2.10 becomes 2.1 (loses precision)
+
+    Always quote version numbers:
+    version: "{{ versionNumber }}"
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#quoting"
+      title: "YAML Quoting - Version Numbers"
+
+- ruleID: yaml-boolean-values-unquoted
+  description: |
+    Boolean values (true, false, yes, no, on, off) should be unquoted unless required as strings.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: ':\\s+"(true|false)"'
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: ":\\s+'(true|false)'"
+  customVariables:
+    - pattern: '["''](true|false)["'']'
+      name: quotedBoolean
+  message: |
+    Quoted boolean value detected: "{{ quotedBoolean }}"
+
+    Use unquoted booleans unless you specifically need string values:
+    enabled: true        # Boolean
+    enabled: "true"      # String "true"
+
+    If you need boolean behavior, remove quotes.
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#quoting"
+      title: "YAML Quoting - Boolean Values"
+
+- ruleID: yaml-special-characters-quoted
+  description: |
+    Strings containing special characters (:, #, *, &, !, |, >, %, @) must be quoted.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: ":\\s+[^\"'][^\\n]*[:#*&!|>%@]"
+  message: |
+    Unquoted string with special characters detected.
+
+    YAML special characters that require quoting:
+    : - Key-value separator
+    # - Comment indicator
+    * - Alias reference
+    & - Anchor definition
+    ! - Tag indicator
+    | > - Multiline indicators
+    % @ - Reserved characters
+
+    Quote the entire string:
+    message: "Error: connection failed"
+    url: "http://example.com/path#anchor"
+  effort: 2
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#quoting"
+      title: "YAML Special Characters Quoting"
+
+- ruleID: yaml-escape-sequences-double-quotes
+  description: |
+    Strings with escape sequences (\n, \t, \\, etc.) must use double quotes.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: ":\\s+'[^']*\\\\[ntr\\\\][^']*'"
+  message: |
+    String with escape sequences using single quotes detected.
+
+    Single quotes treat backslashes literally.
+    Use double quotes for escape sequences:
+
+    Wrong: message: 'Line 1\nLine 2'  # Outputs: Line 1\nLine 2
+    Right: message: "Line 1\nLine 2"  # Outputs: Line 1
+                                       #          Line 2
+
+    Supported escape sequences:
+    \n - Newline
+    \t - Tab
+    \\ - Backslash
+    \" - Double quote
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#quoting"
+      title: "YAML Escape Sequences"
+
+- ruleID: yaml-url-quoting
+  description: |
+    URLs should be quoted to prevent interpretation of special characters.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "url:\\s+https?://[^\"']"
+  customVariables:
+    - pattern: "url:\\s+(https?://[^\\s]+)"
+      name: unquotedUrl
+  message: |
+    Unquoted URL detected: {{ unquotedUrl }}
+
+    URLs contain special characters (#, ?, &) that must be quoted:
+
+    url: "{{ unquotedUrl }}"
+
+    This prevents YAML from misinterpreting:
+    - # as comment
+    - & as anchor
+    - : as key-value separator
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#quoting"
+      title: "YAML URL Quoting"
+
+- ruleID: yaml-simple-values-unquoted
+  description: |
+    Simple alphanumeric values without special characters should be unquoted for clarity.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: ':\\s+"[a-zA-Z][a-zA-Z0-9_-]*"\\s*$'
+  customVariables:
+    - pattern: '"([a-zA-Z][a-zA-Z0-9_-]*)"'
+      name: quotedSimple
+  message: |
+    Unnecessarily quoted simple value: "{{ quotedSimple }}"
+
+    Simple alphanumeric values don't need quotes:
+
+    name: {{ quotedSimple }}
+    type: {{ quotedSimple }}
+    category: {{ quotedSimple }}
+
+    Reserve quotes for:
+    - Values with spaces or special characters
+    - Version numbers
+    - Values that might be interpreted as booleans/numbers
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#quoting"
+      title: "YAML Quoting - Simple Values"
+
+- ruleID: yaml-regex-patterns-quoted
+  description: |
+    Regular expression patterns should use single quotes to avoid escape sequence issues.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: 'pattern:\\s+".*\\^'
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: 'pattern:\\s+".*\\$'
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: 'regex:\\s+".*\\['
+  message: |
+    Regex pattern with double quotes detected.
+
+    Use single quotes for regex to avoid escape sequence conflicts:
+
+    Wrong: pattern: "^\\d{3}-\\d{3}-\\d{4}$"  # Must escape backslashes
+    Right: pattern: '^\\d{3}-\\d{3}-\\d{4}$'  # Literal backslashes
+
+    Single quotes treat content literally, simplifying regex patterns.
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#quoting"
+      title: "YAML Regex Pattern Quoting"

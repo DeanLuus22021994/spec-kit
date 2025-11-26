@@ -1,0 +1,128 @@
+# VSCode: Custom Schema Support Rules
+# Purpose: Validate custom JSON schemas for YAML files
+# Scope: Custom schema files in workspace
+# Package: vscode
+
+---
+- ruleID: vscode-custom-schema-valid-json
+  description: |
+    Ensures custom YAML schemas are valid JSON Schema.
+
+    Custom schemas must follow JSON Schema specification:
+    - Draft-07 or newer recommended
+    - Valid JSON syntax
+    - Proper $schema declaration
+    - Valid keywords and types
+
+    Example valid schema:
+    ```json
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": ["name"]
+    }
+    ```
+  labels:
+    - "vscode/schema"
+    - "vscode/json-schema"
+    - "validation/syntax"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\{[\\s\\S]*(?!\\$schema)"
+      filePattern: "**/schema/*.json"
+  message: |
+    Custom JSON schema missing $schema declaration.
+
+    Add $schema at top of schema file:
+
+    ```json
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "My Config Schema",
+      "type": "object",
+      "properties": {
+        ...
+      }
+    }
+    ```
+
+    Recommended: Use Draft-07 or newer
+    - Draft-07: http://json-schema.org/draft-07/schema#
+    - Draft 2020-12: https://json-schema.org/draft/2020-12/schema
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://json-schema.org/understanding-json-schema/
+      title: "JSON Schema Guide"
+    - url: https://json-schema.org/specification.html
+      title: "JSON Schema Specification"
+
+---
+- ruleID: vscode-schema-documentation
+  description: |
+    Ensures custom schemas include helpful documentation fields.
+
+    Good schemas include:
+    - title: Schema name
+    - description: Purpose and usage
+    - Property descriptions: What each field does
+    - examples: Sample valid values
+
+    Documentation appears in VSCode tooltips and helps users
+    understand required configuration.
+
+    Example:
+    ```json
+    {
+      "type": "object",
+      "title": "Database Configuration",
+      "description": "Settings for database connection",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Database server hostname",
+          "examples": ["localhost", "db.example.com"]
+        }
+      }
+    }
+    ```
+  labels:
+    - "vscode/schema"
+    - "vscode/documentation"
+    - "validation/usability"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\{[\\s\\S]*\"properties\":[\\s\\S]*(?!description|title|examples)"
+      filePattern: "**/schema/*.json"
+  message: |
+    Schema properties lack documentation fields.
+
+    Add helpful documentation:
+
+    ```json
+    {
+      "properties": {
+        "timeout": {
+          "type": "number",
+          "title": "Connection Timeout",
+          "description": "Timeout in seconds for database connections",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 30,
+          "examples": [30, 60, 120]
+        }
+      }
+    }
+    ```
+
+    Documentation appears in VSCode IntelliSense tooltips.
+  effort: 2
+  category: optional
+  links:
+    - url: https://json-schema.org/understanding-json-schema/reference/generic.html
+      title: "JSON Schema Generic Keywords"

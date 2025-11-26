@@ -1,0 +1,113 @@
+# Quality: Unused Elements Detection Rules
+# Purpose: Detect unused anchors and variables in YAML
+# Scope: All YAML files in project
+# Package: quality
+
+---
+- ruleID: yaml-unused-anchors
+  description: |
+    Detects anchors that are defined but never referenced.
+
+    Unused anchors (&name) indicate:
+    - Dead code/configuration
+    - Refactoring leftovers
+    - Documentation examples that should be commented
+
+    If an anchor is not referenced anywhere with *name or <<: *name,
+    it serves no purpose and should be removed or the reference added.
+
+    This keeps YAML clean and maintainable.
+  labels:
+    - "yaml/quality"
+    - "yaml/unused"
+    - "validation/cleanup"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)&([a-zA-Z0-9_-]+)(?![\\s\\S]*\\*\\1)"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Anchor defined but never referenced.
+
+    Either:
+    1. Add a reference using *anchorName
+    2. Use in merge: <<: *anchorName
+    3. Remove the unused anchor
+
+    Example of unused:
+    ```yaml
+    defaults: &unused
+      timeout: 30
+
+    config:
+      retries: 3  # Never uses &unused
+    ```
+
+    Fixed with reference:
+    ```yaml
+    defaults: &defaults
+      timeout: 30
+
+    config:
+      <<: *defaults
+      retries: 3
+    ```
+  effort: 1
+  category: optional
+  links:
+    - url: https://yaml.org/spec/1.2/spec.html#id2785586
+      title: "YAML Anchors and Aliases"
+
+---
+- ruleID: yaml-unused-merge-keys
+  description: |
+    Detects merge keys (<<:) that may not be used effectively.
+
+    Merge keys combine mappings from anchors. Issues to check:
+    - Merge key references non-existent anchor
+    - Merged values are immediately overridden
+    - Merge serves no purpose (no values actually merged)
+
+    Example of ineffective merge:
+    ```yaml
+    base: &base
+      timeout: 30
+
+    config:
+      <<: *base
+      timeout: 60  # Overrides merged timeout completely
+    ```
+
+    This is valid but may indicate confusion about merge behavior.
+  labels:
+    - "yaml/quality"
+    - "yaml/merge-keys"
+    - "validation/effectiveness"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^(\\s+)<<:\\s*\\*([a-zA-Z0-9_-]+)\\s*\\n\\1[a-zA-Z0-9_-]+:"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Merge key usage may be ineffective.
+
+    Review merge behavior:
+    - Ensure anchor exists
+    - Check if merged values are overridden
+    - Verify merge provides actual benefit
+
+    Merge adds values from anchor, but local keys override:
+    ```yaml
+    base: &base
+      timeout: 30
+      retries: 3
+
+    config:
+      <<: *base       # Merges both
+      timeout: 60     # Overrides timeout, keeps retries
+    ```
+
+    If all values are overridden, merge serves no purpose.
+  effort: 2
+  category: potential
+  links:
+    - url: https://yaml.org/type/merge.html
+      title: "YAML Merge Key Specification"

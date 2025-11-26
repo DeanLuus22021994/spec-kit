@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "dotnet-ef": {
+      "version": "10.0.0",
+      "commands": ["dotnet-ef"],
+      "rollForward": true
+    },
+    "dotnet-aspnet-codegenerator": {
+      "version": "9.0.0",
+      "commands": ["dotnet-aspnet-codegenerator"],
+      "rollForward": true
+    },
+    "dotnet-format": {
+      "version": "5.1.250801",
+      "commands": ["dotnet-format"],
+      "rollForward": true
+    },
+    "dotnet-reportgenerator-globaltool": {
+      "version": "5.5.0",
+      "commands": ["reportgenerator"],
+      "rollForward": true
+    },
+    "dotnet-coverage": {
+      "version": "18.1.0",
+      "commands": ["dotnet-coverage"],
+      "rollForward": true
+    },
+    "microsoft.dotnet-httprepl": {
+      "version": "8.0.0",
+      "commands": ["httprepl"],
+      "rollForward": true
+    },
+    "microsoft.dotnet-openapi": {
+      "version": "10.0.0",
+      "commands": ["dotnet-openapi"],
+      "rollForward": true
+    },
+    "dotnet-outdated-tool": {
+      "version": "4.6.8",
+      "commands": ["dotnet-outdated"],
+      "rollForward": true
+    },
+    "dotnet-trace": {
+      "version": "9.0.652701",
+      "commands": ["dotnet-trace"],
+      "rollForward": true
+    },
+    "dotnet-counters": {
+      "version": "9.0.652701",
+      "commands": ["dotnet-counters"],
+      "rollForward": true
+    },
+    "dotnet-dump": {
+      "version": "9.0.652701",
+      "commands": ["dotnet-dump"],
+      "rollForward": true
+    },
+    "dotnet-gcdump": {
+      "version": "9.0.652701",
+      "commands": ["dotnet-gcdump"],
+      "rollForward": true
+    },
+    "dotnet-monitor": {
+      "version": "10.0.0",
+      "commands": ["dotnet-monitor"],
+      "rollForward": true
+    },
+    "dotnet-sos": {
+      "version": "9.0.652701",
+      "commands": ["dotnet-sos"],
+      "rollForward": true
+    },
+    "dotnet-symbol": {
+      "version": "9.0.652701",
+      "commands": ["dotnet-symbol"],
+      "rollForward": true
+    },
+    "microsoft.web.librarymanager.cli": {
+      "version": "3.0.71",
+      "commands": ["libman"],
+      "rollForward": true
+    },
+    "csharpier": {
+      "version": "1.2.1",
+      "commands": ["csharpier"],
+      "rollForward": true
+    },
+    "roslynator.dotnet.cli": {
+      "version": "0.11.0",
+      "commands": ["roslynator"],
+      "rollForward": true
+    },
+    "microsoft.dotnet-interactive": {
+      "version": "1.0.632301",
+      "commands": ["dotnet-interactive"],
+      "rollForward": true
+    },
+    "nbgv": {
+      "version": "3.9.50",
+      "commands": ["nbgv"],
+      "rollForward": true
+    }
+  }
+}

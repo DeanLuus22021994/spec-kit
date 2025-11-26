@@ -1,0 +1,260 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# CLI Configuration for Semantic Kernel App
+
+# Metadata
+metadata: &metadata
+  version: "1.1.0"
+  category: config
+  keywords: [cli, sk-cli, commands, api, semantic-kernel, configuration, tools, endpoints, gpu, cuda]
+  updated: "2025-11-25"
+
+<<: *metadata
+
+# CLI Settings
+cli:
+  name: sk-cli
+  description: "Semantic Kernel CLI for managing AI operations"
+  version: "1.0.0"
+  default_output: json
+  verbose: false
+
+# Command Configuration
+commands:
+  kernel:
+    description: "Manage semantic kernels"
+    subcommands:
+      - create
+      - list
+      - delete
+      - status
+
+  plugins:
+    description: "Manage kernel plugins"
+    subcommands:
+      - install
+      - list
+      - remove
+      - update
+
+  skills:
+    description: "Manage semantic skills"
+    subcommands:
+      - add
+      - list
+      - invoke
+      - test
+
+  embeddings:
+    description: "Manage embeddings and vectors (GPU-accelerated)"
+    subcommands:
+      - generate
+      - search
+      - index
+      - query
+      - benchmark
+
+  gpu:
+    description: "GPU and CUDA management"
+    subcommands:
+      - status
+      - info
+      - benchmark
+      - memory
+      - temperature
+      - utilization
+
+  config:
+    description: "Configuration management"
+    subcommands:
+      - show
+      - set
+      - reset
+      - gpu
+
+# API Endpoints
+api:
+  base_url: "http://localhost:5000"
+  timeout: 30
+  retry_attempts: 3
+  retry_delay: 1
+  endpoints:
+    backend: "http://localhost:5000"
+    engine: "http://localhost:5001"
+    embeddings: "http://localhost:8001"
+    vector: "http://localhost:6333"
+
+# Authentication
+auth:
+  type: "bearer"
+  token_env_var: "SK_API_TOKEN"
+  token_file: ".sk-token"
+
+# Logging
+logging:
+  level: "info"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/cli.log"
+  max_size_mb: 10
+  backup_count: 5
+
+# Output Formats
+output:
+  formats:
+    - json
+    - yaml
+    - table
+    - csv
+  default: "json"
+  pretty_print: true
+  color: true
+
+# Database Connection
+database:
+  host: "localhost"
+  port: 5432
+  name: "semantic_kernel"
+  user: "user"
+  password_env_var: "DB_PASSWORD"
+  pool_size: 10
+  timeout: 30
+
+# Vector Database
+vector_db:
+  host: "localhost"
+  port: 6333
+  collection: "embeddings"
+  distance: "cosine"
+  dimensions: 1536
+
+# OpenAI Configuration
+openai:
+  api_key_env_var: "OPENAI_API_KEY"
+  model: "gpt-4o"
+  embedding_model: "text-embedding-3-small"
+  max_tokens: 4000
+  temperature: 0.7
+  timeout: 120
+
+# GPU / CUDA Settings
+gpu:
+  enabled: true
+  device: "cuda:0"
+  cuda_version: "13.0"
+  cudnn_version: "9.12.0"
+  compute_capability: "8.6"
+  memory_limit: "5G"
+  mixed_precision: true
+  benchmark_mode: true
+  flash_attention: true
+  model: "RTX 3050"
+  memory_total: "6G"
+
+  environment:
+    CUDA_VISIBLE_DEVICES: "0"
+    TORCH_CUDA_ARCH_LIST: "8.6"
+    PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
+    NVIDIA_VISIBLE_DEVICES: "all"
+    NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+    CUDA_DEVICE_ORDER: "PCI_BUS_ID"
+    CUDA_LAUNCH_BLOCKING: "0"
+    TORCH_BACKENDS_CUDNN_BENCHMARK: "1"
+
+  optimization:
+    tf32_enabled: true
+    cudnn_deterministic: false
+    cudnn_benchmark: true
+    memory_efficient_attention: true
+
+  monitoring:
+    enabled: true
+    interval_seconds: 5
+    metrics:
+      - utilization
+      - memory_used
+      - memory_free
+      - temperature
+      - power_draw
+
+# Self-Hosted Runner Configuration
+self_hosted_runner:
+  label: "self-hosted-gpu"
+  description: "Pre-configured self-hosted runner with NVIDIA GPU"
+  token_required: false
+  already_registered: true
+
+  specs:
+    gpu: "RTX 3050 6GB"
+    cuda: "13.0"
+    cudnn: "9.12.0"
+    pytorch: "2.9.1+cu130"
+    compute_capability: "8.6"
+    python: "3.14"
+    dotnet: "10.0"
+    node: "20"
+
+  usage:
+    workflow: "runs-on: self-hosted-gpu"
+    docker: "docker run --gpus all"
+
+  environment_config: ".config/environment.yml"
+
+# Semantic Kernel Settings
+semantic_kernel:
+  plugins_path: "/app/plugins"
+  skills_path: "/app/skills"
+  memory_store: "postgresql"
+  planner: "SequentialPlanner"
+  max_iterations: 10
+  gpu_acceleration: true
+  batch_inference: true
+
+  cuda:
+    enabled: true
+    device: "cuda:0"
+    mixed_precision: true
+    flash_attention: true
+
+  pytorch:
+    version: "2.9.1+cu130"
+    cuda_support: true
+    cudnn_enabled: true
+
+# Cache Settings
+cache:
+  enabled: true
+  ttl: 3600
+  max_size: 1000
+  backend: "memory"
+
+  pytorch_cache:
+    path: "~/.cache/torch"
+    model_weights: true
+
+  huggingface_cache:
+    path: "~/.cache/huggingface"
+    enabled: true
+
+# Feature Flags
+features:
+  async_operations: true
+  batch_processing: true
+  auto_retry: true
+  telemetry: true
+  caching: true
+  gpu_acceleration: true
+  mixed_precision: true
+  flash_attention: true
+
+cross_references:
+  - ".config/copilot/standards/ci-cd-standards.yml: CLI standards and configuration"
+  - ".config/services.yml: Service endpoints and ports"
+  - ".config/semantic-kernel.yml: Semantic Kernel configuration"
+  - ".config/environment.yml: GPU/CUDA environment variables"
+
+related_documentation:
+  - ".config/copilot/standards/ci-cd-standards.yml"
+  - ".config/services.yml"
+  - ".config/semantic-kernel.yml"
+  - ".config/environment.yml"
+  - "tools/cli.py"
+  - ".config/copilot/yaml-best-practices.yml"

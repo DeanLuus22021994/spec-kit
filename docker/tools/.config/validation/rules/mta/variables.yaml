@@ -1,0 +1,294 @@
+# MTA Variables and Categories Validation Rules
+# Purpose: Validate customVariables usage and category/effort alignment
+# Scope: All MTA ruleset YAML files
+# Package: mta
+
+---
+- ruleID: mta-custom-variables-pattern
+  description: |
+    Validates proper use of customVariables in rule messages.
+
+    Custom variables allow parameterizing rule messages with matched content:
+    - Define in message using {{variableName}} syntax
+    - Populated from provider matches (capture groups, named matches)
+    - Enable context-specific error messages
+
+    Example:
+    ```yaml
+    message: |
+      Found deprecated API: {{apiName}}
+      Replace with: {{replacement}}
+    customVariables:
+      - name: apiName
+        value: from-provider-match
+    ```
+
+    Variables make messages more actionable and specific.
+  labels:
+    - "mta/variables"
+    - "mta/customVariables"
+    - "validation/messages"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*message:.*\\{\\{[^}]+\\}\\}"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Message uses variable syntax {{var}} but customVariables may not be defined.
+
+    Define variables in customVariables section:
+
+    ```yaml
+    message: |
+      Deprecated: {{oldAPI}}
+      Use: {{newAPI}}
+    customVariables:
+      - name: oldAPI
+        value: captured-from-pattern
+      - name: newAPI
+        value: recommended-alternative
+    ```
+
+    Check that all {{variables}} in message are defined.
+  effort: 2
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#custom-variables
+      title: "MTA Custom Variables Documentation"
+
+---
+- ruleID: mta-custom-variables-naming
+  description: |
+    Ensures custom variable names follow naming conventions.
+
+    Variable naming guidelines:
+    - Use camelCase for multi-word names
+    - Start with lowercase letter
+    - Descriptive names (not x, var1, temp)
+    - Reflect the content they hold
+
+    Good names:
+    - apiName, oldValue, importPath, className
+
+    Avoid:
+    - UPPERCASE, snake_case, kebab-case
+    - Single letters: x, y, z
+    - Generic: var1, temp, value
+  labels:
+    - "mta/variables"
+    - "mta/naming"
+    - "validation/conventions"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*-\\s*name:\\s+[A-Z_]|^\\s*-\\s*name:\\s+[a-z]$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Custom variable name doesn't follow conventions.
+
+    Use camelCase naming:
+    - ✓ apiName, oldVersion, importPath
+    - ✗ APIName, api_name, api-name
+    - ✗ x, y, var1, temp
+
+    Example:
+    ```yaml
+    customVariables:
+      - name: deprecatedAPI
+        value: old-api-name
+      - name: replacementAPI
+        value: new-api-name
+    ```
+  effort: 1
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#variable-naming
+      title: "Variable Naming Conventions"
+
+---
+- ruleID: mta-custom-variables-validation
+  description: |
+    Ensures all message variables have corresponding customVariables definitions.
+
+    Every {{variable}} referenced in a message must be defined in
+    customVariables section. This ensures:
+    - Variables can be properly populated
+    - Messages display correctly
+    - No missing data at runtime
+
+    MTA will show empty values for undefined variables.
+  labels:
+    - "mta/variables"
+    - "mta/validation"
+    - "validation/completeness"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*message:.*\\{\\{[^}]+\\}\\}.*$(?:(?!customVariables:)[\\s\\S])*?^-\\s+ruleID:"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Message contains {{variables}} but no customVariables section found.
+
+    Define all variables used in messages:
+
+    ```yaml
+    message: |
+      Update {{componentName}} from {{oldVersion}} to {{newVersion}}
+    customVariables:
+      - name: componentName
+        value: component-name
+      - name: oldVersion
+        value: current-version
+      - name: newVersion
+        value: target-version
+    ```
+
+    Every {{var}} needs a definition.
+  effort: 2
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#variables
+      title: "Custom Variables Reference"
+
+---
+- ruleID: mta-category-values
+  description: |
+    Validates that category field uses standard MTA values.
+
+    MTA defines three standard categories:
+    - mandatory: Must be fixed for successful migration (breaking changes)
+    - optional: Recommended improvements (best practices, optimization)
+    - potential: Issues to review (may or may not apply)
+
+    Category affects:
+    - Issue prioritization in reports
+    - Filtering in analysis
+    - User guidance on urgency
+  labels:
+    - "mta/categories"
+    - "mta/severity"
+    - "validation/standards"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*category:\\s+(?!mandatory|optional|potential)[^\\n]+"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Category field uses non-standard value.
+
+    Use one of the standard MTA categories:
+    - mandatory: Must fix (breaking changes)
+    - optional: Should fix (improvements)
+    - potential: May need review (context-dependent)
+
+    Example:
+    ```yaml
+    category: mandatory
+    effort: 5
+    message: |
+      This breaking change must be addressed
+    ```
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#categories
+      title: "MTA Category Definitions"
+
+---
+- ruleID: mta-category-effort-alignment
+  description: |
+    Ensures category and effort values are appropriately aligned.
+
+    General alignment guidelines:
+    - mandatory rules: Usually effort 3-13 (significant work)
+    - optional rules: Usually effort 0-5 (improvements)
+    - potential rules: Usually effort 1-7 (investigation + possible fix)
+
+    Misalignments to review:
+    - mandatory with effort 0 (trivial fix shouldn't be mandatory)
+    - optional with effort 13 (complex work should be mandatory)
+
+    These are guidelines, not strict rules - context matters.
+  labels:
+    - "mta/categories"
+    - "mta/effort"
+    - "validation/alignment"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*category:\\s+mandatory[^\\n]*\\n(?:(?!^\\s*effort:)[^\\n]*\\n)*\\s*effort:\\s+0|^\\s*category:\\s+optional[^\\n]*\\n(?:(?!^\\s*effort:)[^\\n]*\\n)*\\s*effort:\\s+13"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Category and effort may be misaligned.
+
+    Consider:
+    - mandatory usually means effort 3-13 (real work required)
+    - optional usually means effort 0-5 (nice-to-have)
+    - effort 0 (trivial) rarely mandatory
+    - effort 13 (very complex) rarely optional
+
+    Review if:
+    ```yaml
+    category: mandatory
+    effort: 0  # Trivial - why mandatory?
+    ```
+
+    Or:
+    ```yaml
+    category: optional
+    effort: 13  # Very complex - should be mandatory?
+    ```
+
+    Alignment ensures proper prioritization.
+  effort: 3
+  category: potential
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#effort-category-guidelines
+      title: "Effort and Category Alignment"
+
+---
+- ruleID: mta-category-label-consistency
+  description: |
+    Ensures category field matches category= label when both present.
+
+    If using both:
+    - category field: mandatory/optional/potential
+    - category= label: must match category field
+
+    Inconsistency causes confusion in filtering and reporting.
+
+    Example:
+    ```yaml
+    category: mandatory
+    labels:
+      - category=mandatory  # Must match
+      - validation/syntax
+    ```
+  labels:
+    - "mta/categories"
+    - "mta/labels"
+    - "validation/consistency"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*category:\\s+(mandatory|optional|potential)[^\\n]*\\n(?:(?!^\\s*category:|^-\\s+ruleID:)[^\\n]*\\n)*\\s*-\\s+['\"]?category=(?!\\1)[^'\"\\n]+"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    category field and category= label don't match.
+
+    Ensure consistency:
+
+    Correct:
+    ```yaml
+    category: mandatory
+    labels:
+      - category=mandatory
+    ```
+
+    Incorrect:
+    ```yaml
+    category: mandatory
+    labels:
+      - category=optional  # Mismatch!
+    ```
+
+    Both should have the same value.
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#category-consistency
+      title: "Category Consistency Guidelines"

@@ -1,0 +1,424 @@
+# Copilot Context Index
+# Master orchestrator for AI context discovery and on-demand loading
+# Reference this file instead of reading all YAML files
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  description: Single entry point for semantic search and context loading
+
+<<: *metadata
+
+usage:
+  primary_instruction: Reference .config/copilot/index.yml for context discovery
+  semantic_search: Load specific category files on-demand based on user query
+  avoid: Do not load entire context - use category mapping to load relevant files only
+
+categories:
+  workflows:
+    description: "How to do things - operational workflows and processes"
+    path: ".config/copilot/workflows/"
+    files:
+      github-cli:
+        file: "github-cli.yml"
+        keywords: ["github", "cli", "pr", "pull request", "field names", "commands"]
+        contains: ["field_reference", "common_mistakes", "common_commands", "best_practices"]
+
+      deferred-items:
+        file: "deferred-items.yml"
+        keywords: ["deferred", "breaking changes", "future work", "documentation"]
+        contains: ["required_metadata", "required_sections", "when_to_defer", "graduation_criteria", "workflow"]
+
+      tools-container:
+        file: "tools-container.yml"
+        keywords: ["docker", "tools", "container", "dependencies", "cli", "pylint"]
+        contains: ["specifications", "baked_dependencies", "common_commands", "cache_isolation"]
+
+      copilot-agent-setup:
+        file: "workflows/copilot-agent-setup.yml"
+        keywords: ["copilot", "agent", "setup", "dependencies", "caching", "dotnet", "python", "nodejs"]
+        contains: ["dependency_installation", "caching_strategy", "runner_configuration", "verification_steps", "config_directory_access"]
+
+      copilot-service-containers:
+        file: "workflows/copilot-service-containers.yml"
+        keywords: ["copilot", "agent", "services", "containers", "postgres", "qdrant", "redis", "testing"]
+        contains: ["available_services", "service_containers", "enabling_services", "verification_after_enabling", "use_cases"]
+
+      local-docker-stack:
+        file: "workflows/local-docker-stack.yml"
+        keywords:
+          [
+            "docker",
+            "local",
+            "embeddings",
+            "vector",
+            "qdrant",
+            "cache",
+            "redis",
+            "postgres",
+            "pgvector",
+            "gpu",
+            "cuda",
+            "semantic-kernel",
+            "engine",
+            "object-store",
+          ]
+        contains:
+          [
+            "docker_stack",
+            "embeddings",
+            "vector",
+            "cache",
+            "database",
+            "engine",
+            "optimization",
+            "copilot_integration",
+            "commands",
+            "service_dependencies",
+          ]
+
+      github-workflows-reusable-jobs:
+        file: "workflows/github-workflows-reusable-jobs.yml"
+        keywords: ["reusable-workflows", "github-actions", "jobs", "build", "test", "docker", "deploy", "pipeline"]
+        contains: ["reusable_jobs", "pipeline_architecture", "artifact_flow", "dependency_chain", "troubleshooting"]
+
+      github-workflows-composite-actions:
+        file: "workflows/github-workflows-composite-actions.yml"
+        keywords: ["composite-actions", "github-actions", "setup", "cleanup", "utilities", "dotnet", "nodejs", "docker"]
+        contains: ["composite_actions", "setup_dotnet", "setup_node", "docker_cleanup", "action_patterns", "caching_strategy"]
+
+  patterns:
+    description: "How things are organized - structural patterns and conventions"
+    path: ".config/copilot/patterns/"
+    files:
+      documentation:
+        file: "documentation.yml"
+        keywords: ["docs", "mkdocs", "documentation", "structure", "navigation"]
+        contains: ["structure", "when_to_create", "update_navigation", "mkdocs_sections", "best_practices"]
+
+      version-control:
+        file: "version-control.yml"
+        keywords: ["git", "version control", "branches", "commits", "naming", "conventions"]
+        contains: ["tracked_files", "line_endings", "branch_naming", "commit_format", "file_naming"]
+
+  standards:
+    description: "Quality expectations - code standards and best practices"
+    path: ".config/copilot/standards/"
+    files:
+      code-quality:
+        file: "code-quality.yml"
+        keywords: ["code quality", "pylint", "testing", "standards", "metrics"]
+        contains: ["python", "dotnet", "testing", "pre_commit_hooks", "formatting"]
+
+      architecture-standards:
+        file: "architecture-standards.yml"
+        keywords: ["architecture", "SOLID", "coding standards", "API design", "microservices", "REST"]
+        contains: ["architecture", "coding_standards", "api_design", "http_methods", "status_codes"]
+
+      infrastructure-standards:
+        file: "infrastructure-standards.yml"
+        keywords: ["database", "docker", "logging", "security", "infrastructure", "networking"]
+        contains: ["database", "docker", "logging", "security", "infrastructure", "networking"]
+
+      ci-cd-standards:
+        file: "ci-cd-standards.yml"
+        keywords: ["CI/CD", "pr-validation", "testing", "linting", "build", "deployment", "cli"]
+        contains: ["pr_validation", "testing_best_practices", "build_standards", "cli"]
+
+  references:
+    description: "Factual information - project specifications and configurations"
+    path: ".config/copilot/references/"
+    files:
+      github-workflows-catalog:
+        file: "github-workflows-catalog.yml"
+        keywords: ["github-actions", "ci-cd", "workflows", "catalog", "pipeline", "reference", "official-workflows"]
+        contains: ["official_workflows", "workflow_catalog", "ci_cd_workflows", "pr_validation", "deployment_workflows", "usage_examples"]
+
+      services:
+        file: "services.yml"
+        keywords: ["services", "microservices", "architecture", "ports", "resources", "docker", "semantic kernel"]
+        contains: ["services", "semantic_kernel", "project_structure", "resources", "dockerfile"]
+
+      technology-stack:
+        file: "technology-stack.yml"
+        keywords: ["technology", "stack", "versions", "frameworks", "tools", "dependencies", "dotnet", "react", "python"]
+        contains: ["technology_stack", "version_matrix", "development_tools", "package_managers"]
+
+      config-files:
+        file: "config-files.yml"
+        keywords: ["configuration", "yaml", "json", "files", "settings", "locations"]
+        contains: ["copilot_context", "github", "vscode", "project_config", "semantic_configs", "infrastructure_configs"]
+
+      vscode-tasks:
+        file: "vscode-tasks.yml"
+        keywords: ["vscode", "tasks", "automation", "commands", "shortcuts"]
+        contains: ["categories", "code_quality", "github_cli", "tools_container", "docker", "dotnet", "testing", "documentation"]
+
+  config:
+    description: "Application and infrastructure configuration - settings and specifications"
+    path: ".config/"
+    files:
+      versions:
+        file: "versions.yml"
+        keywords:
+          [
+            "versions",
+            "dependencies",
+            "runtime",
+            "frameworks",
+            "dotnet",
+            "node",
+            "python",
+            "database",
+            "tools",
+            "ai",
+            "ml",
+            "testing",
+            "code quality",
+          ]
+        contains:
+          [
+            "runtime",
+            "frameworks",
+            "databases",
+            "build_tools",
+            "ai_ml",
+            "base_images",
+            "testing",
+            "code_quality",
+            "docker",
+            "documentation",
+            "github_actions",
+            "dev_tools",
+          ]
+
+      ports:
+        file: "ports.yml"
+        keywords: ["ports", "networking", "services", "endpoints", "port allocation", "containers"]
+        contains: ["services", "internal", "monitoring", "dev_tools", "admin", "ranges", "external"]
+
+      cli:
+        file: "cli.yml"
+        keywords: ["cli", "sk-cli", "commands", "api", "configuration", "semantic kernel"]
+        contains: ["commands", "api_endpoints", "output_formats", "semantic_kernel"]
+
+      services:
+        file: "services.yml"
+        keywords: ["services", "resources", "docker", "containers", "ports", "registry", "buildkit", "tiers"]
+        contains: ["service_template", "resources", "ports", "enabled", "registry", "buildkit", "service_tiers", "profiles"]
+
+      gpu-resources:
+        file: "gpu-resources.yml"
+        keywords: ["gpu", "cuda", "vram", "memory", "partitioning", "nvidia", "rtx", "scheduling", "allocation"]
+        contains: ["host_gpu", "vram_partitioning", "scheduling", "memory_management", "docker_config", "profiles", "monitoring", "toggles"]
+
+      optimization-toggles:
+        file: "optimization-toggles.yml"
+        keywords: ["optimization", "toggles", "runtime", "hot-reload", "performance", "gpu", "caching", "memory", "wsl2", "buildkit"]
+        contains:
+          [
+            "categories",
+            "gpu_enabled",
+            "mixed_precision",
+            "flash_attention",
+            "dynamic_batching",
+            "profiles",
+            "env_template",
+            "wsl_memory",
+            "registry_enabled",
+          ]
+
+      host-analysis-report:
+        file: "host-analysis-report.yml"
+        keywords: ["host", "analysis", "baseline", "windows", "wsl2", "docker", "gpu", "memory", "storage", "optimization", "recommendations"]
+        contains: ["system", "wsl2", "storage", "gpu", "docker", "images", "processes", "critical_issues", "recommendations", "validation_commands"]
+
+      tracing:
+        file: "tracing.yml"
+        keywords:
+          ["tracing", "opentelemetry", "jaeger", "observability", "spans", "metrics", "prometheus", "otlp", "distributed-tracing", "agent-tracing"]
+        contains:
+          [
+            "opentelemetry",
+            "exporters",
+            "jaeger",
+            "prometheus",
+            "samplers",
+            "instrumentation",
+            "semantic_kernel",
+            "agent_tracing",
+            "propagation",
+            "docker",
+          ]
+
+      infrastructure:
+        file: "infrastructure.yml"
+        keywords: ["network", "security", "logging", "monitoring", "infrastructure", "docker"]
+        contains: ["network", "security", "logging", "monitoring"]
+
+      semantic-kernel:
+        file: "semantic-kernel.yml"
+        keywords: ["semantic kernel", "AI", "kernels", "plugins", "memory", "planners", "skills"]
+        contains: ["kernels", "plugins", "memory", "skills", "planners"]
+
+      pr-validation:
+        file: "pr-validation.yml"
+        keywords: ["PR", "pull request", "validation", "testing", "docker", "lint", "build"]
+        contains: ["build", "tests", "docker", "lint", "reporting"]
+
+      github-workflows:
+        file: "github-workflows.yml"
+        keywords:
+          [
+            "github actions",
+            "workflows",
+            "configuration",
+            "versions",
+            "runners",
+            "timeouts",
+            "branches",
+            "retention",
+            "build",
+            "test",
+            "docker",
+            "pipeline",
+          ]
+        contains:
+          [
+            "versions",
+            "runners",
+            "timeouts",
+            "branches",
+            "retention",
+            "build",
+            "test",
+            "docker",
+            "precommit",
+            "pipeline",
+            "actions",
+            "permissions",
+            "dependencies",
+            "cleanup",
+            "make",
+            "summary",
+          ]
+
+      python-dependencies:
+        file: "python-dependencies.yml"
+        keywords:
+          [
+            "python",
+            "packages",
+            "pip",
+            "dependencies",
+            "auto-provisioning",
+            "requirements",
+            "pyyaml",
+            "pytest",
+            "black",
+            "ruff",
+            "mypy",
+            "torch",
+            "cuda",
+          ]
+        contains: ["packages", "auto_provisioning", "installation", "import_patterns", "ci_cd_integration", "troubleshooting", "gpu_acceleration"]
+
+      dotnet-dependencies:
+        file: "dotnet-dependencies.yml"
+        keywords:
+          [
+            "dotnet",
+            ".net",
+            "nuget",
+            "packages",
+            "csproj",
+            "semantic-kernel",
+            "entity-framework",
+            "aspnet",
+            "docker",
+            "gpu",
+            "cuda",
+            "auto-provisioning",
+          ]
+        contains:
+          [
+            "packages",
+            "auto_provisioning",
+            "semantic_kernel",
+            "semantic_kernel_optimizations",
+            "docker",
+            "service_architecture",
+            "ci_cd_integration",
+            "troubleshooting",
+          ]
+
+      templates:
+        file: "copilot/templates.yml"
+        keywords: ["templates", "anchors", "yaml", "patterns", "reusable", "reference"]
+        contains: ["standard_templates", "resource_templates", "configuration_templates"]
+
+      naming-conventions:
+        file: "copilot/naming-conventions.yml"
+        keywords: ["naming", "conventions", "standards", "anchors", "categories", "keywords"]
+        contains: ["anchor_names", "category_values", "keyword_selection", "file_naming"]
+
+      yaml-best-practices:
+        file: "copilot/yaml-best-practices.yml"
+        keywords: ["yaml", "best practices", "syntax", "formatting", "anchors", "validation"]
+        contains: ["quoting", "indentation", "multiline_strings", "anchors_and_aliases", "collections", "comments", "file_organization"]
+
+context_loading_strategy:
+  on_query:
+    - "Parse user query for keywords and intent"
+    - "Map keywords to relevant category + file using this index"
+    - "Load ONLY the specific YAML file(s) needed"
+    - "Use structured YAML data instead of reading prose documentation"
+
+  examples:
+    github_pr_question:
+      query: "What's the correct field name for the default branch in GitHub CLI?"
+      load: ".config/copilot/workflows/github-cli.yml"
+      reason: "Keywords: 'github', 'cli', 'field name', 'default branch'"
+
+    deferred_item_creation:
+      query: "How do I create a deferred item for breaking changes?"
+      load: ".config/copilot/workflows/deferred-items.yml"
+      reason: "Keywords: 'deferred', 'breaking changes', 'create'"
+
+    code_quality_check:
+      query: "What's the Pylint rating target?"
+      load: ".config/copilot/standards/code-quality.yml"
+      reason: "Keywords: 'pylint', 'rating', 'target'"
+
+    service_architecture:
+      query: "What port does the backend service use?"
+      load: ".config/copilot/references/project.yml"
+      reason: "Keywords: 'backend', 'service', 'port'"
+
+    troubleshooting:
+      query: "Why is git showing line ending changes?"
+      load: ".config/copilot/references/troubleshooting.yml"
+      reason: "Keywords: 'git', 'line ending', 'changes'"
+
+    multiple_contexts:
+      query: "How do I run pre-commit hooks and check the pylint report?"
+      load:
+        - ".config/copilot/references/vscode-tasks.yml"
+        - ".config/copilot/standards/code-quality.yml"
+      reason: "Keywords: 'pre-commit', 'pylint', 'report' - multiple contexts needed"
+
+optimization_benefits:
+  token_efficiency: "Load specific 50-100 line YAML files instead of 360-line monolith"
+  semantic_search: "Keywords and category metadata enable precise context discovery"
+  maintainability: "Modular files easier to update without affecting unrelated context"
+  scalability: "Add new context files without bloating existing ones"
+  clarity: "Clear category separation (workflows, patterns, standards, references)"
+
+migration_notes:
+  from: ".config/copilot-context.yml (360 lines, monolithic)"
+  to: ".config/copilot/*.yml (9 files, modular, category-based)"
+  total_lines: "~900 lines across 9 files (more granular structure)"
+  references_to_update:
+    - ".github/copilot-instructions.md → quick_reference section"
+    - "docs/development/copilot-patterns.md → context references"
+    - "docs/mkdocs.yml → navigation section"

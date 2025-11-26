@@ -1,0 +1,111 @@
+# Quality: Duplicate Detection Rules
+# Purpose: Detect duplicate keys, anchors, and redundant content in YAML
+# Scope: All YAML files in project
+# Package: quality
+
+---
+- ruleID: yaml-duplicate-keys
+  description: |
+    Detects duplicate keys within the same YAML mapping/object.
+
+    YAML parsers handle duplicate keys inconsistently:
+    - Some parsers use the last value
+    - Some parsers error
+    - Some parsers use the first value
+
+    Duplicate keys usually indicate:
+    - Copy-paste errors
+    - Merge conflicts
+    - Refactoring mistakes
+
+    Each key within a mapping must be unique.
+  labels:
+    - "yaml/quality"
+    - "yaml/duplicates"
+    - "validation/correctness"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^(\\s+)([a-zA-Z0-9_-]+):\\s*[^\\n]*\\n(?:(?!^\\1[a-zA-Z0-9_-]+:)[^\\n]*\\n)*\\1\\2:\\s*"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Duplicate key detected in YAML mapping.
+
+    Remove or rename duplicate keys:
+
+    Incorrect:
+    ```yaml
+    config:
+      timeout: 30
+      retries: 3
+      timeout: 60  # Duplicate!
+    ```
+
+    Correct:
+    ```yaml
+    config:
+      timeout: 60
+      retries: 3
+    ```
+
+    Or use different names:
+    ```yaml
+    config:
+      connectionTimeout: 30
+      requestTimeout: 60
+    ```
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://yaml.org/spec/1.2/spec.html#id2765878
+      title: "YAML Key Uniqueness Requirement"
+
+---
+- ruleID: yaml-duplicate-anchors
+  description: |
+    Detects duplicate anchor names in YAML document.
+
+    Anchors (&name) must be unique within a YAML document/stream.
+    Duplicate anchors cause:
+    - Undefined behavior in parsers
+    - Reference ambiguity
+    - Merge errors
+
+    Each anchor must have a unique name. Use descriptive names
+    to avoid conflicts: &dbConfig, &prodSettings, &testData.
+  labels:
+    - "yaml/quality"
+    - "yaml/anchors"
+    - "validation/uniqueness"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)&([a-zA-Z0-9_-]+)[^\\n]*\\n[\\s\\S]*?&\\1"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Duplicate anchor name detected.
+
+    Each anchor must be unique within the document:
+
+    Incorrect:
+    ```yaml
+    defaults: &config
+      timeout: 30
+
+    settings: &config  # Duplicate!
+      retries: 3
+    ```
+
+    Correct:
+    ```yaml
+    defaults: &defaultConfig
+      timeout: 30
+
+    settings: &appSettings
+      retries: 3
+    ```
+
+    Use descriptive, unique anchor names.
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://yaml.org/spec/1.2/spec.html#id2785586
+      title: "YAML Anchor Uniqueness"

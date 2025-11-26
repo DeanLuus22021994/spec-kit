@@ -1,0 +1,224 @@
+# Metadata Block Validation Rules
+# Enforces proper metadata block structure and required fields
+
+- ruleID: yaml-metadata-block-required
+  description: |
+    All YAML files in .config/ must start with a metadata block defining file properties.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.file:
+          pattern: ".config/.*\\.(yml|yaml)$"
+      - not:
+          builtin.filecontent:
+            filePattern: ".config/.*\\.(yml|yaml)$"
+            pattern: "^metadata:\\s*&metadata"
+  message: |
+    Configuration file missing metadata block.
+
+    All .config YAML files must start with metadata block:
+
+    metadata: &metadata
+      version: "1.0.0"
+      created: "2024-01-15"
+      updated: "2024-01-15"
+      author: "team-name"
+      category: "workflows"
+      keywords:
+        - "keyword1"
+        - "keyword2"
+      description: "File purpose description"
+  effort: 3
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#metadata_blocks"
+      title: "YAML Metadata Block Requirements"
+
+- ruleID: yaml-metadata-anchor-required
+  description: |
+    The metadata block must use &metadata anchor for reusability.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.filecontent:
+          filePattern: ".config/.*\\.(yml|yaml)$"
+          pattern: "^metadata:"
+      - not:
+          builtin.filecontent:
+            filePattern: ".config/.*\\.(yml|yaml)$"
+            pattern: "^metadata:\\s*&metadata"
+  message: |
+    Metadata block missing &metadata anchor.
+
+    Correct format:
+    metadata: &metadata
+      version: "1.0.0"
+      ...
+
+    The anchor enables reuse via <<: *metadata in other files.
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#metadata_blocks"
+      title: "YAML Metadata Anchor Pattern"
+
+- ruleID: yaml-metadata-merge-required
+  description: |
+    After metadata block definition, include merge key (<<: *metadata) as second line.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.filecontent:
+          filePattern: ".config/.*\\.(yml|yaml)$"
+          pattern: "^metadata:\\s*&metadata"
+      - not:
+          builtin.filecontent:
+            filePattern: ".config/.*\\.(yml|yaml)$"
+            pattern: "^<<:\\s*\\*metadata"
+  message: |
+    Missing merge key after metadata block.
+
+    Required pattern:
+    metadata: &metadata
+      version: "1.0.0"
+      ...
+
+    <<: *metadata
+
+    The merge key makes metadata accessible at document root level.
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#metadata_blocks"
+      title: "YAML Metadata Merge Pattern"
+
+- ruleID: yaml-metadata-version-quoted
+  description: |
+    Version number in metadata must be quoted to prevent float interpretation.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".config/.*\\.(yml|yaml)$"
+      pattern: "version:\\s+[0-9]+\\.[0-9]+"
+  customVariables:
+    - pattern: "version:\\s+([0-9]+\\.[0-9]+)"
+      name: unquotedVersion
+  message: |
+    Unquoted version number in metadata: {{ unquotedVersion }}
+
+    Always quote version numbers:
+    version: "{{ unquotedVersion }}"
+
+    Prevents YAML from interpreting as float and losing precision.
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#metadata_blocks"
+      title: "YAML Version Number Quoting"
+
+- ruleID: yaml-metadata-category-valid
+  description: |
+    Metadata category must be one of: workflows, patterns, standards, references, rules.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.filecontent:
+          filePattern: ".config/.*\\.(yml|yaml)$"
+          pattern: "category:"
+      - not:
+          builtin.filecontent:
+            filePattern: ".config/.*\\.(yml|yaml)$"
+            pattern: 'category:\\s*"?(workflows|patterns|standards|references|rules)"?'
+  message: |
+    Invalid or missing category in metadata.
+
+    Valid categories:
+    - workflows: Operational workflows and processes
+    - patterns: Structural patterns and conventions
+    - standards: Code quality and best practices
+    - references: Project specifications and configurations
+    - rules: Validation and linting rules
+
+    Set category:
+    category: "workflows"
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/index.yml"
+      title: "Configuration Category Taxonomy"
+
+- ruleID: yaml-metadata-keywords-array
+  description: |
+    Metadata keywords should be an array for searchability and consistency.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    and:
+      - builtin.filecontent:
+          filePattern: ".config/.*\\.(yml|yaml)$"
+          pattern: "keywords:"
+      - not:
+          builtin.filecontent:
+            filePattern: ".config/.*\\.(yml|yaml)$"
+            pattern: "keywords:\\s*\\n\\s+-"
+  message: |
+    Keywords should use array format for consistency.
+
+    Preferred format:
+    keywords:
+      - "keyword1"
+      - "keyword2"
+      - "keyword3"
+
+    Avoid: keywords: "comma,separated,values"
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#metadata_blocks"
+      title: "YAML Metadata Keywords Format"
+
+- ruleID: yaml-metadata-dates-iso8601
+  description: |
+    Metadata date fields (created, updated) should use ISO 8601 format (YYYY-MM-DD).
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".config/.*\\.(yml|yaml)$"
+          pattern: 'created:\s*"[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}"'
+      - builtin.filecontent:
+          filePattern: ".config/.*\\.(yml|yaml)$"
+          pattern: 'updated:\s*"[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}"'
+  message: |
+    Non-ISO date format detected in metadata.
+
+    Use ISO 8601 format for consistency:
+    created: "2024-01-15"
+    updated: "2024-01-15"
+
+    Avoid: created: "01/15/2024" or "15/01/2024"
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#metadata_blocks"
+      title: "YAML Metadata Date Format"

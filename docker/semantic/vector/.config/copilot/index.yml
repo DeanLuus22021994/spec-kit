@@ -1,0 +1,119 @@
+# GitHub Copilot Context: Vector Database Configuration
+# Path: semantic/vector/.config/
+# Purpose: Qdrant vector database for semantic search
+
+context:
+  directory: "semantic/vector/.config/"
+  purpose: "Configuration for Qdrant vector database"
+  pattern: "Aligns with tests/.config/, tools/.config/, src/frontend/.config/, semantic/embeddings/.config/"
+
+service:
+  name: "vector-database"
+  type: "qdrant"
+  version: "v1.7.4-unprivileged"
+  ports:
+    http: 6333
+    grpc: 6334
+  runtime: "Rust-based vector engine"
+
+configuration_file:
+  path: ".config/config.yml"
+  docker_mount: "/qdrant/config/production.yaml"
+  startup_flag: "--config-path /qdrant/config/production.yaml"
+  format: "YAML with vector root key"
+
+collections:
+  default:
+    name: "semantic_vectors"
+    vector_size: 1536
+    distance_metric: "Cosine"
+    on_disk_payload: true
+    description: "Main collection for embeddings from text-embedding-3-small"
+
+storage:
+  path: "/qdrant/storage"
+  snapshot_path: "/qdrant/snapshots"
+  persistence: "Volume mounted for data durability"
+
+performance:
+  max_segment_size: 200000
+  indexing_threshold: 20000
+  payload_indexing_threshold: 10000
+  optimizers_cpu: 0 # Auto-detect
+
+hnsw_index:
+  m: 16 # Number of bi-directional links per node
+  ef_construct: 100 # Quality of graph construction
+  full_scan_threshold: 10000 # When to use brute force
+
+limits:
+  max_request_size: 33554432 # 32MB
+  max_search_results: 100
+
+api:
+  http_port: 6333
+  grpc_port: 6334
+  cors_enabled: true
+  metrics: "Exposed via Prometheus format"
+
+docker:
+  base_image: "qdrant/qdrant:v1.7.4-unprivileged"
+  user: "qdrant (non-root)"
+  volumes:
+    - "/qdrant/storage - Vector data persistence"
+    - "/qdrant/snapshots - Backup snapshots"
+  healthcheck: "wget http://localhost:6333/healthz (30s interval)"
+
+architecture:
+  pattern: "Vector Database Microservice"
+  communication: "HTTP REST API + gRPC"
+  consumers:
+    - "Backend service (similarity search)"
+    - "Engine service (semantic kernel retrieval)"
+  data_flow: "Embeddings (1536 dims) → Qdrant → HNSW index → Cosine similarity search"
+
+operations:
+  insert: "POST /collections/{collection}/points - Add vectors"
+  search: "POST /collections/{collection}/points/search - Similarity search"
+  delete: "DELETE /collections/{collection}/points - Remove vectors"
+  snapshot: "POST /collections/{collection}/snapshots/create - Backup"
+
+optimization:
+  indexing: "HNSW (Hierarchical Navigable Small World)"
+  search_speed: "Sub-millisecond for 100K vectors"
+  memory_efficiency: "On-disk payload storage"
+  scalability: "Horizontal scaling via clustering (not configured)"
+
+file_structure:
+  before_refactoring: |
+    semantic/vector/
+    +-- config.yml       # Config at root
+
+  after_refactoring: |
+    semantic/vector/
+    +-- .config/
+        +-- copilot/
+        |   +-- index.yml  # This file
+        +-- config.yml     # Qdrant configuration
+
+benefits:
+  - "Pattern consistency with tests/.config/, tools/.config/, frontend/.config/, embeddings/.config/"
+  - "Cleaner vector/ directory (config separated)"
+  - "GitHub Copilot semantic search enabled"
+  - "Easier configuration discovery and management"
+
+usage:
+  dockerfile: "dockerfiles/vector.Dockerfile copies .config/config.yml to /qdrant/config/production.yaml"
+  startup: "qdrant --config-path /qdrant/config/production.yaml"
+  docker_compose: "Mounts storage volumes for persistence"
+
+related_services:
+  - "semantic/embeddings/.config/ - Generates vectors for storage"
+  - "src/backend/ - Queries vectors for similarity search"
+  - "src/engine/ - Semantic kernel vector store integration"
+
+related_configs:
+  - "tests/.config/ - Test configuration"
+  - "tools/.config/ - Python tools configuration"
+  - "src/frontend/.config/ - Frontend build configuration"
+  - "semantic/embeddings/.config/ - Embeddings service configuration"

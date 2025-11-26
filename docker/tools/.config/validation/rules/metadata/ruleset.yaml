@@ -1,0 +1,45 @@
+metadata: &metadata
+  name: "metadata-package-ruleset"
+  description: "Rules for YAML metadata blocks and anchor patterns"
+  version: "1.0.0"
+  category: "validation-rules"
+
+<<: *metadata
+
+# Metadata Package - Ruleset Configuration
+# Coordinates metadata-block and anchors rule files
+
+package_info:
+  name: "metadata"
+  total_rules: 14
+  rule_files:
+    - metadata-block.yaml # 8 metadata block rules
+    - anchors.yaml # 6 anchor pattern rules
+
+rule_groups:
+  metadata_blocks:
+    description: "Enforce proper metadata block structure"
+    rule_files:
+      - metadata-block.yaml
+    mandatory_rules: 5
+    optional_rules: 3
+
+  anchor_patterns:
+    description: "Enforce proper YAML anchor and alias usage"
+    rule_files:
+      - anchors.yaml
+    mandatory_rules: 2
+    optional_rules: 2
+    potential_rules: 2
+
+execution_order:
+  - metadata-block.yaml # Run first - validates file structure
+  - anchors.yaml # Run second - validates anchor usage
+
+dependencies: [] # No external dependencies
+
+tags:
+  - metadata
+  - anchors
+  - aliases
+  - file-structure

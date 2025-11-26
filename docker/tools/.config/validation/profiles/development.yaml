@@ -1,0 +1,53 @@
+# Validation Profiles
+metadata: &metadata
+  name: development
+  description: "Developer-friendly validation profile - helpful warnings, not strict"
+  version: "1.0.0"
+
+<<: *metadata
+
+# Rule package configuration
+rules:
+  # Metadata validation - optional (guidance)
+  metadata:
+    severity: optional
+
+  # Syntax validation - all rules for learning
+  syntax:
+    severity:
+      - mandatory
+      - optional
+      - potential
+
+  # Structure validation - optional (guidance)
+  structure:
+    severity: optional
+
+  # MTA-specific validation - all for learning
+  mta:
+    severity:
+      - mandatory
+      - optional
+      - potential
+
+  # Quality validation - all for improvement suggestions
+  quality:
+    severity:
+      - mandatory
+      - optional
+
+  # VS Code integration - all for IDE setup
+  vscode:
+    severity:
+      - mandatory
+      - optional
+
+# Profile options
+options:
+  failOnWarning: false
+  failOnInfo: false
+  maxViolations: 100
+# Description
+# This profile helps developers learn best practices without blocking their work.
+# Shows helpful suggestions and warnings for improvement.
+# Use for: Local development, learning, experimentation, onboarding

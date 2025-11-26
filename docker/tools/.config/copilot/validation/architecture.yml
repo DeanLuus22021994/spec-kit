@@ -1,0 +1,489 @@
+metadata: &metadata
+  name: "validation-architecture"
+  description: "YAML validation framework architecture and design patterns"
+  version: "2.0.0"
+  category: "validation-architecture"
+  updated: "2025-11-25"
+
+<<: *metadata
+
+overview: |
+  The YAML validation framework is a modular, package-based system for validating YAML files
+  against custom rules using Kantra CLI and MTA providers. It supports 107 rules across 6 packages
+  with flexible profile-based validation and comprehensive testing infrastructure.
+
+architecture:
+  design_principles:
+    - modularity: "Package-based organization for maintainability"
+    - extensibility: "Easy to add new rules and packages"
+    - testability: "Comprehensive test harness with fixtures"
+    - performance: "Caching and optimized rule execution"
+    - flexibility: "Profile-based validation for different scenarios"
+    - integration: "Seamless CI/CD and editor integration"
+
+  package_structure:
+    metadata:
+      total_rules: 14
+      categories:
+        mandatory: 8
+        optional: 6
+      purpose: "Validate YAML metadata blocks and anchor patterns"
+      key_rules:
+        - "metadata-block-structure"
+        - "anchor-pattern-validation"
+        - "metadata-version-tracking"
+        - "metadata-merge-key-usage"
+      file_location: "tools/.config/validation/packages/metadata/"
+
+    syntax:
+      total_rules: 33
+      categories:
+        mandatory: 14
+        optional: 18
+        potential: 1
+      purpose: "Validate YAML syntax: indentation, quoting, multiline, collections, comments"
+      key_rules:
+        - "indentation-consistency"
+        - "quoting-style-validation"
+        - "multiline-string-formatting"
+        - "collection-structure-validation"
+        - "comment-placement-validation"
+      file_location: "tools/.config/validation/packages/syntax/"
+
+    structure:
+      total_rules: 9
+      categories:
+        mandatory: 5
+        optional: 4
+      purpose: "Validate file organization and structural patterns"
+      key_rules:
+        - "file-organization-validation"
+        - "section-ordering-validation"
+        - "top-level-structure-validation"
+        - "nesting-depth-validation"
+      file_location: "tools/.config/validation/packages/structure/"
+
+    mta:
+      total_rules: 24
+      categories:
+        mandatory: 8
+        optional: 16
+      purpose: "Validate MTA rule structure and compliance"
+      key_rules:
+        - "mta-rule-structure-validation"
+        - "mta-metadata-compliance"
+        - "mta-effort-estimation"
+        - "mta-category-validation"
+      file_location: "tools/.config/validation/packages/mta/"
+
+    quality:
+      total_rules: 12
+      categories:
+        mandatory: 5
+        optional: 7
+      purpose: "Code quality and best practices"
+      key_rules:
+        - "duplicate-key-detection"
+        - "unused-anchor-detection"
+        - "inconsistent-spacing-detection"
+        - "best-practices-validation"
+      file_location: "tools/.config/validation/packages/quality/"
+
+    vscode:
+      total_rules: 7
+      categories:
+        mandatory: 1
+        optional: 6
+      purpose: "VS Code integration and editor features"
+      key_rules:
+        - "tasks-json-validation"
+        - "settings-json-validation"
+        - "launch-json-validation"
+        - "editor-config-validation"
+      file_location: "tools/.config/validation/packages/vscode/"
+
+core_engine:
+  components:
+    runner:
+      name: "ValidationRunner"
+      purpose: "Orchestrate Kantra CLI execution and rule processing"
+      responsibilities:
+        - "Initialize Kantra CLI environment"
+        - "Load and compose rulesets"
+        - "Execute validation runs"
+        - "Collect and aggregate results"
+      location: "tools/.config/validation/core/runner.py"
+
+    provider:
+      name: "MTAProvider"
+      purpose: "Custom MTA provider integration"
+      responsibilities:
+        - "Register custom rule providers"
+        - "Interface with Kantra CLI"
+        - "Handle rule execution lifecycle"
+        - "Report rule violations"
+      location: "tools/.config/validation/core/provider.py"
+
+    reporter:
+      name: "ValidationReporter"
+      purpose: "Generate validation reports in multiple formats"
+      responsibilities:
+        - "Parse validation results"
+        - "Generate JSON reports"
+        - "Generate HTML reports"
+        - "Generate Markdown reports"
+        - "Calculate metrics and statistics"
+      location: "tools/.config/validation/core/reporter.py"
+
+    cache:
+      name: "ResultCache"
+      purpose: "Cache validation results for performance"
+      responsibilities:
+        - "Cache rule execution results"
+        - "Invalidate cache on file changes"
+        - "Provide cache hit/miss metrics"
+        - "Optimize repeated validations"
+      location: "tools/.config/validation/core/cache.py"
+
+rule_management:
+  registry:
+    name: "RuleRegistry"
+    purpose: "Discover, load, and manage validation rules"
+    capabilities:
+      - "Automatic rule discovery in packages"
+      - "Rule metadata extraction"
+      - "Rule dependency resolution"
+      - "Rule version tracking"
+    implementation: |
+      class RuleRegistry:
+          def discover_rules(self, package_path: Path) -> List[Rule]
+          def load_rule(self, rule_id: str) -> Rule
+          def get_rules_by_category(self, category: str) -> List[Rule]
+          def validate_rule_structure(self, rule: Rule) -> bool
+
+  validator:
+    name: "RuleValidator"
+    purpose: "Validate rule file structure and metadata"
+    checks:
+      - "Required metadata fields present"
+      - "Valid category values"
+      - "Effort estimation in valid range"
+      - "Message templates properly formatted"
+      - "XPath/pattern syntax valid"
+    implementation: |
+      class RuleValidator:
+          def validate_metadata(self, rule: Rule) -> ValidationResult
+          def validate_structure(self, rule: Rule) -> ValidationResult
+          def validate_patterns(self, rule: Rule) -> ValidationResult
+
+  composer:
+    name: "RulesetComposer"
+    purpose: "Dynamically compose rulesets from rules and profiles"
+    capabilities:
+      - "Profile-based rule selection"
+      - "Rule filtering by category"
+      - "Custom ruleset generation"
+      - "Ruleset optimization"
+    implementation: |
+      class RulesetComposer:
+          def compose_from_profile(self, profile: str) -> Ruleset
+          def compose_from_rules(self, rule_ids: List[str]) -> Ruleset
+          def compose_from_filters(self, filters: Dict) -> Ruleset
+
+  versioning:
+    name: "RuleVersioning"
+    purpose: "Track rule versions and changes"
+    features:
+      - "Semantic versioning for rules"
+      - "Change tracking and history"
+      - "Deprecation management"
+      - "Migration support"
+    implementation: |
+      class RuleVersioning:
+          def get_version(self, rule_id: str) -> str
+          def track_change(self, rule_id: str, change: Change) -> None
+          def get_deprecated_rules(self) -> List[str]
+
+validation_profiles:
+  strict:
+    description: "All mandatory rules - production deployments"
+    total_rules: 36
+    rule_breakdown:
+      metadata: 8
+      syntax: 14
+      structure: 5
+      mta: 8
+      quality: 5
+      vscode: 1
+    use_cases:
+      - "Production deployments"
+      - "Final validation before merge"
+      - "Quality gate enforcement"
+    performance: "~2-3 seconds for typical YAML files"
+
+  recommended:
+    description: "Mandatory + optional rules - code reviews"
+    total_rules: 92
+    rule_breakdown:
+      metadata: 14
+      syntax: 32
+      structure: 9
+      mta: 24
+      quality: 12
+      vscode: 7
+    use_cases:
+      - "Code reviews"
+      - "Comprehensive validation"
+      - "Best practices enforcement"
+    performance: "~5-7 seconds for typical YAML files"
+
+  minimal:
+    description: "Critical rules only - quick checks"
+    total_rules: 15
+    rule_breakdown:
+      metadata: 3
+      syntax: 5
+      structure: 2
+      mta: 3
+      quality: 2
+      vscode: 0
+    use_cases:
+      - "Quick pre-commit checks"
+      - "Fast iteration during development"
+      - "Smoke testing"
+    performance: "~1 second for typical YAML files"
+
+  ci_cd:
+    description: "CI/CD optimized rules"
+    total_rules: 45
+    rule_breakdown:
+      metadata: 8
+      syntax: 14
+      structure: 5
+      mta: 12
+      quality: 5
+      vscode: 1
+    use_cases:
+      - "GitHub Actions validation"
+      - "Pipeline quality gates"
+      - "Automated PR checks"
+    performance: "~3-4 seconds for typical YAML files"
+
+  development:
+    description: "Development-friendly rules"
+    total_rules: 60
+    rule_breakdown:
+      metadata: 10
+      syntax: 20
+      structure: 7
+      mta: 16
+      quality: 7
+      vscode: 5
+    use_cases:
+      - "Local development"
+      - "Pre-commit hooks"
+      - "Interactive validation"
+    performance: "~4-5 seconds for typical YAML files"
+
+integration_patterns:
+  kantra_cli:
+    description: "Integration with Konveyor Kantra CLI"
+    setup:
+      - "Install Kantra CLI in Docker container"
+      - "Configure custom provider path"
+      - "Set up rule discovery paths"
+    execution_flow:
+      1: "Initialize Kantra environment"
+      2: "Register custom MTA provider"
+      3: "Load and compose ruleset"
+      4: "Execute validation run"
+      5: "Parse and report results"
+    example: |
+      kantra analyze \
+        --rules /workspace/tools/.config/validation/packages \
+        --provider custom \
+        --output /workspace/reports/validation.json \
+        --input /workspace/.config
+
+  ci_cd_pipeline:
+    description: "GitHub Actions integration"
+    workflow_steps:
+      1: "Checkout code"
+      2: "Set up validation environment"
+      3: "Run validation with ci-cd profile"
+      4: "Generate reports"
+      5: "Upload artifacts"
+      6: "Enforce quality gates"
+    example: |
+      - name: Validate YAML
+        run: |
+          docker run --rm -v $PWD:/workspace semantic-kernel-tools:latest \
+            python -m core.cli validate --profile ci-cd --format json
+
+  pre_commit_hooks:
+    description: "Pre-commit hook integration"
+    configuration:
+      - id: "validate-yaml"
+        name: "Validate YAML files"
+        entry: "python -m core.cli validate"
+        language: "python"
+        files: '\\.ya?ml$'
+        args: ["--mode", "standard"]
+    example: |
+      repos:
+        - repo: local
+          hooks:
+            - id: validate-yaml
+              name: Validate YAML
+              entry: python -m core.cli validate
+              language: python
+              files: '\\.ya?ml$'
+
+  vscode_tasks:
+    description: "VS Code task integration"
+    tasks:
+      - "Validate YAML (Standard)"
+      - "Validate YAML (Strict)"
+      - "Validate YAML (Profile)"
+      - "Validate YAML (Watch)"
+      - "Generate Validation Report"
+    example: |
+      {
+        "label": "Validate YAML",
+        "type": "shell",
+        "command": "docker",
+        "args": [
+          "run", "--rm",
+          "-v", "${workspaceFolder}:/workspace",
+          "semantic-kernel-tools:latest",
+          "python", "-m", "core.cli", "validate"
+        ]
+      }
+
+extensibility:
+  adding_new_rules:
+    steps:
+      1: "Choose appropriate package (or create new one)"
+      2: "Create rule YAML file with required metadata"
+      3: "Define XPath/pattern for violation detection"
+      4: "Add test fixtures for the rule"
+      5: "Update package ruleset.yaml"
+      6: "Run rule validation tests"
+    example: |
+      # Create new rule file
+      touch tools/.config/validation/packages/syntax/new-rule.yaml
+
+      # Define rule structure
+      - ruleID: "syntax-new-rule"
+        category: "mandatory"
+        effort: 3
+        description: "New syntax validation rule"
+        message: "Violation detected: {{.violation}}"
+        when:
+          xpath: "//some/xpath/expression"
+
+  creating_new_packages:
+    steps:
+      1: "Create package directory under packages/"
+      2: "Create README.md with package overview"
+      3: "Create ruleset.yaml with metadata"
+      4: "Add rule YAML files"
+      5: "Create test fixtures"
+      6: "Update core registry to discover package"
+    example: |
+      mkdir -p tools/.config/validation/packages/newpackage
+      touch tools/.config/validation/packages/newpackage/README.md
+      touch tools/.config/validation/packages/newpackage/ruleset.yaml
+
+  custom_profiles:
+    steps:
+      1: "Create profile YAML in profiles/"
+      2: "Define rule selection criteria"
+      3: "Set profile metadata"
+      4: "Test profile execution"
+      5: "Document profile use cases"
+    example: |
+      name: "custom-profile"
+      description: "Custom validation profile"
+      rules:
+        include:
+          - "metadata-*"
+          - "syntax-indentation-*"
+        exclude:
+          - "*-optional-*"
+
+performance_optimization:
+  caching:
+    strategy: "Cache validation results per file hash"
+    invalidation: "On file modification or rule changes"
+    storage: "In-memory cache with disk persistence option"
+    benefits: "50-70% reduction in repeated validations"
+
+  parallel_execution:
+    strategy: "Parallelize rule execution across files"
+    implementation: "ThreadPoolExecutor with configurable workers"
+    benefits: "2-3x speedup for large file sets"
+
+  rule_optimization:
+    techniques:
+      - "XPath expression optimization"
+      - "Early termination on critical violations"
+      - "Lazy rule loading"
+      - "Incremental validation (changed files only)"
+
+  benchmarks:
+    single_file:
+      minimal: "~1 second"
+      standard: "~2-3 seconds"
+      strict: "~2-3 seconds"
+      recommended: "~5-7 seconds"
+
+    repository_wide:
+      minimal: "~5-10 seconds"
+      standard: "~15-20 seconds"
+      strict: "~15-20 seconds"
+      recommended: "~30-40 seconds"
+
+best_practices:
+  rule_development:
+    - "Use specific, descriptive rule IDs"
+    - "Provide clear violation messages"
+    - "Include examples in rule metadata"
+    - "Write comprehensive test fixtures"
+    - "Document edge cases"
+
+  profile_usage:
+    - "Use minimal profile for rapid iteration"
+    - "Use standard profile for regular validation"
+    - "Use strict profile for production deployments"
+    - "Use ci-cd profile in pipelines"
+    - "Use development profile for local work"
+
+  testing:
+    - "Test rules in isolation"
+    - "Use representative fixtures"
+    - "Cover positive and negative cases"
+    - "Test edge cases and boundary conditions"
+    - "Validate performance impact"
+
+  integration:
+    - "Run validation in pre-commit hooks"
+    - "Enforce quality gates in CI/CD"
+    - "Generate and review validation reports"
+    - "Track validation metrics over time"
+    - "Iterate on rule effectiveness"
+
+future_enhancements:
+  planned:
+    - "Auto-fix capabilities for common violations"
+    - "Machine learning-based rule suggestions"
+    - "Real-time validation in editors"
+    - "Custom rule templates and wizards"
+    - "Advanced reporting dashboards"
+
+  under_consideration:
+    - "Language server protocol integration"
+    - "Cloud-based validation service"
+    - "Rule marketplace for sharing"
+    - "Integration with other linters"
+    - "Support for non-YAML formats"

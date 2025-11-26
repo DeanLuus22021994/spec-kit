@@ -1,0 +1,62 @@
+#
+# Vector Database Configuration (Qdrant)
+##
+# Metadata block moved to comments for strict YAML compliance.
+#   version: "1.0.0"
+#   category: config
+#   keywords: vector-database, qdrant, storage, collections, hnsw, api, performance
+#   updated: "2025-11-24"
+#   config_references:
+#     semantic_kernel: "../../.config/semantic-kernel.yml"
+#     services: "../../.config/services.yml"
+#     ports: "../../.config/ports.yml"
+#
+# Follows strict YAML best practices: 2-space indentation, quoted version numbers, comments for documentation.
+vector:
+  service:
+    name: "vector-database"
+    type: "qdrant"
+    version: "v1.7.0"
+
+  storage:
+    path: "/qdrant/storage"
+    snapshotPath: "/qdrant/snapshots"
+
+  collections:
+    default:
+      name: "semantic_vectors"
+      vectorSize: 1536
+      distance: "Cosine"
+      onDiskPayload: true
+
+  performance:
+    maxSegmentSize: 200000
+    indexingThreshold: 20000
+    payloadIndexingThreshold: 10000
+    optimizersCPU: 0
+
+  api:
+    port: 6333
+    grpcPort: 6334
+    enableCORS: true
+
+  limits:
+    maxRequestSize: 33554432 # 32MB
+    maxSearchResults: 100
+
+  hnsw:
+    m: 16
+    efConstruct: 100
+    fullScanThreshold: 10000
+
+cross_references:
+  - ".config/semantic-kernel.yml: Semantic Kernel configuration"
+  - "semantic/embeddings/.config/config.yml: Embeddings service configuration"
+  - ".config/services.yml: Service ports and resources"
+
+related_documentation:
+  - ".config/semantic-kernel.yml"
+  - "semantic/embeddings/.config/config.yml"
+  - ".config/services.yml"
+  - "dockerfiles/vector.Dockerfile"
+  - ".config/copilot/yaml-best-practices.yml"

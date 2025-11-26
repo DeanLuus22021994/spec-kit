@@ -1,0 +1,148 @@
+# YAML Best Practices Ruleset
+# Red Hat Migration Toolkit for Applications (MTA) 7.2
+# Enforces yaml-best-practices.yml standards across repository
+# Location: tools/.config/validation/rules/
+
+metadata: &metadata
+  name: "yaml-best-practices-validation"
+  description: "Enforces YAML best practices from .config/copilot/yaml-best-practices.yml across all repository YAML files"
+  version: "1.0.0"
+  category: "quality"
+  keywords:
+    - yaml
+    - validation
+    - best-practices
+    - red-hat-mta
+    - quality
+    - standards
+    - kantra
+  updated: "2025-11-24"
+  documentation: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide"
+  config_references:
+    - "../../../.config/copilot/yaml-best-practices.yml"
+    - "../copilot/index.yml"
+    - "../copilot/validation.yml"
+
+<<: *metadata
+
+name: "yaml-best-practices-validation"
+description: |
+  Comprehensive ruleset for validating YAML files against best practices defined in
+  .config/copilot/yaml-best-practices.yml. This ruleset enforces:
+
+  - Proper metadata blocks with anchor and merge patterns
+  - Consistent indentation (2 spaces, no tabs)
+  - Correct quote usage (unquoted simple values, quoted versions)
+  - Multiline string formats (literal |, folded >)
+  - File organization structure
+  - Anchor/alias patterns
+  - Cross-references and documentation
+
+  Rules are organized into modular packages:
+  - metadata/ - Metadata blocks and anchor patterns (14 rules)
+  - syntax/ - Indentation, quoting, multiline, collections, comments (33 rules)
+  - structure/ - File organization (9 rules)
+  - mta/ - MTA rule structure, labels, providers, conditions (24 rules)
+  - quality/ - Duplicates, unused elements, naming, performance (12 rules)
+  - vscode/ - VSCode YAML extension compliance and configuration (7 rules)
+
+labels:
+  - "konveyor.io/source=yaml"
+  - "konveyor.io/target=yaml-best-practices"
+  - "quality=mandatory"
+  - "category=standards"
+  - "scope=repository-wide"
+
+# Package-based rule structure (Phase 2 complete - 107 total rules)
+packages:
+  metadata:
+    ruleset: metadata/ruleset.yaml
+    description: "Metadata blocks and anchor patterns"
+    total_rules: 14
+    rule_files:
+      - metadata/metadata-block.yaml
+      - metadata/anchors.yaml
+
+  syntax:
+    ruleset: syntax/ruleset.yaml
+    description: "Indentation, quoting, multiline strings, collections, comments"
+    total_rules: 33
+    rule_files:
+      - syntax/indentation.yaml
+      - syntax/quoting.yaml
+      - syntax/multiline.yaml
+      - syntax/collections.yaml
+      - syntax/comments.yaml
+
+  structure:
+    ruleset: structure/ruleset.yaml
+    description: "File organization and documentation"
+    total_rules: 9
+    rule_files:
+      - structure/organization.yaml
+
+  mta:
+    ruleset: mta/ruleset.yaml
+    description: "MTA rule structure, labels, providers, conditions, variables"
+    total_rules: 24
+    rule_files:
+      - mta/structure.yaml
+      - mta/labels.yaml
+      - mta/providers.yaml
+      - mta/conditions.yaml
+      - mta/variables.yaml
+
+  quality:
+    ruleset: quality/ruleset.yaml
+    description: "Code quality: duplicates, unused elements, naming, performance"
+    total_rules: 12
+    rule_files:
+      - quality/duplicates.yaml
+      - quality/unused.yaml
+      - quality/naming.yaml
+      - quality/performance.yaml
+
+  vscode:
+    ruleset: vscode/ruleset.yaml
+    description: "VSCode YAML extension compliance, schemas, custom tags"
+    total_rules: 7
+    rule_files:
+      - vscode/compliance.yaml
+      - vscode/schemas.yaml
+      - vscode/tags.yaml
+
+# Total Statistics (Phase 2 Complete)
+total_statistics:
+  total_rules: 107
+  total_packages: 6
+  mandatory_rules: 48
+  optional_rules: 52
+  potential_rules: 7
+
+# Legacy rule files (deprecated - use packages above)
+# These files remain for backward compatibility but will be removed in future versions
+legacy_rules:
+  - metadata-validation.yaml # Migrated to metadata/metadata-block.yaml
+  - anchor-pattern-validation.yaml # Migrated to metadata/anchors.yaml
+  - indentation-validation.yaml # Migrated to syntax/indentation.yaml
+  - quoting-validation.yaml # Migrated to syntax/quoting.yaml
+  - file-organization-validation.yml # Migrated to structure/organization.yaml
+
+cross_references:
+  - file: "../../../.config/copilot/yaml-best-practices.yml"
+    description: "YAML best practices and Red Hat MTA rules development guide"
+
+  - file: "../../../.config/copilot/index.yml"
+    description: "Semantic search index structure"
+
+  - file: "../copilot/validation.yml"
+    description: "Kantra validation context and usage documentation"
+
+  - file: "../scripts/validate-yaml.sh"
+    description: "Automated YAML validation script"
+
+related_documentation:
+  - "../../../.config/copilot/yaml-best-practices.yml: Complete YAML standards and MTA guide"
+  - "Red Hat MTA Rules Development Guide: https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide"
+  - "Kantra CLI GitHub: https://github.com/konveyor/kantra"
+  - "tools/.config/copilot/validation.yml: Validation workflow and CLI usage"

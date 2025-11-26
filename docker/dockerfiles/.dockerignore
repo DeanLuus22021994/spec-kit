@@ -1,0 +1,10 @@
+# Dockerfile-specific ignores
+# This file helps optimize Docker build context when building from dockerfiles directory
+
+# Documentation
+*.md
+*.README.md
+
+# Other Dockerfiles (when building specific services)
+# Note: These are NOT ignored by default - they're here for reference
+# Uncomment specific files if needed for targeted builds

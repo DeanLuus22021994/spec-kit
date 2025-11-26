@@ -1,0 +1,43 @@
+# Validation Profiles
+metadata: &metadata
+  name: ci-cd
+  description: "CI/CD optimized validation profile - fast and focused"
+  version: "1.0.0"
+
+<<: *metadata
+
+# Rule package configuration
+rules:
+  # Metadata validation - mandatory only
+  metadata:
+    severity: mandatory
+
+  # Syntax validation - mandatory only (skip slow checks)
+  syntax:
+    severity: mandatory
+
+  # Structure validation - mandatory only
+  structure:
+    severity: mandatory
+
+  # MTA-specific validation - mandatory only
+  mta:
+    severity: mandatory
+
+  # Quality validation - critical only
+  quality:
+    severity: mandatory
+
+  # VS Code integration - skip (not relevant for CI/CD)
+  vscode:
+    severity: optional
+
+# Profile options
+options:
+  failOnWarning: true
+  failOnInfo: false
+  maxViolations: 5
+# Description
+# This profile is optimized for CI/CD pipelines, focusing on critical issues
+# that would break builds or deployments.
+# Use for: GitHub Actions, GitLab CI, Jenkins pipelines, automated builds

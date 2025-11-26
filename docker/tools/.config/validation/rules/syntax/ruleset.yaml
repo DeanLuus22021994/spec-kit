@@ -1,0 +1,75 @@
+metadata: &metadata
+  name: "syntax-package-ruleset"
+  description: "Rules for YAML indentation and quoting syntax"
+  version: "1.0.0"
+  category: "validation-rules"
+
+<<: *metadata
+
+# Syntax Package - Ruleset Configuration
+# Coordinates indentation and quoting rule files
+
+package_info:
+  name: "syntax"
+  total_rules: 33
+  rule_files:
+    - indentation.yaml # 7 indentation rules
+    - quoting.yaml # 7 quoting rules
+    - multiline.yaml # 8 multiline string rules
+    - collections.yaml # 6 collection formatting rules
+    - comments.yaml # 5 comment formatting rules
+
+rule_groups:
+  indentation:
+    description: "Enforce 2-space indentation and consistent alignment"
+    rule_files:
+      - indentation.yaml
+    mandatory_rules: 6
+    optional_rules: 1
+
+  quoting:
+    description: "Enforce proper string quoting practices"
+    rule_files:
+      - quoting.yaml
+    mandatory_rules: 5
+    optional_rules: 2
+
+  multiline:
+    description: "Enforce proper multiline string formatting"
+    rule_files:
+      - multiline.yaml
+    mandatory_rules: 2
+    optional_rules: 6
+
+  collections:
+    description: "Enforce proper collection (array/object) formatting"
+    rule_files:
+      - collections.yaml
+    mandatory_rules: 1
+    optional_rules: 4
+    potential_rules: 1
+
+  comments:
+    description: "Enforce proper comment placement and documentation"
+    rule_files:
+      - comments.yaml
+    mandatory_rules: 0
+    optional_rules: 5
+
+execution_order:
+  - indentation.yaml # Run first - validates structure
+  - quoting.yaml # Run second - validates content
+  - multiline.yaml # Run third - validates multiline strings
+  - collections.yaml # Run fourth - validates collections
+  - comments.yaml # Run fifth - validates documentation
+
+dependencies: [] # No external dependencies
+
+tags:
+  - syntax
+  - indentation
+  - quoting
+  - multiline
+  - collections
+  - comments
+  - formatting

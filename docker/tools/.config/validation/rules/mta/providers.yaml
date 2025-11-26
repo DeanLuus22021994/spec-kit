@@ -1,0 +1,189 @@
+# MTA Provider Validation Rules
+# Purpose: Ensure proper use of MTA builtin providers in when conditions
+# Scope: All MTA ruleset YAML files with when conditions
+# Package: mta
+
+---
+- ruleID: mta-provider-builtin-file
+  description: |
+    Validates proper use of builtin.file provider for file-based matching.
+
+    The builtin.file provider matches files by pattern without examining content.
+    Use for:
+    - Checking file existence
+    - Matching filenames/paths
+    - File extension validation
+
+    Common patterns:
+    - **/*.java: All Java files
+    - **/pom.xml: Maven project files
+    - src/**/*.cs: C# source files in src/
+
+    For content matching, use builtin.filecontent instead.
+  labels:
+    - "mta/providers"
+    - "mta/builtin-file"
+    - "validation/patterns"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*builtin\\.file:\\s*$|^\\s*builtin\\.file:\\s*\\n\\s*(?!pattern:)"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    builtin.file provider is missing required pattern field.
+
+    Use builtin.file for file path/name matching:
+
+    Example:
+    ```yaml
+    when:
+      builtin.file:
+        pattern: "**/*.{yml,yaml}"
+    ```
+
+    For content matching, use builtin.filecontent instead.
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/providers.md#builtin-file
+      title: "builtin.file Provider Documentation"
+
+---
+- ruleID: mta-provider-builtin-filecontent
+  description: |
+    Validates proper use of builtin.filecontent provider for content matching.
+
+    The builtin.filecontent provider searches file content using regex patterns.
+
+    Required fields:
+    - pattern: Regex pattern to match (supports (?m) multiline mode)
+    - filePattern: Glob pattern for which files to search
+
+    Best practices:
+    - Use (?m) for multiline matching
+    - Escape special regex characters
+    - Test patterns with representative files
+    - Keep patterns focused and specific
+  labels:
+    - "mta/providers"
+    - "mta/builtin-filecontent"
+    - "validation/patterns"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*builtin\\.filecontent:\\s*$|^\\s*builtin\\.filecontent:\\s*\\n\\s*(?!pattern:|filePattern:)"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    builtin.filecontent provider missing required fields.
+
+    Both pattern and filePattern are required:
+
+    Example:
+    ```yaml
+    when:
+      builtin.filecontent:
+        pattern: "(?m)^\\s*indentation:\\s+\\d+"
+        filePattern: "**/*.{yml,yaml}"
+    ```
+
+    - pattern: Regex to match in file content
+    - filePattern: Glob for which files to search
+  effort: 2
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/providers.md#builtin-filecontent
+      title: "builtin.filecontent Provider Documentation"
+
+---
+- ruleID: mta-provider-language-specific
+  description: |
+    Validates use of language-specific providers (java, go, dotnet, etc).
+
+    MTA provides specialized providers for different languages:
+    - java: Java source analysis (imports, annotations, types)
+    - go: Go source analysis (packages, imports)
+    - dotnet: .NET analysis (using statements, attributes)
+    - builtin.xml: XML/XHTML parsing
+    - builtin.json: JSON structure analysis
+
+    Each has specific query capabilities beyond simple pattern matching.
+    Refer to provider documentation for available queries.
+  labels:
+    - "mta/providers"
+    - "mta/language-specific"
+    - "validation/capabilities"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*(java|go|dotnet|builtin\\.xml|builtin\\.json):\\s*$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Language-specific provider may be missing query configuration.
+
+    Ensure provider has proper query fields:
+
+    Java example:
+    ```yaml
+    when:
+      java:
+        referenced:
+          pattern: "javax.persistence.*"
+    ```
+
+    Go example:
+    ```yaml
+    when:
+      go:
+        referenced:
+          pattern: "database/sql"
+    ```
+
+    Check provider documentation for available queries.
+  effort: 3
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/providers.md
+      title: "MTA Provider Documentation"
+
+---
+- ruleID: mta-provider-pattern-quality
+  description: |
+    Ensures provider patterns are well-formed and effective.
+
+    Good pattern practices:
+    - Use (?m) for multiline regex matching
+    - Escape special characters: . * + ? [ ] ( ) { } | \\ ^  $
+    - Be specific to reduce false positives
+    - Use non-capturing groups (?:...) when grouping
+    - Test patterns against sample files
+    - Add comments for complex patterns
+
+    Avoid overly broad patterns like .* that match everything.
+  labels:
+    - "mta/providers"
+    - "mta/patterns"
+    - "validation/quality"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*pattern:\\s+['\"]?\\.\\*['\"]?\\s*$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Provider pattern is too broad (.* matches everything).
+
+    Use specific patterns to match actual code/content:
+
+    Instead of:
+    ```yaml
+    pattern: ".*"
+    ```
+
+    Use specific patterns:
+    ```yaml
+    pattern: "(?m)^\\s*indentation:\\s+\\d+"  # YAML indentation
+    pattern: "import\\s+javax\\.persistence"   # Java imports
+    pattern: "using\\s+System\\.Data"          # C# using
+    ```
+
+    Test patterns against real files to ensure accuracy.
+  effort: 2
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/providers.md#pattern-guidelines
+      title: "Pattern Writing Guidelines"

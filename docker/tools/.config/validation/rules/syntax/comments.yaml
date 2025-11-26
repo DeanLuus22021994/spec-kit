@@ -1,0 +1,199 @@
+# Comments Validation Rules
+# Enforces proper YAML comment placement and formatting
+
+- ruleID: yaml-comment-positioning
+  description: |
+    Comments should be on separate lines for block content.
+    Inline comments are acceptable for simple key-value pairs.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "#"
+  message: |
+    Comment found - verify positioning.
+
+    Separate line comments for sections:
+    # Database Configuration
+    database:
+      host: localhost
+      port: 5432
+
+    Inline comments for clarification:
+    timeout: 30  # seconds
+    retries: 3   # max attempts
+
+    Avoid inline comments on complex structures:
+    Bad:
+    services:  # Service definitions
+      - name: backend
+
+    Better:
+    # Service definitions
+    services:
+      - name: backend
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#comments"
+      title: "YAML Comment Positioning"
+
+- ruleID: yaml-header-comment-structure
+  description: |
+    File header comments should include purpose, context, and metadata.
+    Use consistent header format across repository.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^#"
+  message: |
+    File header comment detected - verify completeness.
+
+    Recommended header structure:
+
+    # Service Configuration
+    # Defines runtime parameters and dependencies for backend service
+    #
+    # Related: infrastructure/database/config.yml
+    # Updated: 2024-01-15
+
+    metadata: &metadata
+      ...
+
+    Header should include:
+    - Brief title
+    - Purpose/description
+    - Related files (optional)
+    - Last update date (optional)
+
+    Avoid excessive ASCII art or decorative comments.
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#comments"
+      title: "YAML Header Comment Guidelines"
+
+- ruleID: yaml-section-documentation
+  description: |
+    Major sections should have explanatory comments.
+    Document non-obvious configuration choices.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^[a-zA-Z_][a-zA-Z0-9_]*:"
+  message: |
+    Top-level section detected - consider documentation.
+
+    Document major sections:
+
+    # Network Configuration
+    # Configures service networking and port mappings
+    network:
+      mode: bridge
+      ports:
+        - 8080:8080
+
+    # Environment Variables
+    # Sets runtime environment for the application
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+
+    Benefits:
+    - Helps maintainers understand intent
+    - Documents non-obvious choices
+    - Aids onboarding
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#comments"
+      title: "YAML Section Documentation"
+
+- ruleID: yaml-multiline-documentation
+  description: |
+    Use multiline comments for detailed explanations.
+    Prefer description fields in metadata for structured documentation.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^#.*\\n#.*\\n#"
+  message: |
+    Multiline comment block detected.
+
+    For extensive documentation, consider:
+
+    Option 1 - Multiline comments:
+    # This is a complex configuration that requires
+    # multiple lines of explanation to fully document
+    # the various options and their implications.
+
+    Option 2 - Structured metadata (preferred):
+    metadata:
+      description: |
+        This is a complex configuration that requires
+        multiple lines of explanation to fully document
+        the various options and their implications.
+
+    Option 2 provides:
+    - Structured, queryable documentation
+    - Better semantic search
+    - Integration with tooling
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#comments"
+      title: "YAML Multiline Documentation"
+
+- ruleID: yaml-comment-alignment
+  description: |
+    Inline comments in lists or sequences should be aligned for readability.
+    Use consistent column alignment.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:.*#"
+  message: |
+    Inline comment in structured content detected.
+
+    Align comments for readability:
+
+    Good alignment:
+    services:
+      backend:  8080      # Backend API server
+      frontend: 3000      # React frontend
+      database: 5432      # PostgreSQL database
+
+    Poor alignment:
+    services:
+      backend: 8080 # Backend API server
+      frontend: 3000    # React frontend
+      database: 5432  # PostgreSQL database
+
+    Use consistent spacing (2-4 spaces before #).
+    Align comment start column within same section.
+
+    For varied-length values, align to longest value + padding.
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#comments"
+      title: "YAML Comment Alignment"

@@ -1,0 +1,36 @@
+metadata: &metadata
+  name: "structure-package-ruleset"
+  description: "Rules for YAML file organization and documentation"
+  version: "1.0.0"
+  category: "validation-rules"
+
+<<: *metadata
+
+# Structure Package - Ruleset Configuration
+# Coordinates file organization rule files
+
+package_info:
+  name: "structure"
+  total_rules: 9
+  rule_files:
+    - organization.yaml # 9 file organization rules
+
+rule_groups:
+  file_organization:
+    description: "Enforce proper file structure and documentation"
+    rule_files:
+      - organization.yaml
+    mandatory_rules: 2
+    optional_rules: 7
+
+execution_order:
+  - organization.yaml # Single file in package
+
+dependencies:
+  - metadata # Depends on metadata package for metadata-block validation
+
+tags:
+  - structure
+  - organization
+  - documentation
+  - file-layout

@@ -1,0 +1,217 @@
+# MTA Rule Structure Validation Rules
+# Purpose: Ensure proper MTA 7.2 rule structure and required fields
+# Scope: All MTA ruleset YAML files
+# Package: mta
+
+---
+- ruleID: mta-rule-required-fields
+  description: |
+    Ensures all MTA rules contain required fields: ruleID, description, message.
+
+    Every valid MTA rule must include:
+    - ruleID: Unique identifier in format 'source-target-category-detail'
+    - description: Clear explanation of what the rule validates
+    - message: User-facing guidance when rule is triggered
+
+    Optional fields include: labels, when, effort, category, links.
+  labels:
+    - "mta/structure"
+    - "mta/required-fields"
+    - "validation/completeness"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^-\\s+ruleID:\\s+[^\\n]+\\n(?:(?!^-\\s+ruleID:).*\\n)*?(?:description:|message:|when:)"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    MTA rule is missing required fields.
+
+    Every rule must have:
+    - ruleID: Unique identifier
+    - description: Detailed explanation
+    - message: User guidance
+
+    Example:
+    ```yaml
+    - ruleID: yaml-indentation-consistent
+      description: Ensures consistent indentation across file
+      message: Use consistent 2-space indentation throughout
+    ```
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md
+      title: "MTA Rule Structure Documentation"
+
+---
+- ruleID: mta-rule-id-pattern
+  description: |
+    Validates ruleID follows MTA naming conventions.
+
+    Rule IDs should use kebab-case format: 'source-target-category-specific'
+    - Use lowercase letters
+    - Separate words with hyphens
+    - Start with source/technology identifier
+    - Include category/domain
+    - End with specific validation detail
+
+    Examples:
+    - yaml-indentation-consistent
+    - java-ee-to-quarkus-dependency
+    - dotnet-config-appsettings-structure
+  labels:
+    - "mta/structure"
+    - "mta/naming"
+    - "validation/conventions"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*ruleID:\\s+[A-Z_]|^\\s*ruleID:\\s+[^\\n]*\\s[^\\n]*$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Rule ID does not follow MTA naming conventions.
+
+    Use kebab-case format: lowercase with hyphens
+    - ✓ yaml-indentation-consistent
+    - ✗ YAML_INDENTATION_CONSISTENT
+    - ✗ yaml indentation consistent
+
+    Pattern: technology-category-specific-detail
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#rule-naming
+      title: "MTA Rule Naming Guidelines"
+
+---
+- ruleID: mta-description-quality
+  description: |
+    Ensures rule descriptions are clear and informative.
+
+    Good descriptions:
+    - Explain what the rule validates (not just what it checks)
+    - Provide context on why the rule matters
+    - Include examples of valid/invalid patterns
+    - Are at least 50 characters long
+    - Use complete sentences
+
+    Avoid vague descriptions like "Checks formatting" or "Validates syntax".
+  labels:
+    - "mta/structure"
+    - "mta/documentation"
+    - "validation/quality"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*description:\\s*[|>]?\\s*$|^\\s*description:\\s*['\"]?.{1,49}['\"]?\\s*$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Rule description is missing or too brief.
+
+    Provide clear, detailed descriptions that:
+    - Explain what the rule validates
+    - Include context and rationale
+    - Show examples when helpful
+    - Use at least 50 characters
+
+    Example:
+    ```yaml
+    description: |
+      Ensures consistent 2-space indentation throughout YAML files.
+      Consistent indentation improves readability and prevents parsing errors.
+      Mixed tabs and spaces can cause subtle bugs.
+    ```
+  effort: 2
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#descriptions
+      title: "Writing Effective Rule Descriptions"
+
+---
+- ruleID: mta-message-template-quality
+  description: |
+    Validates that rule messages provide actionable guidance.
+
+    Effective messages:
+    - Clearly state the problem found
+    - Provide specific remediation steps
+    - Include examples of correct usage
+    - Use friendly, constructive tone
+    - Are formatted with proper YAML literal blocks
+
+    Avoid generic messages like "Fix this" or "Invalid syntax".
+  labels:
+    - "mta/structure"
+    - "mta/documentation"
+    - "validation/usability"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*message:\\s*['\"]?(Fix|Invalid|Error|Wrong|Bad)['\"]?\\s*$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Rule message is too generic or not actionable.
+
+    Provide helpful messages that:
+    - Explain what was found
+    - Suggest how to fix it
+    - Show correct examples
+    - Use constructive language
+
+    Example:
+    ```yaml
+    message: |
+      Inconsistent indentation detected.
+
+      Use 2 spaces for all indentation levels.
+      Remove any tab characters.
+
+      Correct:
+        key:
+          nested: value
+    ```
+  effort: 2
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#messages
+      title: "Writing User-Friendly Messages"
+
+---
+- ruleID: mta-effort-values-valid
+  description: |
+    Validates that effort values use standard MTA scale.
+
+    MTA defines standard effort values representing migration complexity:
+    - 0: Trivial (automated fix)
+    - 1: Easy (< 1 hour)
+    - 3: Moderate (< 1 day)
+    - 5: Complex (< 1 week)
+    - 7: Difficult (< 1 month)
+    - 13: Very difficult (> 1 month)
+
+    These values are based on modified Fibonacci sequence for estimation.
+    Effort is optional but should use standard values when specified.
+  labels:
+    - "mta/structure"
+    - "mta/effort"
+    - "validation/standards"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*effort:\\s+(?![0135713]\\s*$)\\d+"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Effort value is not a standard MTA effort level.
+
+    Use one of these standard values:
+    - 0: Trivial (automated)
+    - 1: Easy (< 1 hour)
+    - 3: Moderate (< 1 day)
+    - 5: Complex (< 1 week)
+    - 7: Difficult (< 1 month)
+    - 13: Very difficult (> 1 month)
+
+    Example:
+    ```yaml
+    effort: 1  # Easy fix, under 1 hour
+    ```
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#effort
+      title: "MTA Effort Scale Definition"

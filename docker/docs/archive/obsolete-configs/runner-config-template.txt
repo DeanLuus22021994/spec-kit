@@ -1,0 +1,31 @@
+# Configuration for GitHub Self-Hosted Runner
+
+# This file contains the configuration settings for the GitHub self-hosted runner.
+# Ensure to customize the settings according to your environment and requirements.
+
+# Runner name
+name: MySelfHostedRunner
+
+# The URL of the GitHub repository
+url: https://github.com/your-username/your-repo
+
+# The access token for the runner
+token: YOUR_RUNNER_TOKEN
+
+# The working directory for the runner
+work: /path/to/your/runner/work
+
+# The directory for the runner's logs
+logs: /path/to/your/runner/logs
+
+# The labels for the runner
+labels:
+  - self-hosted
+  - linux
+  - x64
+
+# The runner's environment variables
+env:
+  VARIABLE_NAME: value
+
+# Additional configuration options can be added as needed.

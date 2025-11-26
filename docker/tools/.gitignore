@@ -1,0 +1,21 @@
+# Python cache (should not exist with baked dependencies)
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# Temporary files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files (if any)
+.vscode/settings.json

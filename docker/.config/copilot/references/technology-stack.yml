@@ -1,0 +1,258 @@
+# Technology Stack Reference
+# Framework versions, tools, and technology specifications
+
+technology_stack:
+  backend:
+    dotnet:
+      version: "10.0.x"
+      language_version: "C# 13"
+      frameworks:
+        - "ASP.NET Core"
+        - "Entity Framework Core"
+      features:
+        - "Minimal APIs"
+        - "Dependency Injection"
+        - "Configuration System"
+        - "Logging"
+        - "Native AOT (optional)"
+      auto_provisioning:
+        enabled: true
+        config_file: ".config/dotnet-dependencies.yml"
+        source_file: "global.json"
+        triggers:
+          - "Repository clone"
+          - "Branch checkout"
+          - "CI/CD initialization"
+          - "Docker container build"
+      packages:
+        semantic_kernel:
+          - "Microsoft.SemanticKernel"
+          - "Microsoft.SemanticKernel.Connectors.OpenAI"
+          - "Microsoft.SemanticKernel.Connectors.Postgres"
+          - "Microsoft.SemanticKernel.Connectors.Qdrant"
+          - "Microsoft.SemanticKernel.Planners.Handlebars"
+        aspnet_core:
+          - "Microsoft.AspNetCore.Authentication.JwtBearer"
+          - "Swashbuckle.AspNetCore"
+        entity_framework:
+          - "Microsoft.EntityFrameworkCore"
+          - "Npgsql.EntityFrameworkCore.PostgreSQL"
+          - "Pgvector.EntityFrameworkCore"
+        caching:
+          - "Microsoft.Extensions.Caching.StackExchangeRedis"
+          - "StackExchange.Redis"
+        validation:
+          - "FluentValidation"
+          - "MediatR"
+          - "AutoMapper"
+
+  frontend:
+    react:
+      version: "18"
+    typescript:
+      version: "5"
+    build_tool: "Vite"
+    package_manager: "npm"
+    testing: "Playwright"
+
+  database:
+    postgresql:
+      version: "16"
+      features:
+        - "pgvector extension"
+        - "Migrations support"
+        - "Stored procedures"
+    qdrant:
+      version: "1.7.4"
+      purpose: "Vector database"
+      dimensions: 1536
+      similarity: "cosine"
+
+  ai_ml:
+    openai:
+      api_version: "latest"
+      models:
+        chat: "gpt-4o"
+        embeddings: "text-embedding-3-small"
+    semantic_kernel:
+      version: "latest"
+      config_file: ".config/semantic-kernel.yml"
+      features:
+        - "Plugins"
+        - "Skills"
+        - "Planners (Handlebars, OpenAI Function Calling)"
+        - "Memory stores (PostgreSQL, Qdrant)"
+        - "Streaming responses"
+        - "Batch processing"
+      optimizations:
+        gpu_acceleration: true
+        streaming_enabled: true
+        batch_inference: true
+        memory_efficient: true
+        async_execution: true
+      docker:
+        gpu_enabled: true
+        runtime: "nvidia"
+        environment:
+          - "NVIDIA_VISIBLE_DEVICES=all"
+          - "NVIDIA_DRIVER_CAPABILITIES=compute,utility"
+
+  containers:
+    docker:
+      compose_version: "3.8"
+      features:
+        - "Multi-stage builds"
+        - "Health checks"
+        - "Networks"
+        - "Volumes"
+        - "NVIDIA runtime"
+        - "GPU resource reservations"
+    base_images:
+      dotnet: "mcr.microsoft.com/dotnet/aspnet:10.0-alpine"
+      dotnet_gpu: "mcr.microsoft.com/dotnet/aspnet:10.0-jammy"
+      python: "python:3.14-slim"
+      node: "node:20-alpine"
+      postgres: "postgres:16-alpine"
+      qdrant: "qdrant/qdrant:v1.7.4"
+      nginx: "nginx:1.25-alpine"
+    gpu_services:
+      - "engine"
+      - "embeddings"
+      - "vector"
+
+  testing:
+    dotnet:
+      - "xUnit"
+      - "Moq"
+      - "FluentAssertions"
+    frontend:
+      - "Playwright"
+      - "Vitest"
+    python:
+      - "pytest"
+      - "coverage"
+
+  python:
+    version: "3.14"
+    frameworks:
+      - "FastAPI"
+      - "Pydantic"
+      - "httpx"
+    code_quality:
+      - "Black 24.10.0"
+      - "Pylint"
+      - "isort"
+      - "ruff"
+      - "mypy 1.13.0"
+    auto_provisioning:
+      enabled: true
+      config_file: ".config/python-dependencies.yml"
+      requirements_file: "tools/requirements.txt"
+      triggers:
+        - "Repository clone"
+        - "Branch checkout"
+        - "CI/CD initialization"
+        - "Copilot agent setup"
+    packages:
+      core:
+        - "pyyaml==6.0.2"
+        - "jsonschema==4.23.0"
+        - "click==8.1.7"
+      testing:
+        - "pytest==8.3.3"
+        - "pytest-cov==5.0.0"
+      utilities:
+        - "rich==13.9.4"
+        - "tabulate==0.9.0"
+        - "jinja2==3.1.4"
+        - "watchdog==5.0.3"
+      documentation:
+        - "mkdocs==1.6.1"
+        - "mkdocs-material==9.5.47"
+
+  accelerated_compute:
+    cuda:
+      version: "13.0"
+      compute_capability: "8.6"
+      cudnn: "9.12.0"
+    pytorch:
+      version: "2.9.1+cu130"
+      cuda_support: true
+    gpu:
+      model: "RTX 3050"
+      memory: "6GB"
+    environment_config: ".config/environment.yml"
+
+  devops:
+    ci_cd:
+      - "GitHub Actions"
+      - "pre-commit hooks"
+    code_quality:
+      - "yamllint"
+      - "dotnet-format"
+      - "prettier"
+      - "eslint"
+      - "sqlfluff"
+    documentation:
+      - "MkDocs"
+      - "Material theme"
+
+version_matrix:
+  runtime:
+    dotnet: "10.0.x"
+    node: "20.x"
+    python: "3.14.x"
+    cuda: "13.0.x"
+    pytorch: "2.9.x"
+
+  database:
+    postgresql: "16.x"
+    qdrant: "1.7.4"
+
+  accelerated_compute:
+    cuda: "13.0.x"
+    cudnn: "9.12.x"
+    pytorch: "2.9.x"
+
+  frontend:
+    react: "18.x"
+    typescript: "5.x"
+    vite: "5.x"
+
+development_tools:
+  ide:
+    - "Visual Studio Code"
+    - "Visual Studio 2022"
+
+  extensions:
+    - "C# Dev Kit"
+    - "ESLint"
+    - "Prettier"
+    - "Docker"
+    - "Red Hat YAML"
+
+  cli_tools:
+    - "dotnet CLI"
+    - "npm/npx"
+    - "docker/docker-compose"
+    - "gh (GitHub CLI)"
+    - "az (Azure CLI)"
+
+package_managers:
+  dotnet: "NuGet"
+  node: "npm"
+  python: "pip"
+  system: "apk (Alpine), apt (Debian/Ubuntu)"
+
+related_documentation:
+  - ".config/copilot/references/services.yml: Service specifications and architecture"
+  - ".config/copilot/standards/architecture-standards.yml: Architecture patterns"
+  - ".config/environment.yml: Environment variables for CUDA, Python, Docker"
+  - ".config/python-dependencies.yml: Python package auto-provisioning configuration"
+  - ".config/dotnet-dependencies.yml: .NET package auto-provisioning with Semantic Kernel optimizations"
+  - ".config/semantic-kernel.yml: Semantic Kernel configuration and GPU settings"
+  - "global.json: .NET SDK version pinning"
+  - "package.json: Frontend dependencies"
+  - "tools/requirements.txt: Python dependencies"
+  - "pyproject.toml: Python tool configurations (black, mypy, pylint)"
+  - "docker-compose.yml: Container orchestration with GPU support"

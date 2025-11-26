@@ -1,0 +1,364 @@
+# GitHub Workflows - Reusable Jobs
+# Modular workflow jobs for build, test, docker, and deploy operations
+
+metadata: &metadata
+  version: "1.0.0"
+  category: workflow
+  keywords: [reusable-workflows, github-actions, jobs, build, test, docker, deploy, ci-cd]
+
+<<: *metadata
+
+overview: |
+  Reusable workflow jobs following workflow_call patterns with typed inputs/outputs.
+  All jobs can be called from other workflows, enabling modular CI/CD pipelines.
+  Jobs are located in .github/workflows/jobs/ directory.
+  GPU-accelerated jobs can use 'self-hosted-gpu' runner (pre-configured, no token required).
+
+runner_options:
+  github_hosted:
+    - "ubuntu-latest: Default (2-core, 7GB RAM, 14GB SSD)"
+    - "ubuntu-4-core: Larger runner (4-core, 16GB RAM, 14GB SSD)"
+  self_hosted:
+    label: "self-hosted-gpu"
+    description: "Pre-configured runner with NVIDIA GPU support"
+    token_required: false
+    already_registered: true
+    specs:
+      gpu: "RTX 3050 6GB"
+      cuda: "13.0"
+      pytorch: "2.9.1+cu130"
+      compute_capability: "8.6"
+    environment_config: ".config/environment.yml"
+
+reusable_jobs:
+  build:
+    file: ".github/workflows/jobs/build.yml"
+    description: "Build all application components (.NET, Node.js, Python)"
+    trigger: "workflow_call"
+
+    inputs:
+      dotnet-version:
+        description: ".NET SDK version"
+        type: string
+        required: false
+        default: "10.0.x"
+
+      node-version:
+        description: "Node.js version"
+        type: string
+        required: false
+        default: "20"
+
+      python-version:
+        description: "Python version"
+        type: string
+        required: false
+        default: "3.14"
+
+    outputs:
+      build-artifacts:
+        description: "Compiled binaries, frontend bundle"
+        value: "${{ jobs.build.outputs.artifacts-path }}"
+
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+
+      - name: "Restore .NET dependencies (with NuGet cache)"
+        run: "dotnet restore"
+
+      - name: "Build backend, business, engine, gateway"
+        run: "dotnet build --no-restore --configuration Release"
+
+      - name: "Restore npm dependencies (with npm cache)"
+        working-directory: "src/frontend"
+        run: "npm ci"
+
+      - name: "Build frontend (webpack)"
+        working-directory: "src/frontend"
+        run: "npm run build"
+
+      - name: "Install Python dependencies (with pip cache)"
+        run: "pip install -r tools/requirements.txt"
+
+      - name: "Upload all artifacts"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "build-artifacts"
+          path: |
+            src/*/bin/Release
+            src/frontend/dist
+
+    caching:
+      nuget:
+        path: "~/.nuget/packages"
+        key: "${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', 'global.json') }}"
+
+      npm:
+        path: "~/.npm"
+        key: "${{ runner.os }}-npm-${{ hashFiles('src/frontend/package-lock.json') }}"
+
+      pip:
+        path: "~/.cache/pip"
+        key: "${{ runner.os }}-pip-${{ hashFiles('tools/requirements.txt') }}"
+
+  test:
+    file: ".github/workflows/jobs/test.yml"
+    description: "Run all test suites (unit, integration, E2E)"
+    trigger: "workflow_call"
+
+    inputs:
+      run-unit:
+        description: "Run unit tests"
+        type: boolean
+        required: false
+        default: true
+
+      run-integration:
+        description: "Run integration tests"
+        type: boolean
+        required: false
+        default: true
+
+      run-e2e:
+        description: "Run E2E tests"
+        type: boolean
+        required: false
+        default: false
+
+    outputs:
+      test-results:
+        description: "JUnit XML reports"
+        value: "${{ jobs.test.outputs.results-path }}"
+
+      coverage-report:
+        description: "Coverage HTML/JSON"
+        value: "${{ jobs.test.outputs.coverage-path }}"
+
+    steps:
+      - name: "Download build artifacts"
+        uses: "actions/download-artifact@v4"
+
+      - name: "Unit tests: dotnet test with coverage"
+        condition: "inputs.run-unit == true"
+        run: "dotnet test --collect:'XPlat Code Coverage'"
+
+      - name: "Integration tests: Playwright integration suite"
+        condition: "inputs.run-integration == true"
+        working-directory: "tests"
+        run: "npx playwright test tests/integration"
+
+      - name: "E2E tests: Playwright e2e suite (optional)"
+        condition: "inputs.run-e2e == true"
+        working-directory: "tests"
+        run: "npx playwright test tests/e2e"
+
+      - name: "Upload test results and coverage"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "test-results"
+          path: |
+            tests/test-results/
+            tests/playwright-report/
+            **/coverage/
+
+    requirements:
+      services:
+        - "PostgreSQL (for integration tests)"
+        - "Redis (for caching tests)"
+        - "Qdrant (for vector search tests)"
+
+      note: "Service containers should be defined in calling workflow"
+
+  docker:
+    file: ".github/workflows/jobs/docker.yml"
+    description: "Build and push Docker images for all services"
+    trigger: "workflow_call"
+
+    inputs:
+      registry:
+        description: "Container registry URL"
+        type: string
+        required: false
+        default: "ghcr.io"
+
+      push:
+        description: "Push images to registry"
+        type: boolean
+        required: false
+        default: false
+
+    outputs:
+      image-tags:
+        description: "Built image tags (JSON array)"
+        value: "${{ jobs.docker.outputs.tags }}"
+
+    steps:
+      - name: "Set up Docker Buildx"
+        uses: "docker/setup-buildx-action@v3"
+
+      - name: "Login to container registry"
+        condition: "inputs.push == true"
+        uses: "docker/login-action@v3"
+
+      - name: "Build 11 service images from dockerfiles/"
+        run: |
+          for dockerfile in dockerfiles/*.Dockerfile; do
+            service=$(basename $dockerfile .Dockerfile)
+            docker buildx build -f $dockerfile -t ${{ inputs.registry }}/$service:${{ github.sha }} .
+          done
+
+      - name: "Tag with commit SHA and branch name"
+        run: |
+          docker tag $IMAGE:${{ github.sha }} $IMAGE:${{ github.ref_name }}
+          docker tag $IMAGE:${{ github.sha }} $IMAGE:latest
+
+      - name: "Push to registry (if push=true)"
+        condition: "inputs.push == true"
+        run: "docker push --all-tags $IMAGE"
+
+      - name: "Generate SBOM (Software Bill of Materials)"
+        uses: "anchore/sbom-action@v0"
+        with:
+          format: "spdx-json"
+
+    services:
+      - "backend"
+      - "business"
+      - "engine"
+      - "frontend"
+      - "gateway"
+      - "database"
+      - "vector"
+      - "embeddings"
+      - "nginx"
+      - "runner"
+      - "devsite"
+
+  deploy:
+    file: ".github/workflows/jobs/deploy.yml"
+    description: "Deploy application to Azure Container Apps"
+    trigger: "workflow_call"
+
+    inputs:
+      environment:
+        description: "Target environment (staging/production)"
+        type: string
+        required: true
+
+      azure-credentials:
+        description: "Azure service principal credentials (JSON)"
+        type: string
+        required: true
+
+    outputs:
+      deployment-url:
+        description: "Application URL"
+        value: "${{ jobs.deploy.outputs.url }}"
+
+    steps:
+      - name: "Azure login with service principal"
+        uses: "azure/login@v2"
+        with:
+          creds: "${{ inputs.azure-credentials }}"
+
+      - name: "Deploy infrastructure (Bicep)"
+        run: |
+          az deployment group create \
+            --resource-group semantic-kernel-${{ inputs.environment }} \
+            --template-file infrastructure/main.bicep \
+            --parameters environment=${{ inputs.environment }}
+
+      - name: "Push Docker images to ACR"
+        run: |
+          az acr login --name semantickernel${{ inputs.environment }}
+          docker push --all-tags
+
+      - name: "Update Azure Container Apps"
+        run: |
+          az containerapp update \
+            --name backend \
+            --resource-group semantic-kernel-${{ inputs.environment }} \
+            --image semantickernel${{ inputs.environment }}.azurecr.io/backend:${{ github.sha }}
+
+      - name: "Run smoke tests"
+        run: |
+          curl -f https://backend-${{ inputs.environment }}.azurecontainerapps.io/health
+
+      - name: "Generate deployment summary"
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Environment: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "Image Tag: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "URL: https://backend-${{ inputs.environment }}.azurecontainerapps.io" >> $GITHUB_STEP_SUMMARY
+
+    security:
+      - "Service principal credentials stored in repository secrets"
+      - "Environment protection rules enforced for production"
+      - "Deployment requires approval for production environment"
+
+pipeline_architecture:
+  orchestration: |
+    pipeline.yml (main workflow)
+      ↓
+    jobs/build.yml (builds artifacts)
+      ↓
+    jobs/test.yml (tests artifacts)
+      ↓
+    jobs/docker.yml (containerizes services)
+      ↓
+    jobs/deploy.yml (deploys to Azure)
+
+  artifact_flow:
+    build_to_test:
+      artifact: "build-artifacts"
+      contents:
+        - "Compiled .NET binaries (bin/Release)"
+        - "Frontend webpack bundle (dist/)"
+
+    test_to_docker:
+      artifact: "test-results"
+      contents:
+        - "JUnit XML reports"
+        - "Code coverage reports"
+
+    docker_to_deploy:
+      output: "image-tags"
+      contents:
+        - "Docker image tags (SHA, branch, latest)"
+        - "SBOM (Software Bill of Materials)"
+
+  dependency_chain:
+    - "build (no dependencies)"
+    - "test (depends on: build)"
+    - "docker (depends on: test)"
+    - "deploy (depends on: docker)"
+
+troubleshooting:
+  cache_corruption:
+    symptom: "Build fails with dependency resolution errors"
+    cause: "Corrupted cache from previous failed runs"
+    solution:
+      - "Delete Actions cache: Settings → Actions → Caches → Delete all"
+      - "Re-run workflow to rebuild cache"
+
+  artifact_not_found:
+    symptom: "Downstream job can't find artifact from upstream job"
+    cause: "Artifact name mismatch or upload failed"
+    solution:
+      - "Verify artifact name in upload-artifact and download-artifact match exactly"
+      - "Check upload-artifact step succeeded (green checkmark)"
+      - "Review artifact retention policy (default 90 days)"
+
+  test_timeout:
+    symptom: "E2E tests timeout after 30 minutes"
+    cause: "Playwright tests running too slowly or hanging"
+    solution:
+      - "Increase timeout-minutes in workflow (default 360)"
+      - "Split E2E tests into parallel jobs"
+      - "Use --shard option: npx playwright test --shard=1/4"
+
+related_documentation:
+  - ".config/copilot/workflows/github-workflows-composite-actions.yml: Composite actions"
+  - ".config/copilot/workflows/github-workflows-reference.yml: Workflows catalog"
+  - ".github/workflows/jobs/: Actual job definitions"

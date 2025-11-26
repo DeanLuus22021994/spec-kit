@@ -1,0 +1,155 @@
+# Anchor Pattern Validation Rules
+# Enforces proper YAML anchor and alias usage
+
+- ruleID: yaml-anchor-before-use
+  description: |
+    YAML anchors must be defined before their first use with aliases.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "\\*[a-zA-Z_][a-zA-Z0-9_]*"
+  customVariables:
+    - pattern: "\\*([a-zA-Z_][a-zA-Z0-9_]*)"
+      name: anchorName
+  message: |
+    Alias reference *{{ anchorName }} found.
+
+    Verify that anchor &{{ anchorName }} is defined before this line.
+    YAML requires anchors to be defined before they are referenced.
+  effort: 2
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#anchors_and_aliases"
+      title: "YAML Anchors and Aliases - Definition and Reference"
+
+- ruleID: yaml-anchor-naming-convention
+  description: |
+    Anchor names should use snake_case or camelCase, be descriptive, and avoid generic names.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "&(temp|tmp|data|item|value|obj|test)\\b"
+  customVariables:
+    - pattern: "&([a-z]+)\\b"
+      name: genericAnchor
+  message: |
+    Anchor &{{ genericAnchor }} uses generic naming.
+
+    Use descriptive names that indicate the purpose or content:
+    - &metadata instead of &data
+    - &defaultConfig instead of &config
+    - &baseTemplate instead of &template
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/naming-conventions.yml#anchors"
+      title: "Naming Conventions - Anchors"
+
+- ruleID: yaml-merge-key-alignment
+  description: |
+    Merge keys (<<:) should be aligned with sibling keys at the same indentation level.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+<<:\\s*\\*"
+  message: |
+    Merge key found - verify correct indentation alignment.
+
+    Merge keys should:
+    1. Align with sibling keys (same indentation)
+    2. Appear after the anchored block
+    3. Use consistent spacing: <<: *anchorName
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#indentation"
+      title: "YAML Indentation Standards"
+
+- ruleID: yaml-anchor-documentation
+  description: |
+    Complex anchors should be documented with inline comments explaining their purpose.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^[a-z_]+:\\s*&[a-z_]+"
+  message: |
+    Anchor definition found.
+
+    For complex or reused anchors, add inline comment:
+
+    template_name: &template_name  # Description of template purpose
+      field1: value1
+      field2: value2
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#anchors_and_aliases"
+      title: "YAML Anchor Documentation Guidelines"
+
+- ruleID: yaml-unused-anchor-detection
+  description: |
+    All defined anchors should be referenced at least once with aliases or merge keys.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=potential"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "&[a-zA-Z_][a-zA-Z0-9_]*"
+  customVariables:
+    - pattern: "&([a-zA-Z_][a-zA-Z0-9_]*)"
+      name: anchorName
+  message: |
+    Anchor &{{ anchorName }} defined.
+
+    Verify this anchor is used via:
+    - Alias reference: *{{ anchorName }}
+    - Merge key: <<: *{{ anchorName }}
+
+    Unused anchors should be removed to maintain clean code.
+  effort: 1
+  category: potential
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#anchors_and_aliases"
+      title: "YAML Anchor Usage Guidelines"
+
+- ruleID: yaml-cross-file-anchor-limitation
+  description: |
+    Anchors cannot be referenced across different YAML files - this is a YAML limitation.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=potential"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "!include|\\$ref"
+  message: |
+    File inclusion or reference pattern detected.
+
+    Note: YAML anchors cannot reference across files. If you need cross-file reuse:
+    1. Duplicate the anchor definition in each file
+    2. Use external templating tools (Helm, Kustomize)
+    3. Reference via configuration management system
+  effort: 3
+  category: potential
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#anchors_and_aliases"
+      title: "YAML Anchor Limitations"

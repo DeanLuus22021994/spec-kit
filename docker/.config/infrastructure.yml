@@ -1,0 +1,161 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Infrastructure Configuration
+
+# Metadata
+metadata: &metadata
+  version: "1.2.0"
+  updated: "2025-11-25"
+  category: config
+  keywords: [infrastructure, network, docker, security, monitoring, logging, configuration, gpu, cuda, nvidia, storage, cpu, ram]
+  environment: &environment production
+
+<<: *metadata
+environment: *environment
+
+# =============================================================================
+# Host Hardware Specifications (Verified 2025-11-25)
+# =============================================================================
+host_hardware:
+  verified: true
+  verification_date: "2025-11-25"
+
+  cpu:
+    model: "Intel Core i7/i9 (12th Gen or later)"
+    cores: 16
+    threads: 16
+    base_clock_ghz: 2.0
+    # Resource allocation
+    docker_allocation:
+      cores: 12 # 75% to Docker/WSL2
+      host_reserved: 4 # 25% for Windows host
+      safety_overhead_percent: 10 # 10% CPU headroom
+      effective_percent: 90 # 90% effective usage target
+
+  ram:
+    total_gb: 16
+    # Optimized for high speed, low total - aggressive memory management
+    docker_allocation:
+      allocated_gb: 10 # 62.5% to Docker/WSL2
+      host_reserved_gb: 6 # 37.5% for Windows host
+      swap_gb: 4 # Swap for overflow
+      # Memory reclaim strategy
+      reclaim_mode: "gradual" # gradual | dropcache | disabled
+      oom_kill: true
+      overcommit: false
+    # Per-service limits (high speed, low footprint)
+    service_limits:
+      critical_max_mb: 512 # database, redis, nginx
+      core_max_mb: 512 # backend, gateway, frontend
+      ai_max_mb: 2048 # embeddings (needs more)
+      development_max_mb: 256 # devsite, tools
+
+  storage:
+    # SSD NVMe Configuration - 200GB provisioning
+    nvme:
+      device: "C:"
+      type: "NVMe SSD"
+      total_gb: 930 # Approximate total
+      free_gb: 666 # Available space
+      # Docker provisioning
+      provisioned_gb: 200 # Allocated for Docker workloads
+      reserved_gb: 466 # Keep free for host OS
+      min_free_gb: 50 # Alert threshold
+    # Docker storage breakdown (within 200GB provision)
+    docker_storage:
+      images_gb: 60 # Container images
+      volumes_gb: 80 # Named volumes (data persistence)
+      buildkit_cache_gb: 30 # BuildKit layer cache
+      overlay_gb: 20 # Container overlay filesystem
+      buffer_gb: 10 # Safety buffer
+      total_provisioned_gb: 200
+    # Volume size limits
+    volume_limits:
+      database_max_gb: 30 # PostgreSQL data
+      vector_max_gb: 20 # Qdrant vectors
+      redis_max_gb: 5 # Redis persistence
+      registry_max_gb: 15 # Local registry
+      logs_max_gb: 5 # Application logs
+      cache_max_gb: 5 # Application caches
+
+# GPU / CUDA Infrastructure
+gpu:
+  enabled: true
+  runtime: "nvidia"
+  driver:
+    version: "581.57"
+    capabilities: ["gpu", "compute", "utility"]
+  cuda:
+    version: "13.0"
+    compute_capability: "8.6"
+  devices:
+    - index: 0
+      name: "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
+      memory: "6144M"
+      reserved_memory: "512M"
+  # Utilization targets
+  utilization:
+    target_percent: 80
+    safety_overhead_percent: 5
+    effective_percent: 75
+
+# Docker GPU Configuration
+docker_gpu:
+  runtime: "nvidia"
+  environment:
+    - "NVIDIA_VISIBLE_DEVICES=all"
+    - "NVIDIA_DRIVER_CAPABILITIES=compute,utility"
+  deploy:
+    resources:
+      reservations:
+        devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
+
+# Network Configuration
+network:
+  name: app-network
+  driver: bridge
+  subnet: 172.20.0.0/16
+  gateway: 172.20.0.1
+
+# Security
+security:
+  tls:
+    enabled: false
+  certificates:
+    directory: ./certs
+
+# Logging Configuration
+logging:
+  level: info
+  format: json
+  outputs:
+    - stdout
+    - file
+  # Log rotation to manage SSD usage
+  rotation:
+    max_size_mb: 100
+    max_files: 5
+    compress: true
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics:
+    port: 9090
+  health_checks:
+    interval: 10
+  # Resource alerts
+  alerts:
+    cpu_high_percent: 90
+    ram_high_percent: 85
+    disk_high_percent: 80
+    disk_critical_gb: 50
+
+related_documentation:
+  - ".config/services.yml: Service configurations and resources"
+  - ".config/gpu-resources.yml: GPU VRAM partitioning"
+  - ".config/copilot/standards/infrastructure-standards.yml: Infrastructure standards"
+  - "docker-compose.yml: Docker Compose infrastructure setup"
+  - "infrastructure/nginx/nginx.conf: Nginx configuration"

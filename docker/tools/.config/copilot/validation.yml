@@ -1,0 +1,379 @@
+# YAML Validation Context - Kantra CLI & Red Hat MTA
+# Reference for MTA rule execution, Kantra usage, and validation workflows
+
+metadata: &metadata
+  version: "1.0.0"
+  category: "validation"
+  keywords: [yaml-validation, kantra, mta, red-hat, rules, quality, linting, analysis, migration-toolkit]
+  updated: "2025-11-24"
+  config_references:
+    yaml_best_practices: "../../../.config/copilot/yaml-best-practices.yml"
+    validation_rules: "../validation/rules/ruleset.yaml"
+    validation_script: "../scripts/validate-yaml.sh"
+
+<<: *metadata
+
+description: |
+  Context for YAML validation using Kantra CLI and Red Hat Migration Toolkit
+  for Applications (MTA) 7.2. Covers rule execution, analysis modes, report
+  interpretation, and integration with CI/CD workflows.
+
+kantra_cli:
+  overview:
+    name: "Kantra"
+    description: "Unified CLI for Konveyor analysis and transformation"
+    replaces: ["mta-cli", "windup-cli"]
+    upstream: "https://github.com/konveyor/kantra"
+    container_image: "quay.io/konveyor/kantra:latest"
+    documentation: "https://github.com/konveyor/kantra/blob/main/README.md"
+
+  installation:
+    linux:
+      method: "Extract from container image"
+      command: "podman cp $(podman create --name kantra-download quay.io/konveyor/kantra:latest):/usr/local/bin/kantra . && podman rm kantra-download"
+      binary_location: "./kantra"
+
+    macos:
+      method: "Extract darwin-kantra from container"
+      command: "podman cp $(podman create --name kantra-download quay.io/konveyor/kantra:latest):/usr/local/bin/darwin-kantra . && podman rm kantra-download"
+      note: "May need: xattr -d com.apple.quarantine kantra"
+
+    windows:
+      method: "Extract windows-kantra from container"
+      command: "podman cp $(podman create --name kantra-download quay.io/konveyor/kantra:latest):/usr/local/bin/windows-kantra . && podman rm kantra-download"
+      note: "Add executable to PATH"
+
+    dockerfile_integration:
+      method: "Multi-stage build in tools Docker container"
+      location: "tools/.config/docker/Dockerfile"
+      pattern: "Bake binary into container (zero installation latency)"
+
+  prerequisites:
+    container_runtime:
+      required: "Podman 4+ or Docker 24+"
+      default: "podman"
+      override: "CONTAINER_TOOL=/usr/bin/docker"
+      note: "Not required when using --run-local mode"
+
+analysis_modes:
+  containerless:
+    flag: "--run-local (default)"
+    description: "Everything runs on host"
+    use_cases:
+      - "Development and debugging"
+      - "Linux systems"
+      - "Faster on Linux environments"
+    advantages:
+      - "No container overhead"
+      - "Direct file access"
+      - "Simpler debugging"
+    requirements:
+      - "Analyzer-lsp on host"
+      - "Language providers on host"
+
+  hybrid:
+    flag: "--run-local=false"
+    description: "Analyzer on host, providers in containers"
+    use_cases:
+      - "Production usage"
+      - "macOS systems"
+      - "Multi-language applications"
+    advantages:
+      - "Isolated provider execution"
+      - "Faster on macOS"
+      - "Consistent environments"
+    requirements:
+      - "Podman or Docker running"
+
+validation_workflow:
+  location:
+    rules_dir: "tools/.config/validation/rules/"
+    script: "tools/.config/scripts/validate-yaml.sh"
+    reports_dir: "tools/.config/validation/reports/"
+    test_data: "tools/.config/validation/test-data/"
+
+  quick_start:
+    makefile_targets:
+      validate_all:
+        target: "make validate-yaml"
+        description: "Run all validation rules"
+
+      validate_mandatory:
+        target: "make validate-yaml-mandatory"
+        description: "Run only mandatory rules"
+
+      view_report:
+        target: "make validate-yaml-report"
+        description: "Open HTML report in browser"
+
+  command_structure:
+    basic:
+      command: "kantra analyze"
+      required_flags:
+        input: "Source code directory or file"
+        output: "Output directory for reports"
+        rules: "Path to rule files or directory"
+
+      common_flags:
+        enable_default_rulesets: "false (disable default rules)"
+        run_local: "true (containerless mode)"
+        label_selector: "Filter rules by labels"
+
+    examples:
+      full_repository:
+        command: "kantra analyze --input . --output ./reports --rules ./tools/.config/validation/rules/ --enable-default-rulesets=false --run-local"
+        description: "Validate entire repository with custom rules"
+
+      mandatory_only:
+        command: 'kantra analyze --input . --output ./reports --rules ./tools/.config/validation/rules/ --label-selector="category=mandatory" --enable-default-rulesets=false'
+        description: "Run only mandatory validation rules"
+
+      single_file:
+        command: "kantra analyze --input path/to/file.yml --output ./reports --rules ./tools/.config/validation/rules/ --enable-default-rulesets=false"
+        description: "Validate single YAML file"
+
+      specific_rules:
+        command: "kantra analyze --input . --output ./reports --rules ./tools/.config/validation/rules/metadata-validation.yaml --enable-default-rulesets=false"
+        description: "Run specific rule file only"
+
+label_selectors:
+  description: "Filter rules using logical expressions"
+
+  operators:
+    and: "&&"
+    or: "||"
+    not: "!"
+    grouping: "()"
+
+  examples:
+    category_filter:
+      selector: '--label-selector="category=mandatory"'
+      description: "Run only mandatory rules"
+
+    source_target:
+      selector: '--label-selector="konveyor.io/source=yaml && konveyor.io/target=yaml-best-practices"'
+      description: "Filter by source and target technology"
+
+    exclude:
+      selector: '--label-selector="!category=potential"'
+      description: "Exclude potential issues"
+
+    complex:
+      selector: '--label-selector="(category=mandatory || category=optional) && !scope=experimental"'
+      description: "Complex expression with grouping"
+
+output_formats:
+  static_report:
+    path: "reports/static-report/index.html"
+    format: "HTML"
+    purpose: "Human-readable web interface"
+    features:
+      - "Interactive issue navigation"
+      - "Source code context"
+      - "Rule descriptions with links"
+      - "Issue grouping by file/rule"
+
+  output_yaml:
+    path: "reports/output.yaml"
+    format: "YAML"
+    purpose: "Machine-readable analysis results"
+    content:
+      - "All detected incidents"
+      - "Rule violations with locations"
+      - "Custom variable values"
+      - "Severity and effort estimates"
+
+  dependencies_yaml:
+    path: "reports/dependencies.yaml"
+    format: "YAML"
+    purpose: "Dependency analysis results"
+    note: "Not applicable for YAML-only validation"
+
+  json_output:
+    flag: "--json-output"
+    paths:
+      - "reports/output.json"
+      - "reports/dependencies.json"
+    purpose: "JSON format for CI/CD parsing"
+
+rule_testing:
+  command: "kantra test"
+  description: "Test runner for YAML rules"
+
+  test_file_format:
+    extension: ".test.yaml"
+    structure:
+      - "Rule ID to test"
+      - "Input code samples"
+      - "Expected match results"
+
+  location: "tools/.config/validation/test-data/"
+
+  usage:
+    single_test:
+      command: "kantra test /path/to/test.test.yaml"
+      description: "Run single test file"
+
+    directory:
+      command: "kantra test /path/to/test-data/"
+      description: "Run all tests in directory"
+
+    documentation: "https://github.com/konveyor/kantra/blob/main/docs/testrunner.md"
+
+exit_codes:
+  success:
+    code: 0
+    meaning: "No issues found or all issues are informational"
+
+  mandatory_failures:
+    code: 1
+    meaning: "Mandatory rule violations detected"
+
+  optional_issues:
+    code: 2
+    meaning: "Optional or potential issues found"
+
+  error:
+    code: "Non-zero (>2)"
+    meaning: "Analysis error or tool failure"
+
+automation:
+  script_location: "tools/.config/scripts/validate-yaml.sh"
+
+  environment_variables:
+    LABEL_SELECTOR:
+      description: "Custom label selector expression"
+      example: 'LABEL_SELECTOR="category=mandatory" ./validate-yaml.sh'
+
+    RUN_MODE:
+      description: "Analysis mode selection"
+      values: ["local", "hybrid"]
+      default: "local"
+      example: "RUN_MODE=hybrid ./validate-yaml.sh"
+
+  script_flags:
+    mandatory: "--mandatory (sets LABEL_SELECTOR=category=mandatory)"
+    optional: "--optional (sets LABEL_SELECTOR=category=optional)"
+    potential: "--potential (sets LABEL_SELECTOR=category=potential)"
+    help: "--help, -h (show usage)"
+
+  makefile_integration:
+    targets:
+      - "make validate-yaml"
+      - "make validate-yaml-mandatory"
+      - "make validate-yaml-report"
+    location: "Makefile (repository root)"
+
+ci_cd_integration:
+  github_actions:
+    workflow: ".github/workflows/validate-yaml.yml"
+    trigger: "Push/PR on YAML files"
+
+    steps:
+      - "Download Kantra from quay.io"
+      - "Run analysis with mandatory rules"
+      - "Upload HTML report as artifact"
+      - "Fail build on violations"
+
+    artifact:
+      name: "yaml-validation-report"
+      path: "tools/.config/validation/reports/static-report/"
+      retention: "7 days"
+
+  pre_commit:
+    hook_name: "yaml-validation"
+    location: ".pre-commit-config.yaml"
+    recommended: "Optional - can be slow on large repos"
+    alternative: "Run in CI/CD only"
+
+troubleshooting:
+  kantra_not_found:
+    symptom: "kantra: command not found"
+    solutions:
+      - "Install Kantra CLI from container image"
+      - "Use containerized version via Docker"
+      - "Check PATH includes binary location"
+
+  podman_required:
+    symptom: "Podman/Docker not available"
+    solutions:
+      - "Use --run-local for containerless mode"
+      - "Install Podman 4+ or Docker 24+"
+      - "Set CONTAINER_TOOL environment variable"
+
+  no_rules_found:
+    symptom: "No rules executed"
+    solutions:
+      - "Verify --rules points to correct directory"
+      - "Check ruleset.yaml exists in rules directory"
+      - "Ensure rule files referenced in ruleset"
+
+  static_report_missing:
+    symptom: "HTML report not generated"
+    solutions:
+      - "Check output directory permissions"
+      - "Review Kantra output for errors"
+      - "On macOS: avoid /tmp paths with hybrid mode"
+
+  false_positives:
+    symptom: "Rules trigger incorrectly"
+    solutions:
+      - "Review rule patterns for accuracy"
+      - "Add filePattern to scope searches"
+      - "Adjust rule category or effort level"
+
+performance_optimization:
+  file_patterns:
+    use: "filePattern in builtin.filecontent conditions"
+    example: "filePattern: \".*\\\\.ya?ml$\""
+    benefit: "Limits search to specific file types"
+
+  label_selectors:
+    use: "Filter rules before execution"
+    example: '--label-selector="category=mandatory"'
+    benefit: "Runs fewer rules, faster analysis"
+
+  parallel_execution:
+    mode: "Hybrid mode uses containerized providers"
+    benefit: "Better parallelization on multi-core"
+
+  caching:
+    strategy: "Named volumes for reports directory"
+    benefit: "Persist reports between runs"
+
+cross_references:
+  internal:
+    - file: "../../../.config/copilot/yaml-best-practices.yml"
+      description: "Complete YAML standards and MTA rule development guide"
+
+    - file: "../validation/rules/ruleset.yaml"
+      description: "MTA ruleset metadata and configuration"
+
+    - file: "../validation/rules/README.md"
+      description: "Rule usage guide and examples"
+
+    - file: "../scripts/validate-yaml.sh"
+      description: "Automation script for validation workflow"
+
+    - file: "../scripts/lint.sh"
+      description: "Parallel pattern: linting automation"
+
+  external:
+    - name: "Kantra GitHub Repository"
+      url: "https://github.com/konveyor/kantra"
+      description: "Official Kantra CLI source and documentation"
+
+    - name: "Red Hat MTA Rules Development Guide"
+      url: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide"
+      description: "Complete guide for creating YAML rules"
+
+    - name: "Konveyor Analyzer LSP"
+      url: "https://github.com/konveyor/analyzer-lsp"
+      description: "Language Server Protocol analyzer (Kantra backend)"
+
+related_documentation:
+  - "../../../.config/copilot/yaml-best-practices.yml: YAML standards and rule patterns"
+  - "../validation/rules/README.md: Rule catalog and usage examples"
+  - "../docker/README.md: Docker containerization patterns"
+  - "../scripts/lint.sh: Parallel automation pattern"
+  - "https://github.com/konveyor/kantra/blob/main/docs/testrunner.md: Kantra test runner documentation"

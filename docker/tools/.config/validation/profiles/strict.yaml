@@ -1,0 +1,49 @@
+# Validation Profiles
+metadata: &metadata
+  name: strict
+  description: "Zero-tolerance validation profile - enforces all rules"
+  version: "1.0.0"
+
+<<: *metadata
+
+# Rule package configuration
+rules:
+  # Metadata validation (14 rules)
+  metadata:
+    severity: mandatory
+    all: true
+
+  # Syntax validation (33 rules)
+  syntax:
+    severity: mandatory
+    all: true
+
+  # Structure validation (9 rules)
+  structure:
+    severity: mandatory
+    all: true
+
+  # MTA-specific validation (24 rules)
+  mta:
+    severity: mandatory
+    all: true
+
+  # Quality validation (12 rules)
+  quality:
+    severity: mandatory
+    all: true
+
+  # VSCode integration (7 rules)
+  vscode:
+    severity: mandatory
+    all: true
+
+# Profile options
+options:
+  failOnWarning: true
+  failOnInfo: true
+  maxViolations: 0
+# Description
+# This profile enforces all 107 validation rules with zero tolerance for violations.
+# Use for: Production code, final review, strict compliance requirements
+# Total: 107 rules (48 mandatory, 52 optional, 7 potential)

@@ -1,0 +1,24 @@
+{
+  "//": "TypeScript configuration for Playwright tests",
+  "//types": "Types array is empty because @playwright/test and @types/node are baked into Docker container",
+  "//note": "Type checking happens inside Docker container where node_modules exists",
+  "//lib": "Use built-in TypeScript libs for globals (btoa, setTimeout, etc.) - no external packages needed",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": [],
+    "typeRoots": [],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["**/*.spec.ts", "**/*.test.ts", "**/*.ts"],
+  "exclude": ["node_modules", "playwright-report", "test-results"]
+}

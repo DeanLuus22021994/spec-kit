@@ -1,0 +1,37 @@
+# Build artifacts
+node_modules/
+playwright-report/
+test-results/
+*.log
+
+# Package lock (dependencies baked into image)
+package-lock.json
+
+# Test cache
+.playwright-cache/
+playwright/.cache/
+
+# Development files
+.env.local
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# CI artifacts
+junit.xml
+
+# Coverage reports
+coverage/
+.nyc_output/

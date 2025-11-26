@@ -1,0 +1,29 @@
+# Settings Directory
+# Environment-specific and user-specific settings files
+#
+# This directory is reserved for:
+# - Local development settings (not committed)
+# - Environment-specific overrides
+# - User preferences
+# - GPU/CUDA device-specific settings
+#
+# Planned files:
+# - local.yml: Local development overrides
+# - gpu.yml: GPU-specific configuration overrides
+# - cuda.yml: CUDA environment customization
+# - dev.yml: Development environment settings
+# - prod.yml: Production environment settings
+#
+# Note: Most settings files should be gitignored.
+# Only template files should be committed.
+#
+# GPU Configuration Reference:
+# - CUDA Version: 13.0
+# - PyTorch: 2.9.1+cu130
+# - Compute Capability: 8.6
+# - See .config/environment.yml for full environment variables
+#
+# Self-Hosted Runner:
+# - Label: self-hosted-gpu
+# - Token Required: No (already registered)
+# - GPU: RTX 3050 6GB

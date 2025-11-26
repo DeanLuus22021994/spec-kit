@@ -1,0 +1,1070 @@
+# Local Docker Stack Integration for Copilot
+# Leverages local embeddings, vectorization, caching, and object storage
+# Category: workflow | Version: 1.1.0 | Updated: 2025-11-25
+
+metadata: &metadata
+  version: "1.1.0"
+  category: workflow
+  keywords:
+    - docker
+    - local
+    - embeddings
+    - vector
+    - cache
+    - redis
+    - qdrant
+    - postgres
+    - gpu
+    - cuda
+    - copilot
+    - wsl2
+
+<<: *metadata
+
+description: |
+  Configuration for GitHub Copilot to efficiently leverage the local Docker stack
+  for embeddings generation, vector storage, caching, and data persistence.
+  This enables Copilot to use local GPU-accelerated services instead of remote APIs.
+
+# =============================================================================
+# Host Environment (Verified 2025-11-25)
+# =============================================================================
+host_environment:
+  verified: true
+  verification_date: "2025-11-25"
+
+  system:
+    os: "Windows 11 Home (Build 26200)"
+    architecture: "x64"
+    total_ram_gb: 16
+    available_ram_gb: 3.4 # At inspection
+
+  wsl2:
+    distribution: "docker-desktop"
+    version: 2
+    kernel: "6.6.87.2-microsoft-standard-WSL2"
+    wslconfig:
+      memory: "10GB"
+      processors: 12
+      swap: "4GB"
+      autoMemoryReclaim: "gradual"
+
+  docker:
+    version: "28.5.2"
+    backend: "WSL2"
+    memory_gb: 10 # After .wslconfig optimization
+    cpus: 16
+    storage_driver: "overlayfs"
+    root_dir: "/var/lib/docker"
+
+  gpu:
+    name: "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
+    vram_mib: 6144
+    driver_version: "581.57"
+    cuda_version: "13.0"
+    compute_capability: "8.6"
+    architecture: "Ampere"
+
+  storage:
+    drive: "C:"
+    free_gb: 666
+    docker_images_gb: 28.7
+    docker_cache_gb: 24.9
+
+# =============================================================================
+# Docker Stack Overview
+# =============================================================================
+docker_stack:
+  compose_file: "docker-compose.yml"
+  start_command: "docker compose up -d"
+  stop_command: "docker compose down"
+  logs_command: "docker compose logs -f"
+
+  gpu_services:
+    - engine
+    - embeddings
+    - vector
+
+  core_services:
+    - database
+    - redis
+    - vector
+    - embeddings
+
+  application_services:
+    - frontend
+    - backend
+    - gateway
+    - engine
+    - business
+
+# =============================================================================
+# Embeddings Service (GPU-Accelerated)
+# =============================================================================
+embeddings:
+  service_name: embeddings
+  dockerfile: dockerfiles/embeddings.Dockerfile
+  port: 8001
+  gpu_enabled: true
+
+  endpoints:
+    health: "http://localhost:8001/health"
+    generate: "http://localhost:8001/api/embeddings"
+    batch: "http://localhost:8001/api/embeddings/batch"
+
+  configuration:
+    model: "text-embedding-3-small"
+    dimensions: 1536
+    batch_size: 64
+    max_sequence_length: 8192
+    pooling_strategy: "mean"
+    normalize: true
+    fp16: true
+
+  environment:
+    NVIDIA_VISIBLE_DEVICES: "all"
+    NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+    CUDA_VISIBLE_DEVICES: "0"
+
+  volumes:
+    - "embeddings-cache:/app/cache"
+    - "embeddings-logs:/app/logs"
+    - "embeddings-models:/app/models"
+
+  usage:
+    copilot_prompt: |
+      When generating embeddings, use the local embeddings service at http://localhost:8001
+      instead of calling OpenAI API directly. This leverages GPU acceleration.
+
+    code_example: |
+      # Python example
+      import httpx
+
+      async def generate_embedding(text: str) -> list[float]:
+          async with httpx.AsyncClient() as client:
+              response = await client.post(
+                  "http://localhost:8001/api/embeddings",
+                  json={"text": text}
+              )
+              return response.json()["embedding"]
+
+      # Batch processing for efficiency
+      async def generate_embeddings_batch(texts: list[str]) -> list[list[float]]:
+          async with httpx.AsyncClient() as client:
+              response = await client.post(
+                  "http://localhost:8001/api/embeddings/batch",
+                  json={"texts": texts}
+              )
+              return response.json()["embeddings"]
+
+# =============================================================================
+# Vector Database (Qdrant with GPU)
+# =============================================================================
+vector:
+  service_name: vector
+  dockerfile: dockerfiles/vector.Dockerfile
+  ports:
+    http: 6333
+    grpc: 6334
+  gpu_enabled: true
+
+  endpoints:
+    health: "http://localhost:6333/healthz"
+    dashboard: "http://localhost:6333/dashboard"
+    collections: "http://localhost:6333/collections"
+    search: "http://localhost:6333/collections/{name}/points/search"
+
+  configuration:
+    storage_path: "/qdrant/storage"
+    snapshots_path: "/qdrant/snapshots"
+    dimensions: 1536
+    similarity: "cosine"
+    hnsw_config:
+      m: 16
+      ef_construct: 100
+      ef_search: 128
+
+  environment:
+    NVIDIA_VISIBLE_DEVICES: "all"
+    NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+
+  volumes:
+    - "vector_data:/qdrant/storage"
+    - "vector_snapshots:/qdrant/snapshots"
+
+  collections:
+    semantic_memory:
+      name: "semantic_memory"
+      dimensions: 1536
+      distance: "Cosine"
+      purpose: "Semantic Kernel memory store"
+    code_embeddings:
+      name: "code_embeddings"
+      dimensions: 1536
+      distance: "Cosine"
+      purpose: "Code search and similarity"
+    document_chunks:
+      name: "document_chunks"
+      dimensions: 1536
+      distance: "Cosine"
+      purpose: "Document retrieval (RAG)"
+
+  usage:
+    copilot_prompt: |
+      For vector similarity search, use the local Qdrant instance at http://localhost:6333.
+      Collections are pre-configured for semantic memory, code search, and document retrieval.
+
+    code_example: |
+      # C# Semantic Kernel example
+      var memory = kernel.Memory;
+      await memory.SaveInformationAsync(
+          collection: "semantic_memory",
+          text: "Important information",
+          id: "doc-1"
+      );
+
+      var results = await memory.SearchAsync(
+          collection: "semantic_memory",
+          query: "relevant query",
+          limit: 5
+      ).ToListAsync();
+
+# =============================================================================
+# Cache Layer (Redis)
+# =============================================================================
+cache:
+  service_name: redis
+  dockerfile: dockerfiles/redis.Dockerfile
+  port: 6379
+
+  endpoints:
+    host: "localhost"
+    port: 6379
+    connection_string: "localhost:6379"
+
+  configuration:
+    max_memory: "256mb"
+    eviction_policy: "allkeys-lru"
+    persistence:
+      aof_enabled: true
+      rdb_enabled: true
+
+  volumes:
+    - "redis-data:/data"
+    - "redis-logs:/var/log/redis"
+
+  cache_patterns:
+    embedding_cache:
+      key_prefix: "emb:"
+      ttl_seconds: 86400 # 24 hours
+      purpose: "Cache generated embeddings to avoid recomputation"
+    completion_cache:
+      key_prefix: "comp:"
+      ttl_seconds: 3600 # 1 hour
+      purpose: "Cache AI completions for identical prompts"
+    session_cache:
+      key_prefix: "sess:"
+      ttl_seconds: 1800 # 30 minutes
+      purpose: "User session storage"
+    rate_limit:
+      key_prefix: "rate:"
+      ttl_seconds: 60
+      purpose: "API rate limiting"
+
+  usage:
+    copilot_prompt: |
+      Use Redis at localhost:6379 for caching embeddings and completions.
+      This reduces API calls and improves response times for repeated queries.
+
+    code_example: |
+      # C# StackExchange.Redis example
+      var redis = ConnectionMultiplexer.Connect("localhost:6379");
+      var db = redis.GetDatabase();
+
+      // Cache embedding
+      var embeddingKey = $"emb:{ComputeHash(text)}";
+      var cached = await db.StringGetAsync(embeddingKey);
+      if (cached.HasValue)
+          return JsonSerializer.Deserialize<float[]>(cached);
+
+      var embedding = await GenerateEmbeddingAsync(text);
+      await db.StringSetAsync(embeddingKey, JsonSerializer.Serialize(embedding), TimeSpan.FromDays(1));
+      return embedding;
+
+# =============================================================================
+# Database (PostgreSQL with pgvector)
+# =============================================================================
+database:
+  service_name: database
+  dockerfile: dockerfiles/database.Dockerfile
+  port: 5432
+
+  connection:
+    host: "localhost"
+    port: 5432
+    database: "semantic_kernel"
+    username: "user"
+    password: "password"
+    connection_string: "Host=localhost;Port=5432;Database=semantic_kernel;Username=user;Password=password"
+
+  extensions:
+    - pgvector # Vector similarity search
+    - uuid-ossp # UUID generation
+
+  configuration:
+    max_connections: 100
+    shared_buffers: "256MB"
+    work_mem: "64MB"
+
+  volumes:
+    - "postgres_data:/var/lib/postgresql/data"
+    - "database-backups:/backups"
+    - "database-logs:/var/log/postgresql"
+
+  vector_tables:
+    embeddings:
+      name: "embeddings"
+      columns:
+        - "id UUID PRIMARY KEY"
+        - "content TEXT NOT NULL"
+        - "embedding vector(1536)"
+        - "metadata JSONB"
+        - "created_at TIMESTAMP DEFAULT NOW()"
+      indexes:
+        - "CREATE INDEX ON embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)"
+
+    semantic_memory:
+      name: "semantic_memory"
+      columns:
+        - "id UUID PRIMARY KEY"
+        - "collection VARCHAR(255) NOT NULL"
+        - "key VARCHAR(255) NOT NULL"
+        - "text TEXT NOT NULL"
+        - "embedding vector(1536)"
+        - "metadata JSONB"
+        - "timestamp TIMESTAMP DEFAULT NOW()"
+      indexes:
+        - "CREATE INDEX ON semantic_memory (collection, key)"
+        - "CREATE INDEX ON semantic_memory USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)"
+
+  usage:
+    copilot_prompt: |
+      Use PostgreSQL with pgvector at localhost:5432 for persistent vector storage.
+      The database supports both SQL queries and vector similarity search.
+
+    code_example: |
+      -- Vector similarity search
+      SELECT id, content, 1 - (embedding <=> $1) AS similarity
+      FROM embeddings
+      ORDER BY embedding <=> $1
+      LIMIT 10;
+
+      -- Combined text and vector search
+      SELECT id, content
+      FROM semantic_memory
+      WHERE collection = 'documents'
+        AND (embedding <=> $1) < 0.3
+      ORDER BY embedding <=> $1;
+
+# =============================================================================
+# Semantic Kernel Engine (GPU-Accelerated)
+# =============================================================================
+engine:
+  service_name: engine
+  dockerfile: dockerfiles/engine.Dockerfile
+  port: 5001
+  gpu_enabled: true
+
+  configuration_file: ".config/semantic-kernel.yml"
+
+  environment:
+    NVIDIA_VISIBLE_DEVICES: "all"
+    NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+    SemanticKernel__ConfigPath: "/.config/semantic-kernel.yml"
+    VectorStore__Url: "http://vector:6333"
+    Embeddings__Url: "http://embeddings:8001"
+
+  volumes:
+    - "engine-plugins:/app/plugins"
+    - "engine-skills:/app/skills"
+    - "engine-cache:/app/cache"
+    - "engine-logs:/app/logs"
+    - ".config:/.config:ro"
+
+  features:
+    plugins:
+      - CorePlugin
+      - TextPlugin
+      - ConversationPlugin
+    planners:
+      - HandlebarsPlanner
+      - FunctionCallingStepwisePlanner
+    memory_stores:
+      - PostgreSQL
+      - Qdrant
+
+  usage:
+    copilot_prompt: |
+      The Semantic Kernel engine at localhost:5001 orchestrates AI operations.
+      It connects to local vector and embeddings services for GPU-accelerated processing.
+
+# =============================================================================
+# RedisInsight Dashboard
+# =============================================================================
+redis_dashboard:
+  service_name: redisinsight
+  dockerfile: dockerfiles/redisinsight.Dockerfile
+  port: 5540
+
+  endpoints:
+    dashboard: "http://localhost:5540"
+    health: "http://localhost:5540/healthcheck/"
+
+  purpose: "Web-based Redis management dashboard for monitoring cache performance"
+
+# =============================================================================
+# Service Dependencies
+# =============================================================================
+service_dependencies:
+  embeddings:
+    requires: []
+    optional: ["database"]
+  vector:
+    requires: []
+    optional: []
+  engine:
+    requires: ["database", "vector", "embeddings"]
+    optional: ["redis"]
+  backend:
+    requires: ["database"]
+    optional: ["redis"]
+
+# =============================================================================
+# Startup Commands
+# =============================================================================
+commands:
+  start_all:
+    description: "Start entire Docker stack"
+    command: "docker compose up -d"
+
+  start_core:
+    description: "Start core services only (database, redis, vector, embeddings)"
+    command: "docker compose up -d database redis vector embeddings"
+
+  start_gpu:
+    description: "Start GPU-accelerated services"
+    command: "docker compose up -d engine embeddings vector"
+
+  verify_services:
+    description: "Verify all services are healthy"
+    commands:
+      - "curl -sf http://localhost:8001/health"
+      - "curl -sf http://localhost:6333/healthz"
+      - "redis-cli -h localhost ping"
+      - "PGPASSWORD=password psql -h localhost -U user -d semantic_kernel -c 'SELECT 1'"
+
+  view_logs:
+    description: "View service logs"
+    command: "docker compose logs -f embeddings vector engine"
+
+  restart_gpu_services:
+    description: "Restart GPU services after driver update"
+    command: "docker compose restart engine embeddings vector"
+
+# =============================================================================
+# Copilot Integration
+# =============================================================================
+copilot_integration:
+  embedding_workflow:
+    description: "How Copilot should handle embedding requests"
+    steps:
+      - "Check Redis cache for existing embedding"
+      - "If cached, return immediately"
+      - "If not cached, call local embeddings service"
+      - "Store result in Redis cache"
+      - "Optionally persist to PostgreSQL for long-term storage"
+
+  search_workflow:
+    description: "How Copilot should handle similarity search"
+    steps:
+      - "Generate embedding for query using local service"
+      - "Search Qdrant for similar vectors"
+      - "Optionally search PostgreSQL pgvector for persistent data"
+      - "Combine and rank results"
+      - "Cache frequent queries in Redis"
+
+  memory_workflow:
+    description: "How Copilot should handle semantic memory"
+    steps:
+      - "Use Semantic Kernel memory APIs"
+      - "Engine routes to appropriate vector store (Qdrant/PostgreSQL)"
+      - "Embeddings generated locally via GPU service"
+      - "Results cached in Redis for fast retrieval"
+
+# =============================================================================
+# Performance Optimization
+# =============================================================================
+optimization:
+  gpu_acceleration:
+    enabled: true
+    services: ["engine", "embeddings", "vector"]
+    cuda_version: "13.0"
+    compute_capability: "8.6"
+    mixed_precision: true
+
+  caching:
+    embedding_cache_ttl: 86400 # 24 hours
+    completion_cache_ttl: 3600 # 1 hour
+    use_redis: true
+
+  batching:
+    embedding_batch_size: 64
+    vector_search_batch_size: 100
+
+  connection_pooling:
+    postgres_min: 5
+    postgres_max: 100
+    redis_pool_size: 50
+
+# =============================================================================
+# Embedding Filters
+# =============================================================================
+embedding_filters:
+  # Pre-processing filters (applied before embedding generation)
+  preprocessing:
+    text_normalization:
+      enabled: true
+      lowercase: false # Preserve case for semantic meaning
+      strip_whitespace: true
+      collapse_whitespace: true
+      remove_control_chars: true
+
+    content_filters:
+      min_length: 10 # Minimum text length to generate embedding
+      max_length: 8192 # Maximum text length (truncate beyond)
+      skip_patterns:
+        - "^\\s*$" # Empty/whitespace-only
+        - "^#.*$" # Comment lines only
+        - "^/\\*.*\\*/$" # Single-line block comments
+
+    deduplication:
+      enabled: true
+      hash_algorithm: "xxhash64" # Fast hashing for dedup
+      cache_lookup_first: true # Check cache before generating
+
+    chunking:
+      enabled: true
+      strategy: "semantic" # semantic, fixed, sentence
+      max_chunk_size: 512
+      overlap: 50
+      preserve_sentences: true
+
+  # Post-processing filters (applied after embedding generation)
+  postprocessing:
+    normalization:
+      enabled: true
+      l2_normalize: true # Unit length vectors
+
+    dimensionality:
+      target_dimensions: 1536
+      reduction_method: null # PCA, UMAP if needed
+
+    quality_checks:
+      validate_dimensions: true
+      check_nan_values: true
+      check_inf_values: true
+      min_magnitude: 0.001 # Reject near-zero vectors
+
+# =============================================================================
+# Vector Search Filters
+# =============================================================================
+vector_filters:
+  # Query filters
+  query:
+    similarity_threshold: 0.7 # Minimum similarity score
+    max_results: 100
+    include_metadata: true
+    include_vectors: false # Don't return raw vectors
+
+  # Collection-specific filters
+  collection_filters:
+    semantic_memory:
+      score_threshold: 0.75
+      max_results: 50
+      metadata_filters:
+        - field: "timestamp"
+          operator: "gte"
+          value: "last_7_days"
+
+    code_embeddings:
+      score_threshold: 0.8 # Higher threshold for code
+      max_results: 30
+      metadata_filters:
+        - field: "language"
+          operator: "in"
+          value: ["csharp", "typescript", "python"]
+        - field: "file_type"
+          operator: "neq"
+          value: "test"
+
+    document_chunks:
+      score_threshold: 0.7
+      max_results: 100
+      metadata_filters:
+        - field: "doc_type"
+          operator: "in"
+          value: ["markdown", "yaml", "json"]
+
+  # HNSW index optimization
+  hnsw_params:
+    ef_search: 128 # Higher = more accurate, slower
+    exact_search_threshold: 1000 # Use exact search below this collection size
+
+# =============================================================================
+# Cache Filters
+# =============================================================================
+cache_filters:
+  # Embedding cache rules
+  embedding_cache:
+    enabled: true
+    key_generation:
+      algorithm: "xxhash64"
+      include_model: true
+      include_dimensions: true
+
+    eviction:
+      policy: "lru" # least-recently-used
+      max_entries: 100000
+      max_memory_mb: 512
+
+    invalidation:
+      on_model_change: true
+      on_dimension_change: true
+      ttl_seconds: 86400
+
+    skip_cache_patterns:
+      - "test_*" # Don't cache test embeddings
+      - "temp_*" # Don't cache temporary embeddings
+      - "debug_*" # Don't cache debug embeddings
+
+  # Completion cache rules
+  completion_cache:
+    enabled: true
+    key_generation:
+      include_prompt: true
+      include_model: true
+      include_temperature: true
+
+    eviction:
+      policy: "lru"
+      max_entries: 10000
+      max_memory_mb: 256
+
+    invalidation:
+      ttl_seconds: 3600
+      on_context_change: true
+
+    skip_cache_patterns:
+      - "streaming_*" # Don't cache streaming responses
+      - "realtime_*" # Don't cache realtime queries
+
+  # Session cache rules
+  session_cache:
+    enabled: true
+    ttl_seconds: 1800
+    max_entries: 1000
+    sliding_expiration: true
+
+# =============================================================================
+# Request Rate Limiting & Throttling
+# =============================================================================
+rate_limiting:
+  embeddings:
+    requests_per_second: 100
+    burst_limit: 200
+    queue_size: 1000
+    timeout_ms: 30000
+
+  vector_search:
+    requests_per_second: 500
+    burst_limit: 1000
+    queue_size: 5000
+    timeout_ms: 5000
+
+  completions:
+    requests_per_second: 50
+    burst_limit: 100
+    queue_size: 500
+    timeout_ms: 60000
+
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    recovery_timeout_ms: 30000
+    half_open_requests: 3
+
+# =============================================================================
+# Content Type Routing
+# =============================================================================
+content_routing:
+  # Route different content types to appropriate handlers
+  routing_rules:
+    code:
+      patterns:
+        - "\\.cs$"
+        - "\\.ts$"
+        - "\\.py$"
+        - "\\.js$"
+      collection: "code_embeddings"
+      chunking_strategy: "ast" # Abstract syntax tree aware
+
+    documentation:
+      patterns:
+        - "\\.md$"
+        - "\\.rst$"
+        - "\\.txt$"
+      collection: "document_chunks"
+      chunking_strategy: "semantic"
+
+    configuration:
+      patterns:
+        - "\\.yml$"
+        - "\\.yaml$"
+        - "\\.json$"
+      collection: "document_chunks"
+      chunking_strategy: "fixed"
+
+    default:
+      collection: "semantic_memory"
+      chunking_strategy: "semantic"
+
+# =============================================================================
+# Quality Assurance Filters
+# =============================================================================
+quality_assurance:
+  # Input validation
+  input_validation:
+    max_text_length: 100000
+    allowed_encodings: ["utf-8", "ascii"]
+    sanitize_html: true
+    remove_pii: false # Set true for production
+
+  # Output validation
+  output_validation:
+    validate_embedding_shape: true
+    validate_search_results: true
+    log_anomalies: true
+
+  # Monitoring
+  monitoring:
+    track_latency: true
+    track_cache_hit_rate: true
+    track_error_rate: true
+    alert_thresholds:
+      latency_p99_ms: 1000
+      cache_hit_rate_min: 0.7
+      error_rate_max: 0.01
+
+# =============================================================================
+# Fallback Configuration
+# =============================================================================
+fallback:
+  # When local services are unavailable
+  embedding_fallback:
+    enabled: false # Set true to enable OpenAI fallback
+    provider: "openai"
+    model: "text-embedding-3-small"
+    max_retries: 3
+
+  vector_fallback:
+    enabled: false
+    provider: "pgvector" # Fall back to PostgreSQL pgvector
+
+  cache_fallback:
+    enabled: true
+    provider: "memory" # In-memory cache when Redis unavailable
+    max_entries: 10000
+
+# =============================================================================
+# Health Check Configuration
+# =============================================================================
+health_checks:
+  embeddings:
+    endpoint: "http://localhost:8001/health"
+    interval_seconds: 30
+    timeout_seconds: 5
+    unhealthy_threshold: 3
+
+  vector:
+    endpoint: "http://localhost:6333/healthz"
+    interval_seconds: 30
+    timeout_seconds: 5
+    unhealthy_threshold: 3
+
+  cache:
+    command: "redis-cli -h localhost ping"
+    interval_seconds: 15
+    timeout_seconds: 3
+    unhealthy_threshold: 3
+
+  database:
+    query: "SELECT 1"
+    interval_seconds: 30
+    timeout_seconds: 5
+    unhealthy_threshold: 3
+
+# =============================================================================
+# Related Documentation
+# =============================================================================
+related_documentation:
+  - ".config/semantic-kernel.yml: Semantic Kernel configuration"
+  - ".config/services.yml: Service resource allocation"
+  - ".config/gpu-resources.yml: GPU VRAM partitioning"
+  - ".config/optimization-toggles.yml: Real-time optimization controls"
+  - ".config/environment.yml: Environment variables"
+  - ".config/infrastructure.yml: Infrastructure configuration"
+  - ".config/dotnet-dependencies.yml: .NET package configuration"
+  - "docker-compose.yml: Full Docker stack definition"
+  - "dockerfiles/: Individual Dockerfile definitions"
+
+# =============================================================================
+# Local Registry Integration
+# =============================================================================
+registry:
+  service_name: registry
+  port: 5000
+  ui_port: 5080
+
+  endpoints:
+    api: "http://localhost:5000/v2/"
+    ui: "http://localhost:5080"
+    catalog: "http://localhost:5000/v2/_catalog"
+
+  configuration:
+    storage_path: "/var/lib/registry"
+    max_storage_gb: 10
+    gc_schedule: "0 3 * * *"
+
+  images:
+    namespace: "semantic-kernel"
+    naming_convention: "localhost:5000/semantic-kernel/{service}:{tag}"
+
+  commands:
+    # Push all images to local registry
+    push_all: |
+      docker compose build
+      docker compose push
+
+    # List all images in registry
+    list_images: |
+      curl -s http://localhost:5000/v2/_catalog | jq
+
+    # List tags for a specific image
+    list_tags: |
+      curl -s http://localhost:5000/v2/semantic-kernel/{image}/tags/list | jq
+
+    # Run garbage collection
+    gc: |
+      docker exec semantic-kernel-registry bin/registry garbage-collect /etc/docker/registry/config.yml
+
+    # Check registry health
+    health: |
+      curl -sf http://localhost:5000/v2/ && echo "Registry is healthy"
+
+# =============================================================================
+# BuildKit Integration
+# =============================================================================
+buildkit:
+  enabled: true
+
+  # Builder configuration
+  builder:
+    name: "semantic-kernel-builder"
+    driver: "docker-container"
+
+  # Cache configuration
+  cache:
+    type: "registry"
+    registry: "localhost:5000/semantic-kernel/cache"
+    mode: "max"
+
+  # Build commands
+  commands:
+    # Initialize BuildKit builder
+    init: |
+      docker buildx create --name semantic-kernel-builder --driver docker-container --use
+      docker buildx inspect --bootstrap
+
+    # Build with cache
+    build_cached: |
+      docker buildx build \
+        --cache-from type=registry,ref=localhost:5000/semantic-kernel/cache \
+        --cache-to type=registry,ref=localhost:5000/semantic-kernel/cache,mode=max \
+        -t localhost:5000/semantic-kernel/{service}:latest \
+        -f dockerfiles/{service}.Dockerfile \
+        --push .
+
+    # Build all services
+    build_all: |
+      for service in frontend backend engine business gateway embeddings vector database; do
+        docker buildx build \
+          --cache-from type=registry,ref=localhost:5000/semantic-kernel/cache \
+          --cache-to type=registry,ref=localhost:5000/semantic-kernel/cache,mode=max \
+          -t localhost:5000/semantic-kernel/$service:latest \
+          -f dockerfiles/$service.Dockerfile \
+          --push .
+      done
+
+    # Prune build cache
+    prune: |
+      docker buildx prune --keep-storage 10GB --force
+
+# =============================================================================
+# Real-Time Optimization Toggles
+# =============================================================================
+optimization_toggles:
+  description: |
+    These toggles can be changed at runtime via environment variables.
+    Hot-reloadable toggles take effect immediately without restart.
+
+  # Master GPU toggle
+  gpu_enabled:
+    env_var: "GPU_ENABLED"
+    default: true
+    hot_reload: true
+    description: "Master toggle for GPU acceleration"
+    affects: ["embeddings", "engine", "vector"]
+
+  # Mixed precision (FP16)
+  mixed_precision:
+    env_var: "CUDA_MIXED_PRECISION"
+    default: true
+    hot_reload: true
+    description: "Enable FP16 mixed precision for faster inference"
+    memory_savings: "~40%"
+    affects: ["embeddings", "engine"]
+
+  # Flash attention
+  flash_attention:
+    env_var: "ENABLE_FLASH_ATTENTION"
+    default: true
+    hot_reload: true
+    description: "Enable flash attention for memory efficiency"
+    memory_savings: "~30%"
+    affects: ["embeddings", "engine"]
+
+  # TF32 for matrix operations
+  tf32_enabled:
+    env_var: "CUDA_TF32_ENABLED"
+    default: true
+    hot_reload: true
+    description: "Enable TensorFloat-32 for matmul operations"
+    affects: ["embeddings", "engine"]
+
+  # Dynamic batching
+  dynamic_batching:
+    env_var: "ENABLE_DYNAMIC_BATCHING"
+    default: true
+    hot_reload: true
+    description: "Dynamically adjust batch sizes based on available memory"
+    affects: ["embeddings"]
+
+  # Aggressive garbage collection
+  aggressive_gc:
+    env_var: "CUDA_AGGRESSIVE_GC"
+    default: true
+    hot_reload: true
+    description: "Aggressive garbage collection of unused CUDA memory"
+    affects: ["embeddings", "engine", "vector"]
+
+  # Usage examples
+  toggle_commands:
+    # Enable all optimizations
+    enable_all: |
+      export GPU_ENABLED=true
+      export CUDA_MIXED_PRECISION=true
+      export ENABLE_FLASH_ATTENTION=true
+      export CUDA_TF32_ENABLED=true
+      export ENABLE_DYNAMIC_BATCHING=true
+      docker compose up -d embeddings engine vector
+
+    # Disable GPU (CPU-only mode)
+    disable_gpu: |
+      export GPU_ENABLED=false
+      docker compose up -d embeddings engine vector
+
+    # Conservative mode (stability)
+    conservative: |
+      export GPU_ENABLED=true
+      export CUDA_MIXED_PRECISION=false
+      export ENABLE_FLASH_ATTENTION=true
+      export CUDA_TF32_ENABLED=false
+      docker compose up -d embeddings engine vector
+
+# =============================================================================
+# Service Profiles
+# =============================================================================
+profiles:
+  minimal:
+    description: "Critical services only"
+    services: [database, redis, nginx]
+    command: "docker compose up -d database redis nginx"
+
+  core:
+    description: "Core application stack"
+    services: [database, redis, nginx, backend, gateway, frontend]
+    command: "docker compose up -d database redis nginx backend gateway frontend"
+
+  ai:
+    description: "Full AI-enabled stack"
+    services: [database, redis, nginx, backend, gateway, frontend, embeddings, engine, vector]
+    command: "docker compose up -d"
+    gpu_required: true
+
+  development:
+    description: "Development and build environment"
+    services: [database, redis, registry, registry-ui, devsite, tools]
+    command: "docker compose up -d database redis registry registry-ui devsite tools"
+
+# =============================================================================
+# Quick Reference Commands
+# =============================================================================
+quick_commands:
+  # Start services
+  start:
+    all: "docker compose up -d"
+    core: "docker compose up -d database redis nginx backend gateway frontend"
+    ai: "docker compose up -d embeddings engine vector"
+    registry: "docker compose up -d registry registry-ui"
+
+  # Stop services
+  stop:
+    all: "docker compose down"
+    ai: "docker compose stop embeddings engine vector"
+
+  # View logs
+  logs:
+    all: "docker compose logs -f"
+    ai: "docker compose logs -f embeddings engine vector"
+    registry: "docker compose logs -f registry"
+
+  # Health checks
+  health:
+    all: |
+      curl -sf http://localhost:8001/health && echo "✓ embeddings"
+      curl -sf http://localhost:6333/healthz && echo "✓ vector"
+      curl -sf http://localhost:5000/v2/ && echo "✓ registry"
+      redis-cli -h localhost ping && echo "✓ redis"
+      PGPASSWORD=password psql -h localhost -U user -d semantic_kernel -c 'SELECT 1' && echo "✓ database"
+
+  # GPU status
+  gpu:
+    status: "nvidia-smi"
+    memory: "nvidia-smi --query-gpu=memory.used,memory.free --format=csv"
+    processes: "nvidia-smi --query-compute-apps=pid,used_memory --format=csv"
+
+  # Registry management
+  registry:
+    catalog: "curl -s http://localhost:5000/v2/_catalog | jq"
+    gc: "docker exec semantic-kernel-registry bin/registry garbage-collect /etc/docker/registry/config.yml"
+    ui: "start http://localhost:5080"

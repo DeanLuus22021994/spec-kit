@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/konveyor/kantra/schemas/profile-schema.json",
+  "title": "Validation Profile Schema",
+  "description": "JSON Schema for validation profile definitions",
+  "type": "object",
+  "required": ["metadata", "rules"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["name", "description", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Profile name",
+          "examples": ["strict", "recommended", "minimal"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Profile description"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version"
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z0-9-]+$": {
+          "type": "object",
+          "properties": {
+            "severity": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": ["mandatory", "optional", "potential"]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": ["mandatory", "optional", "potential"]
+                  }
+                }
+              ],
+              "description": "Severity filter (single or multiple)"
+            },
+            "all": {
+              "type": "boolean",
+              "description": "Include all rules from package"
+            }
+          }
+        }
+      },
+      "description": "Rule package configuration"
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "failOnWarning": {
+          "type": "boolean",
+          "default": false,
+          "description": "Fail validation on warnings"
+        },
+        "failOnInfo": {
+          "type": "boolean",
+          "default": false,
+          "description": "Fail validation on info messages"
+        },
+        "maxViolations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum allowed violations (0 = none)"
+        }
+      },
+      "description": "Profile-specific options"
+    }
+  },
+  "examples": [
+    {
+      "metadata": {
+        "name": "strict",
+        "description": "Zero-tolerance validation profile",
+        "version": "1.0.0"
+      },
+      "rules": {
+        "metadata": {
+          "severity": "mandatory",
+          "all": true
+        },
+        "syntax": {
+          "severity": "mandatory",
+          "all": true
+        },
+        "structure": {
+          "severity": "mandatory",
+          "all": true
+        },
+        "mta": {
+          "severity": "mandatory",
+          "all": true
+        },
+        "quality": {
+          "severity": "mandatory",
+          "all": true
+        },
+        "vscode": {
+          "severity": "mandatory",
+          "all": true
+        }
+      },
+      "options": {
+        "failOnWarning": true,
+        "failOnInfo": true,
+        "maxViolations": 0
+      }
+    },
+    {
+      "metadata": {
+        "name": "recommended",
+        "description": "Balanced validation profile (default)",
+        "version": "1.0.0"
+      },
+      "rules": {
+        "metadata": {
+          "severity": "mandatory"
+        },
+        "syntax": {
+          "severity": ["mandatory", "optional"]
+        },
+        "structure": {
+          "severity": "mandatory"
+        },
+        "mta": {
+          "severity": ["mandatory", "optional"]
+        },
+        "quality": {
+          "severity": "mandatory"
+        },
+        "vscode": {
+          "severity": "optional"
+        }
+      },
+      "options": {
+        "failOnWarning": false,
+        "failOnInfo": false,
+        "maxViolations": 10
+      }
+    }
+  ]
+}

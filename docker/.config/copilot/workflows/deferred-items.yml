@@ -1,0 +1,136 @@
+# Deferred Items Workflow
+# Standardized process for managing deferred work items
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: workflow
+  keywords:
+    - deferred
+    - breaking changes
+    - updates
+    - research
+    - planning
+    - workflow
+
+<<: *metadata
+
+# Metadata Field Template
+metadata_field: &metadata_field
+  values: []
+  description: null
+
+format_reference:
+  documentation: docs/deferred/README.md
+  directory: docs/deferred/
+  description: Complete format guidelines and examples
+
+required_metadata:
+  status:
+    <<: *metadata_field
+    values:
+      - deferred
+      - in-progress
+      - completed
+    description: Current state of the deferred item
+
+  priority:
+    <<: *metadata_field
+    values:
+      - low
+      - medium
+      - high
+      - critical
+    description: Urgency and importance level
+
+  effort:
+    <<: *metadata_field
+    values:
+      - 1-2 hours
+      - 2-3 hours
+      - 3-4 hours
+      - 1+ days
+    description: Estimated time to complete
+
+  category:
+    <<: *metadata_field
+    values:
+      - dependencies
+      - features
+      - infrastructure
+      - documentation
+      - gpu-acceleration
+    description: Type of work being deferred
+
+  created:
+    format: YYYY-MM-DD
+    description: Date item was deferred
+
+  review_date:
+    format: YYYY-MM-DD
+    description: Next review date for graduation decision
+
+required_sections:
+  - name: "Summary"
+    length: "2-3 sentences"
+    purpose: "Brief description of what is being deferred"
+
+  - name: "Current State"
+    purpose: "What exists now before changes"
+
+  - name: "Proposed Changes"
+    purpose: "What needs to change and why"
+
+  - name: "Breaking Changes / Reason for Deferral"
+    purpose: "Why this requires 1+ hour research or is being postponed"
+
+  - name: "Update Strategy"
+    purpose: "Step-by-step plan for implementation"
+
+  - name: "Testing Requirements"
+    purpose: "Validation steps and acceptance testing"
+
+  - name: "Acceptance Criteria"
+    purpose: "Definition of done for this item"
+
+  - name: "References"
+    purpose: "Links to docs, issues, changelogs, related PRs"
+
+when_to_defer:
+  - condition: "Breaking changes requiring 1+ hours research"
+    example: "Major version updates with API changes"
+
+  - condition: "Extensive testing needed for validation"
+    example: "Multi-service integration changes"
+
+  - condition: "Feature proposals requiring stakeholder validation"
+    example: "New architecture patterns or tools"
+
+  - condition: "Large refactoring needing detailed planning"
+    example: "Service decomposition or data migration"
+
+  - condition: "GPU/CUDA optimization requiring benchmarking"
+    example: "PyTorch model optimization, CUDA kernel tuning"
+    environment_config: ".config/environment.yml"
+
+graduation_criteria:
+  - "Research completed and breaking changes documented"
+  - "Update strategy validated and reviewed"
+  - "Test plan created with clear acceptance criteria"
+  - "Priority escalated to high or critical"
+  - "Time allocated in development schedule"
+
+workflow:
+  defer:
+    - "Create docs/deferred/{category}-{item}.md"
+    - "Add required metadata headers"
+    - "Document all required sections"
+    - "Set status: deferred"
+
+  graduate:
+    - "Update status: in-progress"
+    - "Create feature branch: feature/{item-name}"
+    - "Follow update strategy from deferred doc"
+    - "Run tests and validation"
+    - "Update status: completed when merged"
+    - "Optional: Move to docs/deferred/archive/"

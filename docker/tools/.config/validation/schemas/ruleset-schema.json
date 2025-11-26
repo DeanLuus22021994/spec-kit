@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/konveyor/kantra/schemas/ruleset-schema.json",
+  "title": "MTA Ruleset Schema",
+  "description": "JSON Schema for MTA ruleset definitions",
+  "type": "object",
+  "required": ["metadata"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Ruleset name"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version"
+        },
+        "description": {
+          "type": "string",
+          "description": "Ruleset description"
+        },
+        "profile": {
+          "type": "string",
+          "description": "Associated profile name"
+        },
+        "generated": {
+          "type": "boolean",
+          "description": "Whether ruleset was auto-generated"
+        }
+      }
+    },
+    "config_references": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri-reference"
+      },
+      "description": "References to configuration files"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "References to rule definition files"
+    },
+    "rule_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Rule definition files"
+    }
+  },
+  "examples": [
+    {
+      "metadata": {
+        "name": "yaml-validation-ruleset",
+        "version": "1.0.0",
+        "description": "YAML validation rules",
+        "profile": "recommended"
+      },
+      "config_references": [
+        "../../copilot/yaml-best-practices.yml",
+        "../../copilot/validation.yml"
+      ],
+      "rules": []
+    }
+  ]
+}

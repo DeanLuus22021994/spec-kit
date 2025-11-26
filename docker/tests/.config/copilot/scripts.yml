@@ -1,0 +1,614 @@
+# Scripts Configuration Context
+# Reference for test automation scripts, workflows, and common operations
+
+version: "1.0.0"
+category: "scripts"
+description: "Test automation scripts and operational workflows"
+
+script_locations:
+  directory: "tests/.config/scripts/"
+
+  scripts:
+    validate_build_cache:
+      file: "validate-build-cache.sh"
+      purpose: "Detect Docker cache corruption and validate package integrity"
+      priority: "P0 - Critical"
+      exit_codes:
+        0: "Cache healthy - proceed with tests"
+        1: "Corruption detected - see recommendations"
+
+    validate_playwright_cache:
+      file: "validate-playwright-cache.sh"
+      purpose: "Validate browser binaries match Playwright version"
+      priority: "P0 - Critical"
+      auto_repair: true
+      exit_codes:
+        0: "Browsers valid - proceed with tests"
+        1: "Corruption detected - auto-repair attempted"
+
+    run_tests:
+      file: "run-tests.sh"
+      purpose: "Execute Playwright tests with service and browser validation"
+      entry_point: true
+      validations:
+        - "Service health checks"
+        - "Browser cache validation"
+
+    seed_test_data:
+      file: "seed-test-data.sh"
+      purpose: "Populate database with test data and validate insertion"
+      priority: "P1 - High"
+      features:
+        - "Service health waiting with retries"
+        - "Data validation after seeding"
+        - "Graceful fallback for missing tables"
+
+    cleanup:
+      file: "cleanup.sh"
+      purpose: "Remove test artifacts with verification"
+      priority: "P1 - High"
+      options:
+        CLEAN_DB: "Truncate database tables (default: false)"
+        CLEAN_VOLUMES: "Remove Docker volumes (default: false)"
+
+run_tests_workflow:
+  location: "tests/.config/scripts/run-tests.sh"
+
+  steps:
+    1_banner:
+      action: "Display test runner banner"
+      output: "🎭 Playwright Test Runner"
+
+    2_health_checks:
+      action: "Wait for services to be healthy"
+      services:
+        frontend:
+          url: "http://frontend:3000"
+          timeout: "60s"
+          method: "curl -f"
+
+        backend:
+          url: "http://backend:80/health"
+          timeout: "60s"
+          method: "curl -f"
+
+      retry_interval: "2s"
+
+    3_browser_validation:
+      action: "Validate Playwright browser cache"
+      script: ".config/scripts/validate-playwright-cache.sh"
+      auto_repair: true
+      fallback: "npx playwright install --with-deps"
+      purpose: "Prevent browser version mismatches"
+
+    4_change_directory:
+      action: "cd /app/tests"
+      purpose: "Ensure correct working directory in container"
+
+    5_execute_tests:
+      ci_mode:
+        condition: "CI=true"
+        command: "npx playwright test --reporter=html --reporter=junit"
+        reporters:
+          - "HTML (playwright-report/)"
+          - "JUnit (test-results/junit.xml)"
+
+      dev_mode:
+        condition: "CI != true"
+        command: "npx playwright test"
+        reporters:
+          - "List (console)"
+
+    6_completion:
+      action: "Display completion message"
+      output: "✅ Tests complete"
+
+  error_handling:
+    set_e: "Exit on any error"
+    timeout: "60s for each health check"
+    curl_fail: "Exit if service unreachable"
+    browser_validation: "Auto-repair on failure, exit if repair fails"
+
+validate_build_cache_workflow:
+  location: "tests/.config/scripts/validate-build-cache.sh"
+  priority: "P0 - Critical"
+  purpose: "Detect Docker cache corruption before tests"
+
+  checks:
+    1_package_checksum:
+      action: "Validate package.json checksum"
+      method: "sha256sum comparison"
+      storage: "/tmp/package.json.sha256"
+
+    2_corruption_indicators:
+      action: "Scan for literal \\n sequences"
+      targets:
+        - "package.json"
+        - "playwright.config.ts"
+        - "tsconfig.json"
+      pattern: 'grep -r "\\\\n" --include="*.json" --include="*.ts"'
+
+    3_playwright_config:
+      action: "Validate Playwright config syntax"
+      command: "node -c playwright.config.ts"
+
+    4_docker_images:
+      action: "Check Docker image existence"
+      image: "semantic-kernel-tests"
+      size_check: "Validate image size reasonable"
+
+    5_critical_files:
+      action: "Verify critical files exist"
+      files:
+        - ".config/docker/Dockerfile"
+        - ".config/docker/docker-compose.test.yml"
+        - "playwright.config.ts"
+        - "package.json"
+
+    6_obsolete_directories:
+      action: "Check for node_modules (should not exist)"
+      pattern: "With baked dependencies, node_modules should not exist"
+
+    7_docker_compose_validation:
+      action: "Validate docker-compose config"
+      command: "docker-compose -f .config/docker/docker-compose.test.yml config --quiet"
+
+    8_summary:
+      action: "Display validation summary"
+      output: "Color-coded status (Green/Yellow/Red)"
+
+  exit_codes:
+    0: "Cache healthy - safe to proceed"
+    1: "Corruption detected - rebuild recommended"
+
+  recommendations_on_failure:
+    - "make test-rebuild-cache"
+    - "git status (check for uncommitted changes)"
+    - "docker-compose logs (review service logs)"
+    - "Rebuild with --no-cache flag"
+
+validate_playwright_cache_workflow:
+  location: "tests/.config/scripts/validate-playwright-cache.sh"
+  priority: "P0 - Critical"
+  purpose: "Validate browser binaries match Playwright version"
+
+  checks:
+    1_playwright_installation:
+      action: "Check Playwright CLI exists"
+      command: "npx playwright --version"
+
+    2_package_validation:
+      action: "Validate @playwright/test package"
+      command: "npm list @playwright/test"
+
+    3_browser_binaries:
+      action: "Check browser binaries installed"
+      browsers:
+        - "chromium"
+        - "firefox"
+        - "webkit"
+
+    4_cache_directory:
+      action: "Validate cache directory size"
+      path: "$PLAYWRIGHT_BROWSERS_PATH"
+      reasonable_range: "500MB - 5GB"
+
+    5_executables:
+      action: "Verify browser executables exist"
+      binaries:
+        - "chrome"
+        - "firefox"
+        - "webkit"
+
+    6_smoke_tests:
+      action: "Dry-run install (container only)"
+      command: "timeout 10 npx playwright install --dry-run"
+
+    7_version_consistency:
+      action: "Compare package.json vs installed version"
+      validation: "Versions must match"
+
+    8_summary:
+      action: "Display validation summary"
+      output: "Color-coded status (Green/Yellow/Red)"
+
+  auto_repair:
+    enabled: true
+    trigger: "Any validation failure"
+    command: "npx playwright install --with-deps"
+    purpose: "Automatically fix browser cache issues"
+
+  exit_codes:
+    0: "Browsers valid - safe to proceed"
+    1: "Corruption detected - auto-repair attempted"
+
+seed_test_data_workflow:
+  location: "tests/.config/scripts/seed-test-data.sh"
+  priority: "P1 - High"
+  purpose: "Populate database with test data and validate"
+
+  steps:
+    1_database_wait:
+      action: "Wait for database with retries"
+      max_retries: 30
+      retry_delay: "2s"
+      command: "pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER"
+
+    2_backend_wait:
+      action: "Wait for backend service"
+      max_retries: 30
+      retry_delay: "2s"
+      command: "curl -f http://backend:80/health"
+
+    3_seed_users:
+      action: "Insert test users"
+      table: "users"
+      data:
+        - "test@example.com"
+        - "admin@example.com"
+      conflict: "ON CONFLICT (email) DO NOTHING"
+
+    4_seed_conversations:
+      action: "Insert test conversations"
+      table: "conversations"
+      count: 2
+      conflict: "ON CONFLICT DO NOTHING"
+
+    5_seed_embeddings:
+      action: "Insert test embeddings"
+      table: "embeddings"
+      requires: "pgvector extension"
+      fallback: "Gracefully skip if extension not enabled"
+
+    6_validate_data:
+      action: "Verify data insertion"
+      checks:
+        users: "SELECT COUNT(*) FROM users WHERE email IN (...)"
+        conversations: "SELECT COUNT(*) FROM conversations WHERE user_id = 1"
+        embeddings: "SELECT COUNT(*) FROM embeddings WHERE conversation_id = 1"
+
+    7_summary:
+      action: "Display seeding summary"
+      output: "Row counts, warnings for missing tables"
+
+  error_handling:
+    graceful_fallback: "Skip if tables don't exist (fresh databases)"
+    validation: "Report row counts, warn if expectations not met"
+
+  environment_variables:
+    DB_HOST: "database"
+    DB_PORT: "5432"
+    DB_USER: "user"
+    DB_NAME: "semantic_kernel_test"
+    DB_PASSWORD: "test_password"
+
+cleanup_workflow:
+  location: "tests/.config/scripts/cleanup.sh"
+  priority: "P1 - High"
+  purpose: "Remove test artifacts with verification"
+
+  steps:
+    1_banner:
+      action: "Display cleanup banner"
+      output: "🧹 Cleaning up test environment..."
+
+    2_artifacts_cleanup:
+      action: "Remove test artifacts with verification"
+      targets:
+        - "playwright-report/"
+        - "test-results/"
+        - ".playwright-cache/"
+        - "coverage/"
+        - ".nyc_output/"
+      verification: "Confirm directories removed"
+
+    3_temporary_files:
+      action: "Remove temporary files"
+      patterns:
+        - "*.log"
+        - "npm-debug.log*"
+        - ".DS_Store"
+        - "Thumbs.db"
+      verification: "Count files removed vs remaining"
+
+    4_obsolete_check:
+      action: "Check for obsolete directories"
+      targets:
+        - "node_modules/ (should not exist with baked deps)"
+
+    5_docker_cleanup:
+      condition: "CLEAN_VOLUMES=true"
+      action: "Stop test containers"
+      command: "docker-compose -f .config/docker/docker-compose.test.yml down"
+
+    6_database_cleanup:
+      condition: "CLEAN_DB=true"
+      action: "Truncate test tables"
+      tables:
+        - "embeddings CASCADE"
+        - "conversations CASCADE"
+        - "users CASCADE"
+
+    7_volume_cleanup:
+      condition: "CLEAN_VOLUMES=true"
+      action: "Remove Docker volumes"
+      warning: "⚠️ Destructive - deletes all test data volumes"
+
+    8_verification:
+      action: "Verify cleanup success"
+      checks:
+        - "Directories removed"
+        - "Containers stopped"
+        - "Log files cleaned"
+      summary: "Issue count, disk space freed"
+
+  environment_variables:
+    CLEAN_DB: "false (default) - Truncate database tables"
+    CLEAN_VOLUMES: "false (default) - Remove Docker volumes"
+
+  safety_features:
+    - "Named volumes preserved by default"
+    - "Database cleanup disabled by default"
+    - "Verification checks prevent partial cleanup"
+
+  when_to_run:
+    - "After test execution"
+    - "Before committing changes"
+    - "When disk space is low"
+
+  preserved:
+    - "Named volumes (survive cleanup unless -v flag)"
+    - "Source files (tests/e2e/, tests/pages/, etc.)"
+
+health_check_patterns:
+  wait_for_service:
+    pattern: "timeout 60 bash -c 'until curl -f <url> > /dev/null 2>&1; do sleep 2; done'"
+
+    components:
+      timeout: "60s maximum wait time"
+      curl_f: "Fail on HTTP errors"
+      redirect: "> /dev/null 2>&1 (suppress output)"
+      retry: "sleep 2 between attempts"
+
+  services:
+    frontend:
+      url: "http://frontend:3000"
+      check: "HTTP 200 response"
+
+    backend:
+      url: "http://backend:80/health"
+      check: "Health endpoint returns OK"
+
+    database:
+      check: "pg_isready -U user -d semantic_kernel_test"
+
+    vector:
+      url: "http://vector:6333/healthz"
+      check: "Qdrant health endpoint"
+
+common_commands:
+  run_tests_locally:
+    command: "bash tests/.config/scripts/run-tests.sh"
+    environment: "Local development"
+    requires:
+      - "Services running (docker-compose up)"
+      - "Bash shell"
+
+  run_tests_docker:
+    command: "make test-docker"
+    environment: "Docker Compose"
+    features:
+      - "Isolated network"
+      - "All services orchestrated"
+      - "Named volumes for caches"
+
+  cleanup_locally:
+    command: "bash tests/.config/scripts/cleanup.sh"
+    purpose: "Remove local test artifacts"
+
+  cleanup_docker:
+    command: "make test-cleanup"
+    purpose: "Stop Docker services (preserve volumes)"
+
+  cleanup_full:
+    command: "make test-cleanup && docker-compose down -v"
+    purpose: "Remove everything including volumes"
+
+  seed_data:
+    command: "bash tests/.config/scripts/seed-test-data.sh"
+    when: "Before running integration tests"
+
+script_permissions:
+  requirement: "Executable (+x)"
+
+  set_permissions:
+    command: "chmod +x tests/.config/scripts/*.sh"
+    applied_to:
+      - "run-tests.sh"
+      - "cleanup.sh"
+      - "seed-test-data.sh"
+
+  docker:
+    note: "Permissions set during image build"
+    dockerfile: "COPY --chown=testsuser:testsuser"
+
+environment_variables:
+  ci:
+    var: "CI"
+    values:
+      true: "CI mode (HTML + JUnit reporters)"
+      false: "Dev mode (list reporter)"
+
+  base_url:
+    var: "BASE_URL"
+    default: "http://frontend:3000"
+    purpose: "Frontend service URL"
+
+  api_url:
+    var: "API_URL"
+    default: "http://backend:80"
+    purpose: "Backend service URL"
+
+makefile_integration:
+  test_docker:
+    target: "test-docker"
+    command: "docker-compose -f tests/.config/docker/docker-compose.test.yml up --abort-on-container-exit"
+    calls:
+      - "run-tests.sh (via Docker CMD)"
+      - "test-extract-results"
+      - "test-cleanup"
+
+  test_e2e:
+    target: "test-e2e"
+    alias: "test-docker"
+
+  test_cleanup:
+    target: "test-cleanup"
+    command: "docker-compose down (without -v)"
+    preserves: "Named volumes"
+
+  test_rebuild_cache:
+    target: "test-rebuild-cache"
+    command: "docker-compose down -v && build --no-cache"
+    when: "package.json changes"
+
+  test_extract_results:
+    target: "test-extract-results"
+    purpose: "Copy reports from named volumes to local filesystem"
+    commands:
+      - "mkdir -p playwright-report test-results"
+      - "docker-compose run tests cp -r /app/tests/playwright-report ./playwright-report"
+      - "docker-compose run tests cp -r /app/tests/test-results ./test-results"
+
+error_handling:
+  set_e:
+    command: "set -e"
+    effect: "Exit script on any error"
+
+  set_u:
+    command: "set -u"
+    effect: "Exit on undefined variable"
+
+  set_pipefail:
+    command: "set -o pipefail"
+    effect: "Fail if any command in pipeline fails"
+
+  timeout:
+    command: "timeout <seconds> <command>"
+    effect: "Kill command after timeout"
+    example: "timeout 60 bash -c 'until curl -f http://frontend:3000...'"
+
+logging:
+  info:
+    pattern: 'echo "✅ <message>"'
+    examples:
+      - "✅ Services ready"
+      - "✅ Tests complete"
+      - "✅ Cleanup complete"
+
+  progress:
+    pattern: 'echo "⏳ <message>"'
+    examples:
+      - "⏳ Waiting for services..."
+      - "⏳ Running tests..."
+
+  action:
+    pattern: 'echo "🚀 <message>"'
+    examples:
+      - "🚀 Running tests..."
+      - "🚀 Seeding test data..."
+
+  banner:
+    pattern: |
+      echo "🎭 Playwright Test Runner"
+      echo "========================="
+
+debugging:
+  verbose_mode:
+    command: "set -x"
+    effect: "Print each command before execution"
+
+  service_logs:
+    command: "docker-compose logs <service>"
+    examples:
+      - "docker-compose logs frontend"
+      - "docker-compose logs backend"
+
+  health_check_debug:
+    manual: "curl -v http://frontend:3000"
+    purpose: "Verbose output for debugging"
+
+  test_execution_debug:
+    command: "npx playwright test --debug"
+    purpose: "Step through tests with inspector"
+
+best_practices:
+  error_handling:
+    - "Use set -e to fail fast"
+    - "Add timeouts to prevent hanging"
+    - "Check service health before tests"
+
+  logging:
+    - "Use emojis for visual clarity (✅, ⏳, 🚀)"
+    - "Add banners for script sections"
+    - "Log progress for long operations"
+
+  service_dependencies:
+    - "Always wait for health checks"
+    - "Use retry logic with timeouts"
+    - "Fail gracefully if service unreachable"
+
+  working_directory:
+    - "Use cd /app/tests for absolute path"
+    - "Avoid relative paths in containers"
+
+  ci_compatibility:
+    - "Check CI environment variable"
+    - "Use appropriate reporters"
+    - "Ensure non-interactive execution"
+
+troubleshooting:
+  service_timeout:
+    symptom: "Timeout waiting for service"
+    solutions:
+      - "Check service logs (docker-compose logs)"
+      - "Verify service health check (docker-compose ps)"
+      - "Increase timeout value"
+      - "Check network connectivity"
+
+  script_not_executable:
+    symptom: "Permission denied"
+    solution: "chmod +x tests/.config/scripts/*.sh"
+
+  wrong_directory:
+    symptom: "Files not found"
+    solution: "Ensure cd /app/tests before running commands"
+
+  tests_fail_locally:
+    symptom: "Tests pass in Docker, fail locally"
+    solutions:
+      - "Check BASE_URL environment variable"
+      - "Verify services running locally"
+      - "Check Node.js version matches container"
+
+migration_notes:
+  from: "tests/scripts/"
+  to: "tests/.config/scripts/"
+
+  changes:
+    - "run-tests.sh: Added cd /app/tests"
+    - "cleanup.sh: Added cd /app/tests"
+    - "All scripts: Updated references in docker-compose"
+
+  docker_compose_update:
+    command: "/app/tests/.config/scripts/run-tests.sh"
+    location: "tests/.config/docker/docker-compose.test.yml"
+
+  makefile_update:
+    test_docker: "Updated docker-compose file path"
+    test_cleanup: "Updated docker-compose file path"
+
+  benefits:
+    - "Clear organization (config vs test code)"
+    - "Easier discovery (all config in .config/)"
+    - "Pattern alignment with root .config/"

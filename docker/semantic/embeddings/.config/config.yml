@@ -1,0 +1,72 @@
+# Embeddings Service Configuration
+# References: .config/semantic-kernel.yml, .config/services.yml
+
+metadata: &metadata
+  version: "1.0.0"
+  category: config
+  keywords: [embeddings, text-embedding, openai, vector-generation, cache, api, optimization]
+  updated: "2025-11-25"
+  config_references:
+    semantic_kernel: "../../.config/semantic-kernel.yml"
+    services: "../../.config/services.yml"
+    ports: "../../.config/ports.yml"
+
+# Merge metadata at root level
+<<: *metadata
+
+embeddings:
+  service:
+    name: "embedding-service"
+    type: "text-embedding"
+    version: "1.0.0"
+
+  models:
+    default: "text-embedding-3-small"
+    available:
+      - name: "text-embedding-3-small"
+        dimensions: 1536
+        maxTokens: 8191
+        enabled: true
+      - name: "text-embedding-3-large"
+        dimensions: 3072
+        maxTokens: 8191
+        enabled: false
+      - name: "text-embedding-ada-002"
+        dimensions: 1536
+        maxTokens: 8191
+        enabled: false
+
+  processing:
+    batchSize: 100
+    maxConcurrent: 10
+    timeoutSeconds: 30
+    retryAttempts: 3
+    retryDelayMs: 1000
+
+  cache:
+    enabled: true
+    type: "postgres"
+    ttlMinutes: 1440 # 24 hours
+    maxEntries: 100000
+
+  api:
+    port: 8001
+    enableMetrics: true
+    enableHealthCheck: true
+
+  optimization:
+    normalize: true
+    poolConnections: true
+    maxPoolSize: 20
+
+cross_references:
+  - ".config/semantic-kernel.yml: Semantic Kernel configuration"
+  - "semantic/vector/.config/config.yml: Vector database configuration"
+  - ".config/services.yml: Service ports and resources"
+
+related_documentation:
+  - ".config/semantic-kernel.yml"
+  - "semantic/vector/.config/config.yml"
+  - ".config/services.yml"
+  - "semantic/embeddings/main.py"
+  - ".config/copilot/yaml-best-practices.yml"

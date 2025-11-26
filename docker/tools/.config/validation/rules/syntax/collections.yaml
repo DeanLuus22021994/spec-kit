@@ -1,0 +1,238 @@
+# Collections Validation Rules
+# Enforces proper YAML collection (array/object) formatting
+
+- ruleID: yaml-block-vs-flow-style
+  description: |
+    Use block style for readability with complex collections.
+    Flow style is acceptable for simple, short collections.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: ":\\s*\\{[^}]{50,}\\}"
+  message: |
+    Long flow-style mapping detected.
+
+    Flow style (inline) is best for short collections:
+    Good: ports: {http: 80, https: 443}
+
+    For longer collections, use block style:
+    ports:
+      http: 80
+      https: 443
+      admin: 8080
+
+    Block style improves:
+    - Readability for complex structures
+    - Git diff clarity
+    - Maintenance
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#collections"
+      title: "YAML Collections - Block vs Flow Style"
+
+- ruleID: yaml-nested-collection-depth
+  description: |
+    Warn when collection nesting exceeds 4 levels.
+    Deep nesting reduces readability and may indicate design issues.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=potential"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s{16,}[a-zA-Z_]"
+  message: |
+    Deep nesting detected (4+ levels).
+
+    Deeply nested structures are hard to read and maintain:
+
+    # 5 levels deep
+    level1:
+      level2:
+        level3:
+          level4:
+            level5: value
+
+    Consider:
+    1. Flattening structure with anchors/aliases
+    2. Splitting into multiple files
+    3. Redesigning data model
+    4. Using references between files
+
+    Maximum recommended depth: 4 levels
+  effort: 5
+  category: potential
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#collections"
+      title: "YAML Nesting Depth Guidelines"
+
+- ruleID: yaml-compact-mapping
+  description: |
+    Compact mappings (key:value on same line) are acceptable for simple cases.
+    Use block style for complex values.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*[^\\s]"
+  message: |
+    Compact mapping detected - verify appropriateness.
+
+    Compact mappings work well for simple values:
+    Good:
+      name: "service"
+      port: 8080
+      enabled: true
+
+    Use block style for complex values:
+    Better:
+      config:
+        database:
+          host: localhost
+          port: 5432
+
+    Guidelines:
+    - Simple scalar values: Compact OK
+    - Nested objects: Use block style
+    - Long strings: Use multiline
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#collections"
+      title: "YAML Compact Mapping Best Practices"
+
+- ruleID: yaml-sequence-alignment
+  description: |
+    Sequences (lists) within mappings should be properly indented.
+    List items must align consistently.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*$\\n\\s+-"
+  message: |
+    Sequence in mapping detected - verify alignment.
+
+    Proper sequence alignment in mappings:
+
+    Correct:
+    services:
+      - name: backend
+        port: 8080
+      - name: frontend
+        port: 3000
+
+    Incorrect:
+    services:
+    - name: backend  # Not indented from parent
+      port: 8080
+
+    Rules:
+    1. List items indent 2 spaces from parent key
+    2. All list items at same indentation
+    3. Nested content indents 2 more spaces
+  effort: 2
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#collections"
+      title: "YAML Sequence Alignment"
+
+- ruleID: yaml-flow-collection-spacing
+  description: |
+    Flow collections should use consistent spacing around delimiters.
+    Space after opening, before closing, after commas.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    or:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "\\{[a-zA-Z]"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: ",[a-zA-Z]"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "\\[[a-zA-Z]"
+  message: |
+    Flow collection without proper spacing detected.
+
+    Recommended spacing for flow collections:
+
+    Good spacing:
+    ports: { http: 80, https: 443 }
+    tags: [ production, backend, api ]
+
+    Poor spacing:
+    ports: {http:80,https:443}
+    tags: [production,backend,api]
+
+    Rules:
+    - Space after opening brace/bracket
+    - Space before closing brace/bracket
+    - Space after colons in mappings
+    - Space after commas
+
+    Consistent spacing improves readability.
+  effort: 1
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#collections"
+      title: "YAML Flow Style Spacing"
+
+- ruleID: yaml-mixed-collection-style
+  description: |
+    Avoid mixing block and flow styles within same collection level.
+    Choose one style per collection for consistency.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*\\{.*\\}\\s*$\\n\\s+[a-zA-Z_][a-zA-Z0-9_]*:\\s*$"
+  message: |
+    Mixed collection styles detected in same level.
+
+    Inconsistent:
+    config:
+      simple: { key1: value1, key2: value2 }
+      complex:
+        key3: value3
+        key4: value4
+
+    Better - all block style:
+    config:
+      simple:
+        key1: value1
+        key2: value2
+      complex:
+        key3: value3
+        key4: value4
+
+    Or all flow style (if appropriate):
+    config:
+      simple: { key1: value1, key2: value2 }
+      complex: { key3: value3, key4: value4 }
+
+    Consistency improves readability and maintenance.
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#collections"
+      title: "YAML Collection Style Consistency"

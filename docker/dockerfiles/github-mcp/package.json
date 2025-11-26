@@ -1,0 +1,30 @@
+{
+  "name": "@semantic-kernel-app/github-mcp",
+  "version": "1.0.0",
+  "description": "GitHub MCP Server for Semantic Kernel App",
+  "main": "index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@octokit/rest": "^21.0.2",
+    "@octokit/graphql": "^8.1.1",
+    "zod": "^3.23.8",
+    "dotenv": "^16.4.5"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "github",
+    "semantic-kernel"
+  ],
+  "author": "semantic-kernel-app",
+  "license": "MIT",
+  "private": true
+}

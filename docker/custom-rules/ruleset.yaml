@@ -1,0 +1,58 @@
+# YAML Best Practices Ruleset
+# Red Hat Migration Toolkit for Applications (MTA) 7.2
+# Enforces yaml-best-practices.yml standards across repository
+
+metadata: &metadata
+  name: "yaml-best-practices-validation"
+  description: "Enforces YAML best practices from .config/copilot/yaml-best-practices.yml across all repository YAML files"
+  version: "1.0.0"
+  category: "quality"
+  keywords:
+    - yaml
+    - validation
+    - best-practices
+    - red-hat-mta
+    - quality
+    - standards
+  updated: "2025-11-24"
+  documentation: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide"
+
+<<: *metadata
+
+name: "yaml-best-practices-validation"
+description: |
+  Comprehensive ruleset for validating YAML files against best practices defined in
+  .config/copilot/yaml-best-practices.yml. This ruleset enforces:
+
+  - Proper metadata blocks with anchor and merge patterns
+  - Consistent indentation (2 spaces, no tabs)
+  - Correct quote usage (unquoted simple values, quoted versions)
+  - Multiline string formats (literal |, folded >)
+  - File organization structure
+  - Anchor/alias patterns
+  - Cross-references and documentation
+
+labels:
+  - "konveyor.io/source=yaml"
+  - "konveyor.io/target=yaml-best-practices"
+  - "quality=mandatory"
+  - "category=standards"
+  - "scope=repository-wide"
+
+rules:
+  - metadata-validation.yaml
+  - anchor-pattern-validation.yaml
+  - indentation-validation.yaml
+  - quoting-validation.yaml
+  - file-organization-validation.yaml
+
+cross_references:
+  - file: ".config/copilot/yaml-best-practices.yml"
+    description: "YAML best practices and Red Hat MTA rules development guide"
+
+  - file: ".config/copilot/index.yml"
+    description: "Semantic search index structure"
+
+related_documentation:
+  - ".config/copilot/yaml-best-practices.yml: Complete YAML standards and MTA guide"
+  - "Red Hat MTA Rules Development Guide: https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide"

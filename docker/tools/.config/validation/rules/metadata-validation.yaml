@@ -1,0 +1,189 @@
+# Metadata Block Validation Rules
+# Enforces proper metadata block structure with anchors and merge keys
+
+- ruleID: yaml-metadata-block-required
+  description: |
+    All YAML files must include a metadata block with version, category, and keywords.
+    The metadata block should be the first element in the file after comments.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.file:
+          pattern: ".*\\.(yml|yaml)$"
+      - or:
+          - builtin.filecontent:
+              filePattern: ".*\\.(yml|yaml)$"
+              pattern: "^(?!#).*"
+              # File has content but no metadata block
+          - builtin.filecontent:
+              filePattern: ".*\\.(yml|yaml)$"
+              pattern: "^metadata:\\s*$"
+              # metadata exists but not as first non-comment element
+  customVariables:
+    - pattern: "^(.*\\.ya?ml)$"
+      name: fileName
+  message: |
+    File {{ fileName }} is missing a proper metadata block.
+
+    According to yaml-best-practices.yml, all YAML files must start with:
+
+    metadata: &metadata
+      version: "X.Y.Z"
+      category: "config|standard|reference|workflow|pattern"
+      keywords: [...]
+
+    <<: *metadata
+  effort: 3
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML Best Practices - File Organization"
+
+- ruleID: yaml-metadata-anchor-required
+  description: |
+    Metadata blocks must define an anchor (&metadata) to enable reuse and root-level merging.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^metadata:\\s*$"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^metadata:\\s*&metadata\\s*$"
+  customVariables:
+    - pattern: "^metadata:\\s*$"
+      name: metadataLine
+  message: |
+    Metadata block found without anchor definition.
+
+    Change: metadata:
+    To:     metadata: &metadata
+
+    This enables the merge pattern: <<: *metadata
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#anchors_and_aliases"
+      title: "YAML Anchors and Aliases Guide"
+
+- ruleID: yaml-metadata-merge-required
+  description: |
+    Files with metadata anchors must include the merge key (<<: *metadata) to expose
+    metadata fields at root level for semantic search and tooling accessibility.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^metadata:\\s*&metadata"
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^<<:\\s*\\*metadata"
+  customVariables:
+    - pattern: "^(.*\\.ya?ml).*metadata:\\s*&metadata"
+      name: fileName
+  message: |
+    File {{ fileName }} has metadata anchor but missing merge key.
+
+    Add after the metadata block:
+
+    <<: *metadata
+
+    This exposes version, category, keywords at root level for semantic indexing.
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#file_organization"
+      title: "YAML File Organization Standards"
+
+- ruleID: yaml-metadata-version-quoted
+  description: |
+    Version numbers in metadata must be quoted to prevent YAML float interpretation.
+    Example: version: "1.0.0" not version: 1.0.0
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s*version:\\s+[0-9]+\\.[0-9]+\\.[0-9]+\\s*$"
+  customVariables:
+    - pattern: "version:\\s+([0-9]+\\.[0-9]+\\.[0-9]+)"
+      name: versionNumber
+  message: |
+    Version number {{ versionNumber }} is not quoted.
+
+    Unquoted version numbers are interpreted as floats, causing precision loss.
+
+    Change: version: {{ versionNumber }}
+    To:     version: "{{ versionNumber }}"
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#quoting"
+      title: "YAML Quoting Best Practices"
+
+- ruleID: yaml-metadata-category-valid
+  description: |
+    Metadata category must be one of: config, standard, reference, workflow, pattern.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=mandatory"
+  when:
+    and:
+      - builtin.filecontent:
+          filePattern: ".*\\.(yml|yaml)$"
+          pattern: "^\\s*category:\\s+[\"']?(?!config|standard|reference|workflow|pattern)[a-z-]+[\"']?"
+  customVariables:
+    - pattern: "category:\\s+[\"']?([a-z-]+)[\"']?"
+      name: categoryValue
+  message: |
+    Invalid metadata category: {{ categoryValue }}
+
+    Allowed values: config, standard, reference, workflow, pattern
+
+    Update the category field to use one of the approved values.
+  effort: 1
+  category: mandatory
+  links:
+    - url: "file:///.config/copilot/naming-conventions.yml#categories"
+      title: "Naming Conventions - Categories"
+
+- ruleID: yaml-metadata-keywords-array
+  description: |
+    Keywords field must be an array, preferably in inline flow style for readability.
+  labels:
+    - "konveyor.io/source=yaml"
+    - "konveyor.io/target=yaml-best-practices"
+    - "category=optional"
+  when:
+    builtin.filecontent:
+      filePattern: ".*\\.(yml|yaml)$"
+      pattern: "^\\s*keywords:\\s*$"
+  message: |
+    Keywords field found without array value.
+
+    Use inline flow style:
+    keywords: [keyword1, keyword2, keyword3]
+
+    Or block style:
+    keywords:
+      - keyword1
+      - keyword2
+  effort: 2
+  category: optional
+  links:
+    - url: "file:///.config/copilot/yaml-best-practices.yml#collections"
+      title: "YAML Collections Best Practices"

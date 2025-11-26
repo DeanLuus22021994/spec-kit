@@ -1,0 +1,158 @@
+# Tools Copilot Context Index
+# Master index for GitHub Copilot semantic search and context discovery
+
+version: "1.0.0"
+category: "index"
+description: "Tools directory context orchestrator for semantic search"
+
+overview:
+  directory: "tools/"
+  purpose: "Python CLI utilities, documentation generation, and code quality tools"
+  pattern: "Self-contained Docker container with baked dependencies"
+  alignment: "Mirrors tests/ directory .config/ organization pattern"
+
+context_files:
+  index:
+    file: ".config/copilot/index.yml"
+    purpose: "Master context index (this file)"
+
+  docker:
+    file: ".config/copilot/docker.yml"
+    purpose: "Docker containerization patterns, baked dependencies, build optimization"
+    keywords:
+      - "Docker"
+      - "container"
+      - "baked dependencies"
+      - "pip packages"
+      - "build context"
+      - "multi-stage"
+      - ".dockerignore"
+
+  scripts:
+    file: ".config/copilot/scripts.yml"
+    purpose: "Automation scripts, workflows, and operational procedures"
+    keywords:
+      - "scripts"
+      - "automation"
+      - "lint"
+      - "pre-commit"
+      - "bash"
+      - "workflows"
+
+  cli:
+    file: ".config/copilot/cli.yml"
+    purpose: "Python CLI tool usage, commands, and configuration"
+    keywords:
+      - "CLI"
+      - "python"
+      - "click"
+      - "commands"
+      - "configuration"
+      - "yaml"
+
+  validation:
+    file: ".config/copilot/validation.yml"
+    purpose: "YAML validation using Kantra CLI and Red Hat MTA rules"
+    keywords:
+      - "validation"
+      - "kantra"
+      - "mta"
+      - "yaml-quality"
+      - "rules"
+      - "red-hat"
+      - "migration-toolkit"
+      - "analysis"
+      - "linting"
+      - "quality-assurance"
+
+semantic_search_categories:
+  docker_containerization:
+    context_file: "docker.yml"
+    topics:
+      - "Container build process"
+      - "Baked pip dependencies (zero pip install latency)"
+      - "Build context optimization"
+      - ".dockerignore patterns"
+      - "Multi-stage builds"
+      - "Non-root user (toolsuser:1001)"
+      - "Health checks"
+
+  script_automation:
+    context_file: "scripts.yml"
+    topics:
+      - "Lint script workflow"
+      - "Pre-commit automation"
+      - "Bash best practices"
+      - "Error handling"
+      - "Script dependencies"
+
+  python_cli:
+    context_file: "cli.yml"
+    topics:
+      - "CLI commands and usage"
+      - "Configuration files (.config/cli.yml)"
+      - "Python package management"
+      - "Documentation generation (docgen.py)"
+      - "Database operations"
+      - "Vector store operations"
+
+  yaml_validation:
+    context_file: "validation.yml"
+    topics:
+      - "Kantra CLI usage and installation"
+      - "Red Hat MTA rule execution"
+      - "YAML quality enforcement"
+      - "Analysis modes (containerless vs hybrid)"
+      - "Label selectors and filtering"
+      - "Report generation and interpretation"
+      - "CI/CD integration patterns"
+      - "Rule testing with kantra test"
+
+  pattern_alignment:
+    context_file: "docker.yml"
+    topics:
+      - "Tools vs Tests pattern consistency"
+      - ".config/ directory organization"
+      - "Baked dependencies philosophy"
+      - "Named volumes for caches"
+      - "Build optimization strategies"
+
+directory_structure:
+  tools:
+    - ".config/"
+    - "cli.py"
+    - "docgen.py"
+    - "requirements.txt"
+
+  config:
+    - "copilot/ (GitHub Copilot context)"
+    - "docker/ (Dockerfile, .dockerignore)"
+    - "scripts/ (bash automation)"
+    - "documentation/ (implementation docs)"
+
+usage_instructions:
+  discovery:
+    - "Use this index to discover relevant context files"
+    - "Match user query keywords to semantic search categories"
+    - "Load specific YAML files on-demand based on intent"
+
+  context_loading:
+    - "For Docker questions → docker.yml"
+    - "For script questions → scripts.yml"
+    - "For CLI usage → cli.yml"
+    - "For validation questions → validation.yml"
+    - "For pattern questions → docker.yml + tests/.config/copilot/docker.yml"
+
+pattern_consistency:
+  with_tests:
+    - "Same .config/ organization"
+    - "Same baked dependencies approach"
+    - "Same Docker build optimization"
+    - "Same non-root user pattern"
+    - "Same named volumes for caches"
+
+  differences:
+    - "tools: pip packages (Python) | tests: npm packages (Node.js)"
+    - "tools: cli.py + docgen.py | tests: Playwright tests"
+    - "tools: requirements.txt | tests: package.json"
+    - "tools: python:3.14-slim | tests: mcr.microsoft.com/playwright:v1.40.0-jammy"

@@ -1,0 +1,196 @@
+# GitHub Workflows Configuration
+# Centralized configuration for GitHub Actions workflows
+# Referenced by workflows in .github/workflows/ for consistency
+
+metadata: &metadata
+  version: "1.0.0"
+  updated: "2025-11-24"
+  category: config
+  keywords: [github-actions, workflows, ci-cd, pipeline, testing, build, deployment, runners, versions, configuration]
+
+<<: *metadata
+
+# Runtime versions
+versions:
+  dotnet: "10.0.x"
+  node: "20"
+  python: "3.11"
+
+# Runner configuration
+runners:
+  default: "self-hosted"
+  ubuntu: "ubuntu-latest"
+
+# Timeout settings (minutes)
+timeouts:
+  pr_validation: 60
+  e2e_tests: 20
+  integration_tests: 15
+  full_pipeline: 120
+
+# Branch configuration
+branches:
+  main: "semantic-foundation"
+  feature_pattern: "feature/**"
+
+# Artifact retention (days)
+retention:
+  build_artifacts: 1
+  test_results: 7
+  validation_results: 30
+  docker_logs: 7
+
+# Build configuration
+build:
+  solution: "semantic-kernel-app.sln"
+  configuration: "Release"
+  verbosity: "normal"
+  frontend_dir: "src/frontend"
+  cache_paths:
+    npm: "src/frontend/package-lock.json"
+    tests_npm: "tests/package-lock.json"
+
+# Test configuration
+test:
+  browsers:
+    - chromium
+    - firefox
+    - webkit
+
+  strategy:
+    fail_fast: false
+
+  environment:
+    ci: true
+    base_url: "http://localhost:3000"
+    api_url: "http://localhost:5000"
+
+  unit:
+    timeout: 300
+    requires_services: false
+
+  integration:
+    timeout: 600
+    requires_services: true
+
+  e2e:
+    timeout: 900
+    requires_services: true
+
+# Docker configuration
+docker:
+  compose_file: "docker-compose.yml"
+  test_compose_file: "tests/docker-compose.test.yml"
+
+  startup:
+    wait_seconds: 30
+
+  health_checks:
+    interval: 15
+    timeout: 5
+    retries: 3
+    endpoints:
+      database: "pg_isready -U user -d semantic_kernel"
+      vector: "http://localhost:6333/healthz"
+      embeddings: "http://localhost:8001/health"
+      gateway: "http://localhost:8080/health"
+
+# Pre-commit configuration
+precommit:
+  python_version: "3.11"
+  node_version: "20"
+  dotnet_version: "10.0.x"
+  run_all_files: true
+  ci_mode: true
+
+# Pipeline targets
+pipeline:
+  targets:
+    - build
+    - test
+    - docker
+    - deploy
+    - agent-test
+    - full
+
+  agent_test:
+    working_dir: "vscode-copilot-chat/test/prompts/fixtures"
+    dependencies:
+      - "@types/node"
+      - "typescript"
+      - "ts-node"
+    environment:
+      verbose_logging: true
+
+# Action versions
+actions:
+  checkout: "actions/checkout@v4"
+  setup_dotnet: "actions/setup-dotnet@v4"
+  setup_node: "actions/setup-node@v4"
+  setup_python: "actions/setup-python@v4"
+  upload_artifact: "actions/upload-artifact@v4"
+  docker_buildx: "docker/setup-buildx-action@v3"
+
+# Permissions templates
+permissions:
+  read_only:
+    contents: read
+
+  read_with_actions:
+    contents: read
+    actions: read
+
+  write_contents:
+    contents: write
+    pull-requests: write
+
+# Dependency installation
+dependencies:
+  python:
+    file: "tools/requirements.txt"
+    upgrade_pip: true
+
+  frontend:
+    command: "npm ci"
+    working_dir: "src/frontend"
+
+  tests:
+    command: "npm ci"
+    working_dir: "tests"
+
+  dotnet:
+    restore_solution: true
+    restore_tools: true
+
+# Cleanup configuration
+cleanup:
+  docker:
+    remove_orphans: true
+    system_prune: true
+
+  always_run: true
+
+# Make targets
+make:
+  validate_pr: "validate-pr"
+  test_build: "test-build"
+  test_integration: "test-integration"
+  test_cleanup: "test-cleanup"
+
+# Summary configuration
+summary:
+  enabled: true
+  include:
+    - target
+    - branch
+    - commit
+    - job_status
+    - test_results
+    - resource_usage
+
+related_documentation:
+  - ".config/copilot/references/github-workflows-catalog.yml: Official workflows catalog"
+  - ".config/copilot/workflows/github-workflows-composite-actions.yml: Composite actions"
+  - ".config/copilot/workflows/github-workflows-reusable-jobs.yml: Reusable jobs"
+  - ".config/pr-validation.yml: PR validation configuration"
+  - ".github/workflows/: Actual workflow definitions"

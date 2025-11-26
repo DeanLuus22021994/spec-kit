@@ -1,0 +1,147 @@
+metadata: &metadata
+  name: "validation-context-index"
+  description: "Semantic search index for YAML validation framework"
+  version: "2.0.0"
+  category: "validation"
+  updated: "2025-11-25"
+  maintainer: "Semantic Kernel App Team"
+
+<<: *metadata
+
+overview: |
+  This index provides semantic search and on-demand loading of validation framework context.
+  The YAML validation framework is a modular, package-based system for validating YAML files
+  using Kantra CLI and custom MTA providers. It includes 107 rules across 6 packages.
+
+categories:
+  - architecture: "Architecture patterns, design decisions, and framework structure"
+  - rules: "Complete rule catalog and reference with examples"
+  - testing: "Testing guide, fixtures, assertions, and CI/CD integration"
+  - profiles: "Validation profile usage guide and customization"
+  - automation: "CI/CD integration, scripts, and workflow automation"
+
+context_files:
+  architecture:
+    file: "architecture.yml"
+    description: "Modular architecture, core engine, rule management, package structure"
+    keywords: [modular, engine, registry, composer, versioning, packages, kantra, mta]
+    topics:
+      - "Package-based organization (6 packages)"
+      - "Core engine components (runner, provider, reporter, cache)"
+      - "Rule management (registry, validator, composer, versioning)"
+      - "Integration with Kantra CLI and MTA providers"
+
+  rules:
+    file: "rules-catalog.yml"
+    description: "Complete catalog of 107 validation rules across all packages"
+    keywords: [rules, metadata, syntax, structure, mta, quality, vscode, catalog]
+    topics:
+      - "Metadata package (14 rules): anchor patterns, metadata blocks"
+      - "Syntax package (33 rules): indentation, quoting, multiline, collections"
+      - "Structure package (9 rules): file organization, ordering"
+      - "MTA package (24 rules): MTA rule compliance and structure"
+      - "Quality package (12 rules): code quality and best practices"
+      - "VSCode package (7 rules): editor integration and tasks"
+
+  testing:
+    file: "testing.yml"
+    description: "Test harness, fixtures, assertions, and testing best practices"
+    keywords: [testing, harness, fixtures, assertions, ci-cd, pytest, coverage]
+    topics:
+      - "Test harness architecture and usage"
+      - "Writing test fixtures and test cases"
+      - "Assertion utilities and helpers"
+      - "Running tests locally and in CI/CD"
+      - "Coverage tracking and quality gates"
+
+  profiles:
+    file: "profiles.yml"
+    description: "Validation profiles: strict, recommended, minimal, ci-cd, development"
+    keywords: [profiles, strict, recommended, minimal, ci-cd, development, customization]
+    topics:
+      - "Profile types and use cases"
+      - "When to use each profile"
+      - "Customizing existing profiles"
+      - "Creating new profiles"
+      - "Profile composition and inheritance"
+
+quick_reference:
+  core_packages:
+    - metadata: "14 rules for metadata blocks and anchors"
+    - syntax: "33 rules for YAML syntax validation"
+    - structure: "9 rules for file organization"
+    - mta: "24 rules for MTA compliance"
+    - quality: "12 rules for code quality"
+    - vscode: "7 rules for VS Code integration"
+
+  validation_profiles:
+    - strict: "All mandatory rules (36 rules) - production deployments"
+    - recommended: "Mandatory + optional rules (92 rules) - code reviews"
+    - minimal: "Critical rules only (15 rules) - quick checks"
+    - ci-cd: "CI/CD optimized rules (45 rules) - pipeline validation"
+    - development: "Development-friendly rules (60 rules) - local development"
+
+  cli_commands:
+    - "python -m core.cli validate --mode standard"
+    - "python -m core.cli validate --mode strict --fail-on-warning"
+    - "python -m core.cli validate --profile ci-cd"
+    - "python -m core.cli list-rules"
+    - "python -m core.cli show-config"
+
+usage_examples:
+  basic_validation: |
+    # Run standard validation
+    docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+      python -m core.cli validate --mode standard
+
+  strict_validation: |
+    # Run strict validation with warnings as errors
+    docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+      python -m core.cli validate --mode strict --fail-on-warning
+
+  profile_validation: |
+    # Run validation with specific profile
+    docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+      python -m core.cli validate --profile ci-cd
+
+  watch_mode: |
+    # Run validation in watch mode
+    docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+      python -m core.cli validate --watch --mode standard
+
+integration_points:
+  github_copilot:
+    - "Use this index for semantic search and context discovery"
+    - "Load specific YAML files on-demand based on keywords"
+    - "Reference categories for focused assistance"
+
+  development_workflow:
+    - "Pre-commit validation with development profile"
+    - "PR validation with recommended profile"
+    - "Production deployment with strict profile"
+
+  ci_cd_pipeline:
+    - "Automated validation in GitHub Actions"
+    - "Quality gates with configurable thresholds"
+    - "Report generation and artifact storage"
+
+related_documentation:
+  - path: "tools/.config/validation/README.md"
+    description: "Validation framework overview and getting started"
+  - path: "tools/.config/validation/PHASE4_COMPLETE.md"
+    description: "Phase 4 documentation completion summary"
+  - path: "docs/configuration/yaml-files.md"
+    description: "YAML configuration file patterns"
+  - path: "MIGRATION.md"
+    description: "Migration guide from validation 1.0 to 2.0"
+
+support:
+  troubleshooting:
+    - "Check tools/.config/validation/packages/*/README.md for package-specific issues"
+    - "Review test harness documentation in testing.yml"
+    - "Consult profile documentation in profiles.yml"
+
+  contribution:
+    - "See CONTRIBUTING.md for contribution guidelines"
+    - "Follow rule development guide in architecture.yml"
+    - "Use scaffolding tools for new rules"

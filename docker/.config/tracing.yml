@@ -1,0 +1,376 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Agent Tracing Configuration
+# OpenTelemetry + Jaeger for observability
+
+metadata: &metadata
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: config
+  keywords:
+    - tracing
+    - observability
+    - opentelemetry
+    - jaeger
+    - agents
+    - telemetry
+    - monitoring
+
+<<: *metadata
+
+description: |
+  Configuration for agent tracing and observability using OpenTelemetry
+  and Jaeger. Enables distributed tracing across all services for
+  debugging, performance analysis, and continuous improvement.
+
+# =============================================================================
+# Toggles (Real-time configurable)
+# =============================================================================
+toggles:
+  tracing_enabled:
+    value: true
+    env_var: "TRACING_ENABLED"
+    hot_reload: true
+    description: "Master toggle for distributed tracing"
+    affects: ["all_services"]
+
+  agent_tracing:
+    value: true
+    env_var: "AGENT_TRACING_ENABLED"
+    hot_reload: true
+    description: "Enable tracing for AI agent operations"
+    affects: ["engine", "embeddings"]
+
+  span_sampling:
+    value: 1.0
+    env_var: "OTEL_TRACES_SAMPLER_ARG"
+    hot_reload: true
+    description: "Sampling rate (1.0 = 100%, 0.1 = 10%)"
+    range: [0.0, 1.0]
+
+  gpu_metrics:
+    value: true
+    env_var: "GPU_METRICS_ENABLED"
+    hot_reload: true
+    description: "Collect GPU utilization metrics"
+    affects: ["engine", "embeddings", "vector"]
+
+# =============================================================================
+# OpenTelemetry Configuration
+# =============================================================================
+opentelemetry:
+  # Exporter configuration
+  exporter:
+    type: "otlp"
+    endpoint: "http://jaeger:4317"
+    protocol: "grpc"
+    timeout_seconds: 30
+    compression: "gzip"
+
+  # Service identification
+  resource:
+    service_name_prefix: "semantic-kernel"
+    deployment_environment: "development"
+    attributes:
+      - "service.namespace=semantic-kernel-app"
+      - "deployment.environment=${ENVIRONMENT:-development}"
+
+  # Trace configuration
+  traces:
+    sampler: "parentbased_traceidratio"
+    sampling_rate: 1.0
+    max_attributes_per_span: 128
+    max_events_per_span: 128
+    max_links_per_span: 128
+
+  # Metrics configuration
+  metrics:
+    enabled: true
+    export_interval_ms: 60000
+    export_timeout_ms: 30000
+
+  # Logs configuration
+  logs:
+    enabled: true
+    include_trace_context: true
+
+# =============================================================================
+# Jaeger Configuration
+# =============================================================================
+jaeger:
+  service_name: "jaeger"
+  image: "jaegertracing/all-in-one:1.52"
+
+  ports:
+    ui: 16686
+    collector_grpc: 4317
+    collector_http: 4318
+    zipkin: 9411
+
+  environment:
+    COLLECTOR_OTLP_ENABLED: "true"
+    SPAN_STORAGE_TYPE: "badger"
+    BADGER_EPHEMERAL: "false"
+    BADGER_DIRECTORY_VALUE: "/badger/data"
+    BADGER_DIRECTORY_KEY: "/badger/key"
+
+  volumes:
+    - "jaeger-data:/badger"
+
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: "512M"
+    reservations:
+      cpus: "0.5"
+      memory: "256M"
+
+  healthcheck:
+    test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:14269/"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+
+# =============================================================================
+# Per-Service Tracing Configuration
+# =============================================================================
+services:
+  engine:
+    instrumentation:
+      - "semantic_kernel"
+      - "http_client"
+      - "grpc"
+      - "redis"
+    span_attributes:
+      - "sk.kernel.name"
+      - "sk.plugin.name"
+      - "sk.function.name"
+      - "sk.planner.type"
+    custom_spans:
+      - name: "kernel_invocation"
+        attributes: ["prompt_tokens", "completion_tokens", "model"]
+      - name: "plugin_execution"
+        attributes: ["plugin_name", "function_name", "duration_ms"]
+      - name: "memory_retrieval"
+        attributes: ["collection", "query_count", "relevance_score"]
+
+  embeddings:
+    instrumentation:
+      - "pytorch"
+      - "http_server"
+      - "gpu"
+    span_attributes:
+      - "embedding.model"
+      - "embedding.dimensions"
+      - "batch_size"
+      - "gpu.memory_used_mb"
+    custom_spans:
+      - name: "embedding_generation"
+        attributes: ["text_length", "model", "duration_ms", "gpu_utilization"]
+      - name: "batch_processing"
+        attributes: ["batch_size", "total_tokens", "throughput"]
+
+  vector:
+    instrumentation:
+      - "qdrant"
+      - "http_server"
+    span_attributes:
+      - "collection_name"
+      - "vector_count"
+      - "search_limit"
+    custom_spans:
+      - name: "vector_search"
+        attributes: ["query_vector_dim", "top_k", "score_threshold"]
+      - name: "index_operation"
+        attributes: ["operation_type", "vectors_affected"]
+
+  backend:
+    instrumentation:
+      - "aspnetcore"
+      - "http_client"
+      - "npgsql"
+      - "redis"
+    span_attributes:
+      - "http.method"
+      - "http.route"
+      - "http.status_code"
+      - "db.statement"
+
+  gateway:
+    instrumentation:
+      - "aspnetcore"
+      - "http_client"
+    span_attributes:
+      - "http.method"
+      - "http.route"
+      - "upstream.service"
+      - "rate_limit.remaining"
+
+# =============================================================================
+# Agent-Specific Tracing
+# =============================================================================
+agent_tracing:
+  # Trace AI agent decision-making
+  decisions:
+    enabled: true
+    capture_reasoning: true
+    max_reasoning_length: 1000
+
+  # Trace tool/function calls
+  tool_calls:
+    enabled: true
+    capture_inputs: true
+    capture_outputs: true
+    max_content_length: 5000
+
+  # Trace memory operations
+  memory:
+    enabled: true
+    capture_queries: true
+    capture_results: false # Privacy: don't store retrieved content
+
+  # Trace planner operations
+  planner:
+    enabled: true
+    capture_plan: true
+    capture_steps: true
+
+  # Subagent tracing
+  subagents:
+    enabled: true
+    propagate_context: true
+    capture_handoff: true
+    attributes:
+      - "subagent.task_type"
+      - "subagent.duration_ms"
+      - "subagent.success"
+
+# =============================================================================
+# GPU Metrics Collection
+# =============================================================================
+gpu_metrics:
+  enabled: true
+  collection_interval_seconds: 5
+
+  metrics:
+    - name: "gpu.utilization"
+      type: "gauge"
+      unit: "percent"
+      description: "GPU utilization percentage"
+
+    - name: "gpu.memory.used"
+      type: "gauge"
+      unit: "bytes"
+      description: "GPU memory used"
+
+    - name: "gpu.memory.free"
+      type: "gauge"
+      unit: "bytes"
+      description: "GPU memory free"
+
+    - name: "gpu.temperature"
+      type: "gauge"
+      unit: "celsius"
+      description: "GPU temperature"
+
+    - name: "gpu.power.usage"
+      type: "gauge"
+      unit: "watts"
+      description: "GPU power consumption"
+
+  labels:
+    - "gpu_index"
+    - "gpu_name"
+    - "service_name"
+
+# =============================================================================
+# Alerting Rules
+# =============================================================================
+alerts:
+  high_latency:
+    condition: "span.duration_ms > 5000"
+    severity: "warning"
+    services: ["engine", "embeddings"]
+    action: "notify"
+
+  error_rate:
+    condition: "error_rate > 0.05"
+    severity: "critical"
+    services: ["all"]
+    action: "page"
+
+  gpu_memory_high:
+    condition: "gpu.memory.utilization > 0.90"
+    severity: "warning"
+    services: ["embeddings", "engine", "vector"]
+    action: "notify"
+
+  trace_sampling_degraded:
+    condition: "sampling_rate < 0.5"
+    severity: "info"
+    action: "log"
+
+# =============================================================================
+# Environment Variables Template
+# =============================================================================
+env_template: |
+  # OpenTelemetry Configuration
+  OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+  OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+  OTEL_SERVICE_NAME=${SERVICE_NAME}
+  OTEL_RESOURCE_ATTRIBUTES=service.namespace=semantic-kernel-app,deployment.environment=${ENVIRONMENT:-development}
+  OTEL_TRACES_SAMPLER=parentbased_traceidratio
+  OTEL_TRACES_SAMPLER_ARG=1.0
+
+  # Tracing Toggles
+  TRACING_ENABLED=true
+  AGENT_TRACING_ENABLED=true
+  GPU_METRICS_ENABLED=true
+
+# =============================================================================
+# Docker Compose Service Definition
+# =============================================================================
+docker_compose:
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: semantic-kernel-jaeger
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_COLLECTOR_GRPC:-4317}:4317"
+      - "${JAEGER_COLLECTOR_HTTP:-4318}:4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY_VALUE=/badger/data
+      - BADGER_DIRECTORY_KEY=/badger/key
+    volumes:
+      - jaeger-data:/badger
+    networks:
+      - internal-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:14269/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# =============================================================================
+# Related Documentation
+# =============================================================================
+related_documentation:
+  - ".config/services.yml: Service definitions"
+  - ".config/optimization-toggles.yml: Performance toggles"
+  - ".config/gpu-resources.yml: GPU configuration"
+  - "docker-compose.yml: Container orchestration"
+  - "https://opentelemetry.io/docs/: OpenTelemetry docs"
+  - "https://www.jaegertracing.io/docs/: Jaeger docs"

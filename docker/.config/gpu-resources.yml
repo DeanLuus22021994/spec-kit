@@ -1,0 +1,468 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# GPU Resource Partitioning Configuration
+# Optimized for RTX 3050 6GB with CUDA 13.0
+
+metadata: &metadata
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: config
+  keywords:
+    - gpu
+    - cuda
+    - vram
+    - memory
+    - partitioning
+    - optimization
+    - nvidia
+    - rtx3050
+
+<<: *metadata
+
+# =============================================================================
+# Host GPU Specifications (Verified 2025-11-25)
+# =============================================================================
+host_gpu:
+  verified: true
+  verification_date: "2025-11-25"
+
+  device:
+    name: "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
+    index: 0
+    compute_capability: "8.6"
+    architecture: "Ampere"
+
+  memory:
+    total_mib: 6144 # 6 GB (verified via nvidia-smi)
+    usable_mib: 5632 # After system reserve
+    system_reserve_mib: 512
+    # At inspection: 275 MiB used, 5728 MiB free
+
+  driver:
+    version: "581.57" # Verified via nvidia-smi
+    cuda_version: "13.0" # Verified via nvcc --version
+    cudnn_version: "9.1.2"
+    cuda_build: "V13.0.88"
+
+  docker_support:
+    nvidia_runtime: true
+    runtimes: ["io.containerd.runc.v2", "nvidia", "runc"]
+    default_runtime: "runc"
+    kernel: "6.6.87.2-microsoft-standard-WSL2"
+
+# =============================================================================
+# Real-Time Optimization Toggles
+# =============================================================================
+toggles:
+  # Master GPU toggle - disables all GPU acceleration when false
+  gpu_enabled:
+    value: true
+    description: "Master toggle for GPU acceleration"
+    hot_reload: true
+    env_var: "GPU_ENABLED"
+
+  # Mixed precision (FP16) - faster but slightly less accurate
+  mixed_precision:
+    value: true
+    description: "Enable FP16 mixed precision for faster inference"
+    hot_reload: true
+    env_var: "CUDA_MIXED_PRECISION"
+    memory_savings: "~40%"
+
+  # Flash attention - memory efficient attention mechanism
+  flash_attention:
+    value: true
+    description: "Enable flash attention for memory efficiency"
+    hot_reload: true
+    env_var: "ENABLE_FLASH_ATTENTION"
+    memory_savings: "~30%"
+
+  # TF32 for matrix operations - good balance of speed/accuracy
+  tf32_enabled:
+    value: true
+    description: "Enable TensorFloat-32 for matmul operations"
+    hot_reload: true
+    env_var: "CUDA_TF32_ENABLED"
+
+  # Memory pool - pre-allocate GPU memory
+  memory_pool:
+    value: true
+    description: "Enable CUDA memory pooling"
+    hot_reload: false # Requires restart
+    env_var: "CUDA_MEMORY_POOL"
+
+  # Dynamic batching - adjust batch size based on memory
+  dynamic_batching:
+    value: true
+    description: "Dynamically adjust batch sizes based on available memory"
+    hot_reload: true
+    env_var: "ENABLE_DYNAMIC_BATCHING"
+
+  # Time-sliced GPU sharing (vs MPS)
+  time_sliced_sharing:
+    value: true
+    description: "Use time-sliced GPU sharing instead of MPS"
+    hot_reload: false
+    env_var: "GPU_TIME_SLICED"
+    reason: "Recommended for 6GB VRAM constraint"
+
+  # Aggressive memory cleanup
+  aggressive_gc:
+    value: true
+    description: "Aggressive garbage collection of unused CUDA memory"
+    hot_reload: true
+    env_var: "CUDA_AGGRESSIVE_GC"
+
+# =============================================================================
+# VRAM Partitioning
+# =============================================================================
+# Total: 6144 MB | Target: 80% (4915 MB) | Safety: 5% (307 MB) | Effective: 75% (4608 MB)
+# Reserved: 1536 MB (25% - system + safety overhead)
+vram_partitioning:
+  strategy: "time_sliced" # time_sliced | mps | exclusive
+
+  # Target utilization settings
+  utilization:
+    target_percent: 80
+    safety_overhead_percent: 5
+    effective_percent: 75
+    total_mb: 6144
+    target_mb: 4915 # 80% of 6144
+    safety_mb: 307 # 5% of 6144
+    effective_mb: 4608 # 75% of 6144 (actual usable)
+    reserved_mb: 1536 # 25% reserved (system + overhead)
+
+  # Service allocations (must sum to <= effective_mb: 4608 MB)
+  allocations:
+    embeddings:
+      service_name: "embeddings"
+      priority: 1 # Highest priority
+      allocation_mb: 2458 # ~53% of effective (primary workload)
+      min_mb: 1536
+      max_mb: 3072
+      fraction: 0.40 # CUDA_MEMORY_FRACTION (of total)
+      description: "Primary GPU workload for embedding generation"
+      pytorch_config:
+        max_split_size_mb: 512
+        expandable_segments: true
+      environment:
+        - "PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512,expandable_segments:True"
+        - "CUDA_MEMORY_FRACTION=0.40"
+
+    engine:
+      service_name: "engine"
+      priority: 2
+      allocation_mb: 1382 # ~30% of effective
+      min_mb: 768
+      max_mb: 1536
+      fraction: 0.225
+      description: "Semantic Kernel inference and caching"
+      environment:
+        - "PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:256,expandable_segments:True"
+        - "CUDA_MEMORY_FRACTION=0.225"
+
+    vector:
+      service_name: "vector"
+      priority: 3
+      allocation_mb: 768 # ~17% of effective
+      min_mb: 256
+      max_mb: 1024
+      fraction: 0.125
+      description: "Qdrant HNSW index operations"
+      environment:
+        - "CUDA_MEMORY_FRACTION=0.125"
+
+    system_reserve:
+      allocation_mb: 1536
+      description: "Reserved for CUDA runtime, driver overhead, and 5% safety buffer"
+      fixed: true
+
+  # Total allocated check
+  validation:
+    total_allocated_mb: 4608 # embeddings + engine + vector
+    reserved_mb: 1536 # system + safety
+    remaining_mb: 0
+    utilization_percent: 75 # Effective utilization
+    target_percent: 80 # Target before safety
+    safety_overhead_percent: 5 # Safety margin
+
+# =============================================================================
+# Service Priority & Scheduling
+# =============================================================================
+scheduling:
+  # Priority-based GPU access
+  priorities:
+    - service: embeddings
+      priority: 1
+      preemptible: false
+      gpu_time_slice_ms: 100
+
+    - service: engine
+      priority: 2
+      preemptible: true
+      gpu_time_slice_ms: 50
+
+    - service: vector
+      priority: 3
+      preemptible: true
+      gpu_time_slice_ms: 25
+
+  # Concurrent execution rules
+  concurrency:
+    max_concurrent_gpu_services: 2
+    preferred_pairs:
+      - ["embeddings", "vector"] # Can run together (3.5GB)
+      - ["engine", "vector"] # Can run together (2GB)
+    avoid_pairs:
+      - ["embeddings", "engine"] # Would exceed VRAM (4.5GB)
+
+  # Fallback behavior when GPU unavailable
+  fallback:
+    embeddings:
+      action: "queue"
+      timeout_ms: 30000
+      cpu_fallback: false
+    engine:
+      action: "queue"
+      timeout_ms: 10000
+      cpu_fallback: true
+    vector:
+      action: "cpu_fallback"
+      timeout_ms: 5000
+      cpu_fallback: true
+
+# =============================================================================
+# Memory Management
+# =============================================================================
+memory_management:
+  # CUDA memory allocator settings
+  allocator:
+    backend: "cudaMallocAsync" # Modern async allocator
+    max_split_size_mb: 512
+    garbage_collection_threshold: 0.8
+
+  # Memory cleanup triggers
+  cleanup:
+    on_idle_seconds: 30
+    on_oom: true
+    aggressive_mode: true
+
+  # Memory monitoring
+  monitoring:
+    enabled: true
+    interval_seconds: 5
+    alert_threshold_percent: 90
+    log_allocations: false # Toggle for debugging
+
+  # PyTorch-specific settings
+  pytorch:
+    cuda_alloc_conf: "max_split_size_mb:512,expandable_segments:True,garbage_collection_threshold:0.8"
+    cudnn_benchmark: true
+    cudnn_deterministic: false
+    torch_compile: true
+    memory_efficient_attention: true
+
+# =============================================================================
+# Docker GPU Configuration
+# =============================================================================
+docker_config:
+  runtime: "nvidia"
+
+  # Target utilization: 80% with 5% safety = 75% effective
+  utilization_policy:
+    target_percent: 80
+    safety_overhead_percent: 5
+    effective_percent: 75
+
+  # Default environment for GPU services
+  default_environment:
+    - "NVIDIA_VISIBLE_DEVICES=all"
+    - "NVIDIA_DRIVER_CAPABILITIES=compute,utility"
+    - "CUDA_DEVICE_ORDER=PCI_BUS_ID"
+
+  # Per-service deploy configurations
+  services:
+    embeddings:
+      deploy:
+        resources:
+          limits:
+            cpus: "2.0"
+            memory: 2G
+          reservations:
+            cpus: "1.0"
+            memory: 1G
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities: [gpu]
+      environment:
+        - "PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512,expandable_segments:True"
+        - "CUDA_MEMORY_FRACTION=0.40"
+        - "CUDA_VISIBLE_DEVICES=0"
+
+    engine:
+      deploy:
+        resources:
+          limits:
+            cpus: "2.0"
+            memory: 1G
+          reservations:
+            cpus: "1.0"
+            memory: 512M
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities: [gpu]
+      environment:
+        - "PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:256,expandable_segments:True"
+        - "CUDA_MEMORY_FRACTION=0.225"
+        - "CUDA_VISIBLE_DEVICES=0"
+
+    vector:
+      deploy:
+        resources:
+          limits:
+            cpus: "2.0"
+            memory: 1G
+          reservations:
+            cpus: "1.0"
+            memory: 512M
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities: [gpu]
+      environment:
+        - "CUDA_MEMORY_FRACTION=0.125"
+        - "CUDA_VISIBLE_DEVICES=0"
+
+# =============================================================================
+# Performance Profiles
+# =============================================================================
+profiles:
+  # Maximum performance - 80% target with 5% safety (75% effective)
+  maximum:
+    description: "Maximum GPU utilization (80% target, 5% safety overhead)"
+    target_percent: 80
+    safety_percent: 5
+    effective_percent: 75
+    toggles:
+      gpu_enabled: true
+      mixed_precision: true
+      flash_attention: true
+      tf32_enabled: true
+      memory_pool: true
+      dynamic_batching: true
+      aggressive_gc: false
+    allocations:
+      embeddings: 2458 # ~53% of 4608 MB effective
+      engine: 1382 # ~30% of 4608 MB effective
+      vector: 768 # ~17% of 4608 MB effective
+
+  # Balanced - default profile (same as maximum with aggressive GC)
+  balanced:
+    description: "Balanced performance (80% target, 5% safety, aggressive cleanup)"
+    target_percent: 80
+    safety_percent: 5
+    effective_percent: 75
+    toggles:
+      gpu_enabled: true
+      mixed_precision: true
+      flash_attention: true
+      tf32_enabled: true
+      memory_pool: true
+      dynamic_batching: true
+      aggressive_gc: true
+    allocations:
+      embeddings: 2458
+      engine: 1382
+      vector: 768
+
+  # Conservative - 70% target with 10% safety (60% effective)
+  conservative:
+    description: "Conservative memory usage (70% target, 10% safety)"
+    target_percent: 70
+    safety_percent: 10
+    effective_percent: 60
+    toggles:
+      gpu_enabled: true
+      mixed_precision: false # FP32 for accuracy
+      flash_attention: true
+      tf32_enabled: false
+      memory_pool: false
+      dynamic_batching: true
+      aggressive_gc: true
+    allocations:
+      embeddings: 1843 # ~50% of 3686 MB (60% of 6144)
+      engine: 1106 # ~30% of 3686 MB
+      vector: 737 # ~20% of 3686 MB
+
+  # CPU-only - GPU disabled
+  cpu_only:
+    description: "Disable GPU, use CPU for all operations"
+    target_percent: 0
+    safety_percent: 0
+    effective_percent: 0
+    toggles:
+      gpu_enabled: false
+      mixed_precision: false
+      flash_attention: false
+      tf32_enabled: false
+      memory_pool: false
+      dynamic_batching: false
+      aggressive_gc: false
+    allocations:
+      embeddings: 0
+      engine: 0
+      vector: 0
+
+  # Active profile
+  active_profile: "balanced"
+
+# =============================================================================
+# Monitoring & Alerts
+# =============================================================================
+monitoring:
+  enabled: true
+
+  metrics:
+    gpu_utilization:
+      enabled: true
+      interval_seconds: 5
+    memory_usage:
+      enabled: true
+      interval_seconds: 5
+    temperature:
+      enabled: true
+      interval_seconds: 10
+    power_usage:
+      enabled: true
+      interval_seconds: 10
+
+  alerts:
+    memory_high:
+      threshold_percent: 90
+      action: "warn"
+    memory_critical:
+      threshold_percent: 95
+      action: "evict_lowest_priority"
+    temperature_high:
+      threshold_celsius: 85
+      action: "throttle"
+    oom_detected:
+      action: "restart_service"
+
+  # Prometheus metrics endpoint
+  prometheus:
+    enabled: true
+    port: 9400
+    path: "/metrics"
+
+# =============================================================================
+# Related Documentation
+# =============================================================================
+related_documentation:
+  - ".config/services.yml: Service resource allocations"
+  - ".config/infrastructure.yml: Infrastructure configuration"
+  - ".config/semantic-kernel.yml: Semantic Kernel GPU settings"
+  - ".config/optimization-toggles.yml: Global optimization toggles"
+  - ".config/copilot/workflows/local-docker-stack.yml: Docker stack integration"
+  - "docker-compose.yml: Docker service definitions"

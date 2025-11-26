@@ -1,0 +1,128 @@
+# GitHub Copilot Context: Frontend Configuration
+# Path: src/frontend/.config/
+# Purpose: Centralized configuration for React + TypeScript frontend
+
+context:
+  directory: "src/frontend/.config/"
+  purpose: "Frontend build, lint, and type-checking configuration"
+  pattern: "Aligns with tests/.config/ and tools/.config/ organization"
+
+configurations:
+  typescript:
+    file: "tsconfig.json"
+    purpose: "TypeScript compiler configuration for React app"
+    key_settings:
+      target: "ES2020"
+      jsx: "react"
+      lib: ["ES2020", "DOM", "DOM.Iterable"]
+      outDir: "../dist"
+      strict: true
+    includes: ["../src/**/*"]
+    excludes: ["../node_modules", "../dist"]
+
+  webpack:
+    file: "webpack.config.js"
+    purpose: "Build configuration and dev server setup"
+    key_features:
+      entry: "./src/main.ts"
+      output: "../dist/bundle.[contenthash].js"
+      dev_server_port: 3000
+      hot_reload: true
+      html_plugin: "Injects bundle into public/index.html"
+    loaders:
+      - "ts-loader (TypeScript to JavaScript)"
+      - "style-loader + css-loader (CSS bundling)"
+    plugins:
+      - "HtmlWebpackPlugin (HTML generation)"
+
+  eslint:
+    file: ".eslintrc.json"
+    purpose: "JavaScript/TypeScript linting rules"
+    extends:
+      - "eslint:recommended"
+      - "plugin:@typescript-eslint/recommended"
+      - "plugin:react/recommended"
+      - "plugin:prettier/recommended"
+    plugins:
+      - "@typescript-eslint"
+      - "react"
+    overrides:
+      - files: ["webpack.config.js"]
+        env: "node"
+        rules: "Disable TypeScript checks for CommonJS config"
+
+  prettier:
+    file: ".prettierrc"
+    purpose: "Code formatting rules"
+    integration: "Works with eslint-plugin-prettier"
+
+npm_scripts:
+  dev: "webpack serve --config .config/webpack.config.js --mode development --hot"
+  start: "webpack serve --config .config/webpack.config.js --mode development"
+  build: "webpack --config .config/webpack.config.js --mode production"
+  lint: "npx eslint 'src/**/*.{ts,tsx,js,jsx}' --max-warnings=0"
+  test: "jest"
+
+dependencies:
+  runtime:
+    - "react@17.0.2 - UI framework"
+    - "react-dom@17.0.2 - DOM rendering"
+    - "semantic-ui-react@2.1.5 - UI components"
+    - "axios@1.13.2 - HTTP client"
+
+  dev_tools:
+    - "typescript@4.4.3 - Type system"
+    - "webpack@5.103.0 - Bundler"
+    - "ts-loader@9.5.4 - TypeScript compilation"
+    - "eslint@8.57.1 - Linting"
+    - "prettier@3.6.2 - Formatting"
+
+architecture:
+  pattern: "React SPA (Single Page Application)"
+  entry_point: "src/main.ts"
+  output: "dist/bundle.[contenthash].js"
+  serving:
+    development: "webpack-dev-server on :3000"
+    production: "Static files served via gateway (Nginx)"
+
+file_structure:
+  before_refactoring: |
+    src/frontend/
+    +-- .eslintrc.json      # Config at root
+    +-- .prettierrc         # Config at root
+    +-- webpack.config.js   # Config at root
+    +-- tsconfig.json       # Config at root
+    +-- package.json
+    +-- public/
+    +-- src/
+
+  after_refactoring: |
+    src/frontend/
+    +-- .config/            # Centralized configuration
+    |   +-- copilot/
+    |   |   +-- index.yml   # This file
+    |   +-- .eslintrc.json
+    |   +-- .prettierrc
+    |   +-- webpack.config.js
+    |   +-- tsconfig.json
+    +-- package.json
+    +-- public/
+    +-- src/
+
+benefits:
+  - "Consistent with tests/.config/ and tools/.config/ patterns"
+  - "Cleaner frontend/ root (4 config files to 1 directory)"
+  - "Easier configuration discovery and maintenance"
+  - "GitHub Copilot semantic search enabled via this context file"
+  - "Separation of concerns (code vs. configuration)"
+
+usage_notes:
+  - "npm scripts updated to reference .config/webpack.config.js"
+  - "webpack.config.js uses __dirname to resolve paths relative to .config/"
+  - "tsconfig.json uses ../ paths for outDir, include, exclude"
+  - "eslint and prettier work from .config/ directory without path changes"
+
+related_configs:
+  - "tests/.config/ - Test configuration organization"
+  - "tools/.config/ - Python tools configuration"
+  - ".config/copilot/references/config-files.yml - Project-wide config index"

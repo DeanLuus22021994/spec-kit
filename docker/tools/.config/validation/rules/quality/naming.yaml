@@ -1,0 +1,195 @@
+# Quality: Naming Convention Rules
+# Purpose: Enforce consistent naming conventions in YAML
+# Scope: All YAML files in project
+# Package: quality
+
+---
+- ruleID: yaml-key-naming-kebab-case
+  description: |
+    Recommends kebab-case for YAML keys (words-separated-by-hyphens).
+
+    Kebab-case is the most common convention in YAML:
+    - database-url (not database_url or databaseUrl)
+    - max-connections (not maxConnections or MAX_CONNECTIONS)
+    - api-timeout (not api_timeout or apiTimeout)
+
+    Benefits:
+    - Consistent with most YAML ecosystems
+    - Readable without camelCase complexity
+    - Compatible with property parsing
+
+    This is a style recommendation, not a strict requirement.
+  labels:
+    - "yaml/naming"
+    - "yaml/kebab-case"
+    - "validation/style"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s+[a-z]+_[a-z_]+:|^\\s+[a-z]+[A-Z][a-zA-Z]+:"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Key uses snake_case or camelCase instead of kebab-case.
+
+    Consider using kebab-case for consistency:
+
+    Current:
+    ```yaml
+    database_url: localhost
+    maxConnections: 100
+    ```
+
+    Recommended:
+    ```yaml
+    database-url: localhost
+    max-connections: 100
+    ```
+
+    Kebab-case is the YAML community standard.
+  effort: 1
+  category: optional
+  links:
+    - url: https://developers.google.com/style/filenames
+      title: "Kebab-case Naming Guidelines"
+
+---
+- ruleID: yaml-key-naming-consistency
+  description: |
+    Detects inconsistent naming styles within the same YAML file.
+
+    Mixing naming conventions reduces readability:
+    - Some keys in kebab-case: database-url
+    - Some keys in snake_case: max_connections
+    - Some keys in camelCase: apiTimeout
+
+    Pick one convention and use it consistently throughout the file.
+    Kebab-case is recommended for YAML, but any consistent style works.
+  labels:
+    - "yaml/naming"
+    - "yaml/consistency"
+    - "validation/uniformity"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s+[a-z]+-[a-z-]+:[^\\n]*\\n[\\s\\S]*?^\\s+[a-z]+_[a-z_]+:|^\\s+[a-z]+_[a-z_]+:[^\\n]*\\n[\\s\\S]*?^\\s+[a-z]+-[a-z-]+:"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Inconsistent key naming conventions detected.
+
+    Choose one style and use consistently:
+
+    Mixed (inconsistent):
+    ```yaml
+    database-url: localhost
+    max_connections: 100
+    apiTimeout: 30
+    ```
+
+    Consistent (kebab-case):
+    ```yaml
+    database-url: localhost
+    max-connections: 100
+    api-timeout: 30
+    ```
+
+    Consistency improves maintainability.
+  effort: 2
+  category: optional
+  links:
+    - url: https://yaml.org/spec/1.2/spec.html
+      title: "YAML Style Guidelines"
+
+---
+- ruleID: yaml-anchor-naming-descriptive
+  description: |
+    Encourages descriptive anchor names instead of generic ones.
+
+    Good anchor names describe what they represent:
+    - &databaseConfig, &productionSettings, &testFixture
+
+    Avoid generic names:
+    - &config, &data, &item, &x, &temp
+
+    Descriptive names:
+    - Make references clearer
+    - Prevent naming conflicts
+    - Improve maintainability
+    - Aid understanding without comments
+  labels:
+    - "yaml/naming"
+    - "yaml/anchors"
+    - "validation/clarity"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)&(config|data|item|temp|x|y|z|test|obj)\\b"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Anchor uses generic name instead of descriptive one.
+
+    Use specific, meaningful names:
+
+    Generic:
+    ```yaml
+    &config
+    &data
+    &item
+    ```
+
+    Descriptive:
+    ```yaml
+    &databaseConfig
+    &customerData
+    &productItem
+    ```
+
+    Descriptive names make YAML self-documenting.
+  effort: 1
+  category: optional
+  links:
+    - url: https://yaml.org/spec/1.2/spec.html#id2785586
+      title: "YAML Anchor Best Practices"
+
+---
+- ruleID: yaml-environment-variable-naming
+  description: |
+    Validates environment variable references use UPPER_SNAKE_CASE.
+
+    Environment variables conventionally use uppercase with underscores:
+    - DATABASE_URL, API_KEY, MAX_CONNECTIONS
+
+    This distinguishes them from regular YAML keys and makes it clear
+    they reference external configuration.
+
+    Common patterns:
+    - ${DATABASE_URL}
+    - ${ENV:API_KEY}
+    - $DATABASE_URL
+  labels:
+    - "yaml/naming"
+    - "yaml/environment"
+    - "validation/conventions"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)\\$\\{?[a-z][a-zA-Z0-9_-]*\\}?"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Environment variable reference uses lowercase.
+
+    Use UPPER_SNAKE_CASE for environment variables:
+
+    Current:
+    ```yaml
+    database_url: ${database_url}
+    api_key: $apiKey
+    ```
+
+    Recommended:
+    ```yaml
+    database-url: ${DATABASE_URL}
+    api-key: ${API_KEY}
+    ```
+
+    Uppercase distinguishes env vars from regular config.
+  effort: 1
+  category: optional
+  links:
+    - url: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html
+      title: "Environment Variable Naming Convention"

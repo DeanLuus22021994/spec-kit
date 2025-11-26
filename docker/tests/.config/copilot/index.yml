@@ -1,0 +1,175 @@
+# Tests Copilot Context Index
+# Master orchestrator for test suite context discovery and on-demand loading
+# Reference this file instead of reading all YAML files
+version: "1.0.0"
+description: "Single entry point for semantic search and test context loading"
+
+usage:
+  primary_instruction: "Reference tests/.config/copilot/index.yml for test context discovery"
+  semantic_search: "Load specific category files on-demand based on user query"
+  avoid: "Do not load entire context - use category mapping to load relevant files only"
+
+categories:
+  docker:
+    description: "Docker configuration, containerization, and baked dependencies"
+    path: "tests/.config/copilot/"
+    files:
+      docker:
+        file: "docker.yml"
+        keywords:
+          [
+            "docker",
+            "dockerfile",
+            "compose",
+            "container",
+            "baked",
+            "dependencies",
+            "volumes",
+            "cache",
+          ]
+        contains:
+          [
+            "dockerfile_structure",
+            "baked_dependencies",
+            "named_volumes",
+            "multi_stage_builds",
+            "health_checks",
+            "docker_compose_services",
+          ]
+
+  playwright:
+    description: "Playwright test configuration, fixtures, and patterns"
+    path: "tests/.config/copilot/"
+    files:
+      playwright:
+        file: "playwright.yml"
+        keywords:
+          [
+            "playwright",
+            "e2e",
+            "tests",
+            "fixtures",
+            "config",
+            "browsers",
+            "page objects",
+          ]
+        contains:
+          [
+            "test_structure",
+            "page_object_model",
+            "fixtures",
+            "test_patterns",
+            "authentication",
+            "api_testing",
+          ]
+
+  scripts:
+    description: "Test automation scripts and workflows"
+    path: "tests/.config/copilot/"
+    files:
+      scripts:
+        file: "scripts.yml"
+        keywords:
+          ["scripts", "automation", "workflow", "run-tests", "cleanup", "seed"]
+        contains:
+          [
+            "script_locations",
+            "common_workflows",
+            "health_checks",
+            "test_execution",
+            "cleanup_procedures",
+          ]
+
+  fixtures:
+    description: "Test data, fixtures, and configuration"
+    path: "tests/.config/copilot/"
+    files:
+      fixtures:
+        file: "fixtures.yml"
+        keywords:
+          ["fixtures", "test data", "configuration", "environment", "setup"]
+        contains:
+          [
+            "test_data_structure",
+            "fixture_patterns",
+            "environment_config",
+            "data_seeding",
+          ]
+
+context_loading_strategy:
+  on_query:
+    - "Parse user query for keywords and intent"
+    - "Map keywords to relevant category + file using this index"
+    - "Load ONLY the specific YAML file(s) needed"
+    - "Use structured YAML data instead of reading prose documentation"
+
+  examples:
+    docker_question:
+      query: "How are npm dependencies baked into the test container?"
+      load: "tests/.config/copilot/docker.yml"
+      reason: "Keywords: 'npm', 'dependencies', 'baked', 'container'"
+
+    playwright_pattern:
+      query: "What's the page object model structure?"
+      load: "tests/.config/copilot/playwright.yml"
+      reason: "Keywords: 'page object', 'model', 'structure'"
+
+    script_workflow:
+      query: "How do I run tests in the Docker container?"
+      load: "tests/.config/copilot/scripts.yml"
+      reason: "Keywords: 'run tests', 'docker', 'container'"
+
+    fixture_setup:
+      query: "Where are test fixtures defined?"
+      load: "tests/.config/copilot/fixtures.yml"
+      reason: "Keywords: 'fixtures', 'defined', 'test data'"
+
+    multiple_contexts:
+      query: "How do I add a new test with Docker and fixtures?"
+      load:
+        - "tests/.config/copilot/docker.yml"
+        - "tests/.config/copilot/playwright.yml"
+        - "tests/.config/copilot/fixtures.yml"
+      reason: "Keywords: 'new test', 'docker', 'fixtures' - multiple contexts needed"
+
+optimization_benefits:
+  token_efficiency: "Load specific 50-150 line YAML files instead of monolithic documentation"
+  semantic_search: "Keywords and category metadata enable precise context discovery"
+  maintainability: "Modular files easier to update without affecting unrelated context"
+  scalability: "Add new context files without bloating existing ones"
+  clarity: "Clear category separation (docker, playwright, scripts, fixtures)"
+
+file_locations:
+  docker:
+    dockerfile: "tests/.config/docker/Dockerfile"
+    compose: "tests/.config/docker/docker-compose.test.yml"
+    dockerignore: "tests/.config/docker/.dockerignore"
+
+  scripts:
+    directory: "tests/.config/scripts/"
+    files:
+      - "run-tests.sh"
+      - "cleanup.sh"
+      - "seed-test-data.sh"
+
+  documentation:
+    directory: "tests/.config/documentation/"
+    files:
+      - "PLAN.md"
+      - "IMPLEMENTATION.md"
+      - "BAKED_DEPENDENCIES.md"
+
+  playwright:
+    config: "tests/playwright.config.ts"
+    pages: "tests/pages/"
+    fixtures: "tests/fixtures/"
+    e2e: "tests/e2e/"
+
+migration_notes:
+  from: "tests/ (flat structure with mixed concerns)"
+  to: "tests/.config/ (organized, category-based)"
+  benefits:
+    - "Clear separation of configuration from test code"
+    - "Easier discovery of Docker, script, and documentation files"
+    - "Pattern alignment with root .config/ directory"
+    - "Improved maintainability and navigation"

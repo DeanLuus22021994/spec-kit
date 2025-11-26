@@ -1,0 +1,55 @@
+{
+  "name": "semantic-kernel-frontend",
+  "version": "1.0.0",
+  "description": "Frontend application for the Semantic Kernel project",
+  "main": "src/main.ts",
+  "scripts": {
+    "dev": "webpack serve --config .config/webpack.config.js --mode development --hot",
+    "start": "webpack serve --config .config/webpack.config.js --mode development",
+    "build": "webpack --config .config/webpack.config.js --mode production",
+    "test": "jest",
+    "lint": "npx eslint 'src/**/*.{ts,tsx,js,jsx}' --max-warnings=0",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,css}'",
+    "lint:fix": "npx eslint 'src/**/*.{ts,tsx,js,jsx}' --fix"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "semantic-ui-css": "^2.5.0",
+    "semantic-ui-react": "^2.1.5"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.90",
+    "@types/react-dom": "^17.0.26",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "css-loader": "^7.1.2",
+    "eslint": "8.57.1",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.32.0",
+    "html-webpack-plugin": "^5.6.5",
+    "jest": "^27.0.6",
+    "prettier": "^3.6.2",
+    "style-loader": "^4.0.0",
+    "ts-jest": "^27.0.3",
+    "ts-loader": "^9.5.4",
+    "typescript": "^4.4.3",
+    "webpack": "^5.103.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^5.2.2"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all"
+  ]
+}

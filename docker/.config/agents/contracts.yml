@@ -1,0 +1,572 @@
+# Agent Responsibility Contracts & Interface Definitions
+# Defines clear boundaries, contracts, and responsibilities for each agent
+
+metadata: &metadata
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: config
+  keywords: [agents, contracts, interfaces, boundaries, responsibilities, soap, wsdl, orchestration]
+
+<<: *metadata
+
+description: |
+  Enterprise agent architecture with clear responsibility contracts,
+  interface definitions, and operational boundaries for the Semantic Kernel platform.
+  Supports SOAP/WSDL 3rd party integration with multi-agent orchestration.
+
+# =============================================================================
+# Agent Registry
+# =============================================================================
+agents:
+  orchestrator:
+    id: "agent-orchestrator"
+    name: "Orchestrator Agent"
+    version: "1.0.0"
+    tier: "core"
+
+    responsibility: |
+      Primary coordination agent responsible for decomposing complex tasks,
+      routing to specialized agents, aggregating results, and managing
+      multi-agent workflows. Acts as the central nervous system for all
+      agent-based operations.
+
+    capabilities:
+      - task_decomposition
+      - agent_routing
+      - result_aggregation
+      - workflow_coordination
+      - error_recovery
+      - parallel_execution
+
+    interfaces:
+      inbound:
+        - protocol: "HTTP/REST"
+          endpoint: "/api/orchestrator/execute"
+          methods: ["POST"]
+        - protocol: "SOAP"
+          endpoint: "/soap/orchestrator"
+          wsdl: "/wsdl/orchestrator.wsdl"
+        - protocol: "gRPC"
+          service: "OrchestratorService"
+      outbound:
+        - target: "semantic-agent"
+          protocol: "HTTP/REST"
+        - target: "embedding-agent"
+          protocol: "HTTP/REST"
+        - target: "retrieval-agent"
+          protocol: "HTTP/REST"
+        - target: "validation-agent"
+          protocol: "HTTP/REST"
+
+    contracts:
+      input:
+        task_request:
+          required: ["task_id", "task_type", "payload"]
+          optional: ["priority", "timeout_ms", "callback_url"]
+      output:
+        task_result:
+          fields: ["task_id", "status", "result", "execution_time_ms", "agent_trace"]
+
+    boundaries:
+      max_concurrent_tasks: 100
+      max_task_depth: 10
+      timeout_ms: 300000
+      retry_policy:
+        max_retries: 3
+        backoff_multiplier: 2.0
+
+    dependencies:
+      required: ["redis", "database"]
+      optional: ["jaeger"]
+
+  semantic:
+    id: "agent-semantic"
+    name: "Semantic Processing Agent"
+    version: "1.0.0"
+    tier: "ai"
+
+    responsibility: |
+      Handles natural language understanding, semantic analysis,
+      intent classification, and context management. Processes
+      user queries and generates semantic representations.
+
+    capabilities:
+      - intent_classification
+      - entity_extraction
+      - sentiment_analysis
+      - context_management
+      - query_reformulation
+      - semantic_similarity
+
+    interfaces:
+      inbound:
+        - protocol: "HTTP/REST"
+          endpoint: "/api/semantic/process"
+          methods: ["POST"]
+        - protocol: "SOAP"
+          endpoint: "/soap/semantic"
+          wsdl: "/wsdl/semantic.wsdl"
+      outbound:
+        - target: "embedding-agent"
+          protocol: "HTTP/REST"
+        - target: "llm-provider"
+          protocol: "HTTP/REST"
+
+    contracts:
+      input:
+        semantic_request:
+          required: ["text", "operation"]
+          optional: ["context_id", "language", "options"]
+      output:
+        semantic_result:
+          fields: ["intent", "entities", "confidence", "context_id"]
+
+    boundaries:
+      max_text_length: 32000
+      timeout_ms: 30000
+      rate_limit: "100/minute"
+
+    dependencies:
+      required: ["engine", "embeddings"]
+      optional: ["redis"]
+
+  embedding:
+    id: "agent-embedding"
+    name: "Embedding Generation Agent"
+    version: "1.0.0"
+    tier: "ai"
+    gpu_required: true
+
+    responsibility: |
+      GPU-accelerated embedding generation for text, documents,
+      and code. Manages embedding model lifecycle and provides
+      efficient batch processing capabilities.
+
+    capabilities:
+      - text_embedding
+      - document_embedding
+      - code_embedding
+      - batch_processing
+      - model_caching
+      - dimension_reduction
+
+    interfaces:
+      inbound:
+        - protocol: "HTTP/REST"
+          endpoint: "/api/embeddings/generate"
+          methods: ["POST"]
+        - protocol: "SOAP"
+          endpoint: "/soap/embeddings"
+          wsdl: "/wsdl/embeddings.wsdl"
+      outbound:
+        - target: "vector-store"
+          protocol: "HTTP/REST"
+        - target: "cache"
+          protocol: "Redis"
+
+    contracts:
+      input:
+        embedding_request:
+          required: ["texts"]
+          optional: ["model", "batch_size", "normalize"]
+      output:
+        embedding_result:
+          fields: ["embeddings", "dimensions", "model_used", "tokens_processed"]
+
+    boundaries:
+      max_batch_size: 100
+      max_text_length: 8192
+      timeout_ms: 60000
+      gpu_memory_fraction: 0.40
+
+    dependencies:
+      required: ["embeddings-service", "redis"]
+      optional: ["vector"]
+
+  retrieval:
+    id: "agent-retrieval"
+    name: "Retrieval Agent"
+    version: "1.0.0"
+    tier: "ai"
+
+    responsibility: |
+      Handles vector similarity search, document retrieval,
+      and RAG (Retrieval Augmented Generation) operations.
+      Manages retrieval strategies and result ranking.
+
+    capabilities:
+      - vector_search
+      - hybrid_search
+      - reranking
+      - context_expansion
+      - source_attribution
+      - relevance_scoring
+
+    interfaces:
+      inbound:
+        - protocol: "HTTP/REST"
+          endpoint: "/api/retrieval/search"
+          methods: ["POST"]
+        - protocol: "SOAP"
+          endpoint: "/soap/retrieval"
+          wsdl: "/wsdl/retrieval.wsdl"
+      outbound:
+        - target: "vector-store"
+          protocol: "HTTP/REST"
+        - target: "embedding-agent"
+          protocol: "HTTP/REST"
+
+    contracts:
+      input:
+        retrieval_request:
+          required: ["query"]
+          optional: ["top_k", "filters", "threshold", "collections"]
+      output:
+        retrieval_result:
+          fields: ["results", "total_count", "search_time_ms"]
+
+    boundaries:
+      max_top_k: 100
+      timeout_ms: 10000
+      min_threshold: 0.5
+
+    dependencies:
+      required: ["vector", "embeddings"]
+      optional: ["redis"]
+
+  generation:
+    id: "agent-generation"
+    name: "Generation Agent"
+    version: "1.0.0"
+    tier: "ai"
+
+    responsibility: |
+      Handles text generation, completion, and response synthesis.
+      Manages LLM interactions, prompt engineering, and output
+      quality control including hallucination detection.
+
+    capabilities:
+      - text_generation
+      - completion
+      - summarization
+      - prompt_engineering
+      - output_validation
+      - hallucination_check
+
+    interfaces:
+      inbound:
+        - protocol: "HTTP/REST"
+          endpoint: "/api/generation/complete"
+          methods: ["POST"]
+        - protocol: "SOAP"
+          endpoint: "/soap/generation"
+          wsdl: "/wsdl/generation.wsdl"
+      outbound:
+        - target: "llm-provider"
+          protocol: "HTTP/REST"
+        - target: "retrieval-agent"
+          protocol: "HTTP/REST"
+
+    contracts:
+      input:
+        generation_request:
+          required: ["prompt"]
+          optional: ["max_tokens", "temperature", "context", "system_prompt"]
+      output:
+        generation_result:
+          fields: ["response", "tokens_used", "finish_reason", "grounding_score"]
+
+    boundaries:
+      max_prompt_tokens: 8000
+      max_output_tokens: 4000
+      timeout_ms: 60000
+      temperature_range: [0.0, 2.0]
+
+    dependencies:
+      required: ["engine"]
+      optional: ["retrieval-agent", "redis"]
+
+  validation:
+    id: "agent-validation"
+    name: "Validation Agent"
+    version: "1.0.0"
+    tier: "business"
+
+    responsibility: |
+      Ensures data quality, schema compliance, and business rule
+      validation. Validates inputs, outputs, and intermediate
+      results throughout the agent pipeline.
+
+    capabilities:
+      - schema_validation
+      - business_rule_validation
+      - content_moderation
+      - pii_detection
+      - quality_scoring
+      - compliance_check
+
+    interfaces:
+      inbound:
+        - protocol: "HTTP/REST"
+          endpoint: "/api/validation/validate"
+          methods: ["POST"]
+        - protocol: "SOAP"
+          endpoint: "/soap/validation"
+          wsdl: "/wsdl/validation.wsdl"
+      outbound:
+        - target: "rules-engine"
+          protocol: "HTTP/REST"
+
+    contracts:
+      input:
+        validation_request:
+          required: ["data", "rules"]
+          optional: ["strict_mode", "include_warnings"]
+      output:
+        validation_result:
+          fields: ["valid", "errors", "warnings", "score"]
+
+    boundaries:
+      max_payload_size: "10MB"
+      timeout_ms: 5000
+
+    dependencies:
+      required: ["business"]
+      optional: ["redis"]
+
+# =============================================================================
+# SOAP/WSDL Service Definitions
+# =============================================================================
+soap_services:
+  enabled: true
+  base_url: "/soap"
+  wsdl_base_url: "/wsdl"
+
+  services:
+    orchestrator:
+      name: "OrchestratorService"
+      namespace: "http://semantic-kernel.local/orchestrator"
+      endpoint: "/soap/orchestrator"
+      wsdl: "/wsdl/orchestrator.wsdl"
+      operations:
+        - name: "ExecuteTask"
+          input: "ExecuteTaskRequest"
+          output: "ExecuteTaskResponse"
+          faults: ["TaskFault", "TimeoutFault"]
+        - name: "GetTaskStatus"
+          input: "GetTaskStatusRequest"
+          output: "GetTaskStatusResponse"
+          faults: ["TaskNotFoundFault"]
+        - name: "CancelTask"
+          input: "CancelTaskRequest"
+          output: "CancelTaskResponse"
+          faults: ["TaskFault"]
+
+    semantic:
+      name: "SemanticService"
+      namespace: "http://semantic-kernel.local/semantic"
+      endpoint: "/soap/semantic"
+      wsdl: "/wsdl/semantic.wsdl"
+      operations:
+        - name: "ProcessText"
+          input: "ProcessTextRequest"
+          output: "ProcessTextResponse"
+          faults: ["ProcessingFault"]
+        - name: "ClassifyIntent"
+          input: "ClassifyIntentRequest"
+          output: "ClassifyIntentResponse"
+          faults: ["ClassificationFault"]
+
+    embeddings:
+      name: "EmbeddingsService"
+      namespace: "http://semantic-kernel.local/embeddings"
+      endpoint: "/soap/embeddings"
+      wsdl: "/wsdl/embeddings.wsdl"
+      operations:
+        - name: "GenerateEmbeddings"
+          input: "GenerateEmbeddingsRequest"
+          output: "GenerateEmbeddingsResponse"
+          faults: ["EmbeddingFault", "ResourceFault"]
+
+    retrieval:
+      name: "RetrievalService"
+      namespace: "http://semantic-kernel.local/retrieval"
+      endpoint: "/soap/retrieval"
+      wsdl: "/wsdl/retrieval.wsdl"
+      operations:
+        - name: "Search"
+          input: "SearchRequest"
+          output: "SearchResponse"
+          faults: ["SearchFault"]
+        - name: "HybridSearch"
+          input: "HybridSearchRequest"
+          output: "HybridSearchResponse"
+          faults: ["SearchFault"]
+
+  message_types:
+    ExecuteTaskRequest:
+      elements:
+        - name: "taskId"
+          type: "string"
+          required: true
+        - name: "taskType"
+          type: "string"
+          required: true
+        - name: "payload"
+          type: "base64Binary"
+          required: true
+        - name: "priority"
+          type: "int"
+          required: false
+          default: 5
+        - name: "timeoutMs"
+          type: "int"
+          required: false
+          default: 30000
+
+    ExecuteTaskResponse:
+      elements:
+        - name: "taskId"
+          type: "string"
+        - name: "status"
+          type: "string"
+        - name: "result"
+          type: "base64Binary"
+        - name: "executionTimeMs"
+          type: "long"
+
+# =============================================================================
+# Inter-Agent Communication Protocol
+# =============================================================================
+communication:
+  protocol: "AMQP"
+  fallback: "HTTP/REST"
+
+  message_format:
+    version: "1.0"
+    encoding: "JSON"
+    compression: "gzip"
+
+  headers:
+    required:
+      - "X-Correlation-Id"
+      - "X-Agent-Id"
+      - "X-Timestamp"
+    optional:
+      - "X-Priority"
+      - "X-Callback-Url"
+      - "X-Trace-Id"
+
+  error_handling:
+    retry_policy:
+      max_retries: 3
+      initial_delay_ms: 100
+      max_delay_ms: 5000
+      backoff_multiplier: 2.0
+
+    circuit_breaker:
+      failure_threshold: 5
+      recovery_timeout_ms: 30000
+      half_open_requests: 3
+
+    dead_letter:
+      enabled: true
+      queue: "agent-dead-letter"
+      retention_days: 7
+
+# =============================================================================
+# Monitoring & Observability
+# =============================================================================
+monitoring:
+  tracing:
+    enabled: true
+    provider: "opentelemetry"
+    exporter: "jaeger"
+    sampling_rate: 1.0
+
+  metrics:
+    enabled: true
+    provider: "prometheus"
+    scrape_interval: "15s"
+
+    custom_metrics:
+      - name: "agent_task_duration_seconds"
+        type: "histogram"
+        labels: ["agent_id", "task_type", "status"]
+        buckets: [0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0]
+
+      - name: "agent_task_total"
+        type: "counter"
+        labels: ["agent_id", "task_type", "status"]
+
+      - name: "agent_concurrent_tasks"
+        type: "gauge"
+        labels: ["agent_id"]
+
+      - name: "soap_request_duration_seconds"
+        type: "histogram"
+        labels: ["service", "operation", "status"]
+        buckets: [0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0]
+
+  logging:
+    level: "info"
+    format: "json"
+    include_trace_id: true
+
+  alerts:
+    - name: "agent_high_error_rate"
+      condition: "error_rate > 5%"
+      severity: "critical"
+
+    - name: "agent_high_latency"
+      condition: "p99_latency > 10s"
+      severity: "warning"
+
+    - name: "soap_service_unavailable"
+      condition: "health_check_failed"
+      severity: "critical"
+
+# =============================================================================
+# Security Boundaries
+# =============================================================================
+security:
+  authentication:
+    agents:
+      method: "mTLS"
+      certificate_path: "/certs/agent.crt"
+      key_path: "/certs/agent.key"
+      ca_path: "/certs/ca.crt"
+
+    external:
+      method: "JWT"
+      issuer: "semantic-kernel-app"
+      audience: "semantic-kernel-api"
+
+  authorization:
+    model: "RBAC"
+    policies:
+      - name: "agent-to-agent"
+        subjects: ["agent-*"]
+        resources: ["agent-*"]
+        actions: ["invoke", "query"]
+
+      - name: "external-to-orchestrator"
+        subjects: ["external-client"]
+        resources: ["agent-orchestrator"]
+        actions: ["invoke"]
+
+  data_protection:
+    encryption_at_rest: true
+    encryption_in_transit: true
+    pii_masking: true
+    audit_logging: true
+
+# =============================================================================
+# Cross-References
+# =============================================================================
+related_documentation:
+  - ".config/architecture.yml: Overall architecture"
+  - ".config/services.yml: Service configurations"
+  - ".config/tracing.yml: Observability configuration"
+  - "src/engine/: Semantic Kernel engine implementation"
+  - "src/business/: Business layer with agent coordination"

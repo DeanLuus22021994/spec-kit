@@ -1,0 +1,306 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Semantic Kernel Configuration
+
+# Metadata
+metadata: &metadata
+  version: "1.1.0"
+  updated: "2025-11-25"
+  category: config
+  keywords: [semantic-kernel, AI, kernels, plugins, memory, planners, skills, configuration, gpu, cuda, accelerated]
+
+<<: *metadata
+
+semantic_kernel:
+  service:
+    name: semantic-kernel-engine
+    type: ai-processing
+
+  # GPU Acceleration
+  gpu:
+    enabled: true
+    device: "cuda"
+    cuda_version: "13.0"
+    compute_capability: "8.6"
+    memory_fraction: 0.8
+    allow_growth: true
+    mixed_precision: true # FP16 for faster inference
+
+  # PyTorch Settings
+  pytorch:
+    cuda_enabled: true
+    cudnn_benchmark: true
+    cudnn_deterministic: false
+    memory_efficient: true
+    torch_compile: true # PyTorch 2.x compile optimization
+
+  ai:
+    defaultModel: gpt-4o
+    temperature: 0.7
+    maxTokens: 4000
+    timeoutSeconds: 60
+    batch_size: 32 # GPU batch processing
+
+  kernels:
+    defaultKernel: main
+    enabledKernels:
+      - main
+      - chat
+      - completion
+      - embedding
+
+  plugins:
+    autoLoad: true
+    directory: "./Plugins"
+    enabled:
+      - "CorePlugin"
+      - "TextPlugin"
+      - "ConversationPlugin"
+
+  memory:
+    type: "postgres"
+    connectionString: "Host=database;Database=semantic_kernel;Username=user;Password=password"
+    embeddingDimensions: 1536
+    similarityFunction: "cosine"
+    # Vector store configuration (local Qdrant)
+    vector_store:
+      type: "qdrant"
+      url: "http://vector:6333"
+      collections:
+        - semantic_memory
+        - code_embeddings
+        - document_chunks
+
+  # GPU-Accelerated Embeddings (Local Service)
+  embeddings:
+    # Use local embedding service instead of OpenAI API
+    service_url: "http://embeddings:8001"
+    device: "cuda:0"
+    batch_size: 64
+    max_sequence_length: 8192
+    pooling_strategy: "mean"
+    normalize: true
+    fp16: true # Half-precision for speed
+    model: "text-embedding-3-small"
+    dimensions: 1536
+    cache:
+      enabled: true
+      redis_url: "redis:6379"
+      ttl_seconds: 86400
+
+  # Cache Configuration (Local Redis)
+  cache:
+    type: "redis"
+    url: "redis:6379"
+    embedding_cache:
+      prefix: "emb:"
+      ttl_seconds: 86400
+    completion_cache:
+      prefix: "comp:"
+      ttl_seconds: 3600
+    session_cache:
+      prefix: "sess:"
+      ttl_seconds: 1800
+
+  skills:
+    directory: "./Skills"
+    autoDiscover: true
+
+  planners:
+    defaultPlanner: "sequential"
+    maxPlanningSteps: 10
+    enabledPlanners:
+      - "sequential"
+      - "action"
+      - "stepwise"
+
+  logging:
+    level: "Information"
+    enableConsole: true
+    enableFile: false
+
+  performance:
+    maxConcurrentRequests: 32
+    requestTimeoutMs: 60000
+    enableCaching: true
+    cacheExpirationMinutes: 60
+    gpu_memory_pool: true
+    async_inference: true
+    stream_responses: true
+
+  # CUDA Optimization
+  cuda:
+    visible_devices: "0"
+    memory_limit: "5G"
+    allow_tf32: true
+    matmul_precision: "high"
+    flash_attention: true
+
+related_documentation:
+  - ".config/cli.yml: CLI configuration for Semantic Kernel operations"
+  - ".config/services.yml: Engine service resource configuration"
+  - ".config/copilot/references/services.yml: Service architecture documentation"
+  - ".config/copilot/workflows/local-docker-stack.yml: Local Docker stack integration"
+  - "src/engine/: Semantic Kernel engine implementation"
+  - ".config/copilot/references/technology-stack.yml: AI/ML stack details"
+
+# Local Docker Service Integration
+local_services:
+  embeddings:
+    url: "http://embeddings:8001"
+    endpoints:
+      generate: "/api/embeddings"
+      batch: "/api/embeddings/batch"
+      health: "/health"
+    gpu_enabled: true
+
+  vector:
+    url: "http://vector:6333"
+    type: "qdrant"
+    endpoints:
+      collections: "/collections"
+      search: "/collections/{name}/points/search"
+      health: "/healthz"
+
+  cache:
+    url: "redis:6379"
+    type: "redis"
+
+  database:
+    url: "database:5432"
+    type: "postgresql"
+    extensions: ["pgvector", "uuid-ossp"]
+
+# =============================================================================
+# Filters for Optimized Local Processing
+# =============================================================================
+filters:
+  # Embedding generation filters
+  embedding:
+    preprocessing:
+      enabled: true
+      text_normalization:
+        strip_whitespace: true
+        collapse_whitespace: true
+        remove_control_chars: true
+      content_validation:
+        min_length: 10
+        max_length: 8192
+      deduplication:
+        enabled: true
+        algorithm: "xxhash64"
+        cache_lookup_first: true
+      chunking:
+        enabled: true
+        strategy: "semantic"
+        max_chunk_size: 512
+        overlap: 50
+        preserve_sentences: true
+
+    postprocessing:
+      normalization:
+        l2_normalize: true
+      validation:
+        check_dimensions: true
+        check_nan: true
+        check_inf: true
+        min_magnitude: 0.001
+
+    skip_patterns:
+      - "^test_"
+      - "^temp_"
+      - "^debug_"
+      - "^\\s*$"
+
+  # Vector search filters
+  vector_search:
+    default:
+      similarity_threshold: 0.7
+      max_results: 100
+      include_metadata: true
+      include_vectors: false
+
+    collection_specific:
+      semantic_memory:
+        similarity_threshold: 0.75
+        max_results: 50
+      code_embeddings:
+        similarity_threshold: 0.8
+        max_results: 30
+        metadata_filters:
+          languages: ["csharp", "typescript", "python"]
+      document_chunks:
+        similarity_threshold: 0.7
+        max_results: 100
+
+    hnsw_optimization:
+      ef_search: 128
+      exact_search_threshold: 1000
+
+  # Cache filters
+  caching:
+    embedding_cache:
+      enabled: true
+      key_includes: ["text_hash", "model", "dimensions"]
+      ttl_seconds: 86400
+      max_entries: 100000
+      eviction_policy: "lru"
+      skip_patterns: ["test_*", "temp_*", "debug_*"]
+
+    completion_cache:
+      enabled: true
+      key_includes: ["prompt_hash", "model", "temperature"]
+      ttl_seconds: 3600
+      max_entries: 10000
+      eviction_policy: "lru"
+
+    memory_cache:
+      enabled: true
+      max_size_mb: 512
+      sliding_expiration: true
+
+  # Content routing filters
+  content_routing:
+    rules:
+      - pattern: "\\.(cs|ts|py|js)$"
+        collection: "code_embeddings"
+        chunking: "ast"
+      - pattern: "\\.(md|rst|txt)$"
+        collection: "document_chunks"
+        chunking: "semantic"
+      - pattern: "\\.(yml|yaml|json)$"
+        collection: "document_chunks"
+        chunking: "fixed"
+    default:
+      collection: "semantic_memory"
+      chunking: "semantic"
+
+  # Rate limiting
+  rate_limiting:
+    embeddings:
+      requests_per_second: 100
+      burst_limit: 200
+      queue_size: 1000
+    vector_search:
+      requests_per_second: 500
+      burst_limit: 1000
+      queue_size: 5000
+    circuit_breaker:
+      enabled: true
+      failure_threshold: 5
+      recovery_timeout_ms: 30000
+
+  # Quality assurance
+  quality:
+    input_validation:
+      max_text_length: 100000
+      sanitize_html: true
+    output_validation:
+      validate_shape: true
+      log_anomalies: true
+    monitoring:
+      track_latency: true
+      track_cache_hit_rate: true
+      alert_thresholds:
+        latency_p99_ms: 1000
+        cache_hit_rate_min: 0.7
+        error_rate_max: 0.01

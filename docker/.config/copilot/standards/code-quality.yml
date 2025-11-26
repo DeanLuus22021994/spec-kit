@@ -1,0 +1,171 @@
+# Code Quality Standards
+# Python and .NET code quality expectations and tooling
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: standard
+  keywords:
+    - code quality
+    - pylint
+    - testing
+    - standards
+    - metrics
+
+<<: *metadata
+
+# Violation Template
+violation_template: &violation_template
+  message: null
+  fix: null
+
+python:
+  target_rating: "10.00/10"
+  tool: Pylint
+
+  current_status:
+    src_reports: reports/pylint_report.txt
+    tools_reports: reports/pylint_tools_report.txt
+    last_rating: "10.00/10"
+
+  enforcement:
+    pre_commit: Runs automatically via .pre-commit-config.yaml
+    ci_cd: Blocks merge if rating < 10.00/10
+    vscode_tasks:
+      - Generate Pylint Report
+      - Generate Pylint Tools Report
+
+  common_violations:
+    missing_docstring:
+      <<: *violation_template
+      message: Missing function or module docstring
+      fix: Add triple-quoted docstring below function/class definition
+
+    line_too_long:
+      <<: *violation_template
+      message: Line too long (>150 characters)
+      fix: Break line using implicit line continuation or backslash
+
+    unused_import:
+      <<: *violation_template
+      message: Unused import statement
+      fix: Remove import or use __all__ to export explicitly
+
+    invalid_name:
+      <<: *violation_template
+      message: Variable name doesn't conform to snake_case
+      fix: Rename using snake_case (lowercase with underscores)
+
+  configuration:
+    file: pyproject.toml
+    max_line_length: 150
+    docstring_style: "Google"
+
+python_environment:
+  version: "3.14"
+  cuda_support: true
+  pytorch: "2.9.1+cu130"
+  environment_config: ".config/environment.yml"
+  dependencies_config: ".config/python-dependencies.yml"
+  auto_provisioning:
+    enabled: true
+    triggers:
+      - "Repository clone"
+      - "Branch checkout"
+      - "CI/CD initialization"
+    installation_command: "pip install -r tools/requirements.txt"
+    verification: 'python -c ''import yaml, jsonschema, click, pytest, black, ruff, mypy; print("Packages verified")'''
+  required_packages:
+    core:
+      - pyyaml: "6.0.2"
+      - jsonschema: "4.23.0"
+      - click: "8.1.7"
+    code_quality:
+      - black: "24.10.0"
+      - ruff: "0.7.4"
+      - mypy: "1.13.0"
+      - pylint: ">=3.0.0"
+      - isort: ">=5.12.0"
+    testing:
+      - pytest: "8.3.3"
+      - pytest-cov: "5.0.0"
+
+dotnet:
+  target_framework: ".NET 10"
+  language_version: "C# 13"
+
+  code_analysis:
+    enabled: true
+    treat_warnings_as_errors: false
+    analysis_level: "latest"
+
+  documentation:
+    requirement: "XML documentation for public APIs"
+    format: "/// triple-slash comments"
+
+  naming_conventions:
+    classes: "PascalCase"
+    methods: "PascalCase"
+    properties: "PascalCase"
+    fields_private: "_camelCase (underscore prefix)"
+    fields_public: "PascalCase"
+    constants: "PascalCase"
+    interfaces: "IPascalCase (I prefix)"
+
+testing:
+  frameworks:
+    dotnet: "xUnit"
+    end_to_end: "Playwright"
+
+  coverage_targets:
+    unit: "80% minimum"
+    integration: "Critical paths"
+    e2e: "Main user flows"
+
+  test_organization:
+    unit: "tests/unit/**"
+    integration: "tests/integration/**"
+    e2e: "tests/e2e/**"
+
+  naming_pattern:
+    format: "MethodName_StateUnderTest_ExpectedBehavior"
+    example: "CreateCollection_WhenCollectionExists_ReturnsExistingCollection"
+
+pre_commit_hooks:
+  configuration: ".pre-commit-config.yaml"
+
+  hooks:
+    trailing_whitespace:
+      action: "Remove trailing whitespace from all files"
+
+    end_of_file:
+      action: "Ensure single newline at end of files"
+
+    yaml_check:
+      action: "Validate YAML syntax"
+
+    pylint:
+      action: "Run Pylint on Python files"
+      fail_threshold: "10.00/10"
+
+    check_merge_conflict:
+      action: "Detect merge conflict markers"
+
+formatting:
+  python:
+    tool: "Black"
+    version: "24.10.0"
+    line_length: 150
+    config_file: "pyproject.toml"
+
+  csharp:
+    tool: "Built-in .editorconfig"
+    indent_size: 4
+    insert_final_newline: true
+
+related_documentation:
+  - ".config/python-dependencies.yml: Python package auto-provisioning"
+  - ".config/environment.yml: Environment variables"
+  - "tools/requirements.txt: Pinned Python package versions"
+  - "pyproject.toml: Python tool configurations"
+  - "reports/pylint_report.txt: Latest Pylint results"

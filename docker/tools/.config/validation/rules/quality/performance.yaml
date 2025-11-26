@@ -1,0 +1,234 @@
+# Quality: Performance and Size Rules
+# Purpose: Detect potential performance issues and size concerns
+# Scope: All YAML files in project
+# Package: quality
+
+---
+- ruleID: yaml-file-size-large
+  description: |
+    Warns about very large YAML files (>1000 lines).
+
+    Large YAML files can cause:
+    - Slow parsing and loading
+    - Difficulty in maintenance
+    - Merge conflict complexity
+    - Poor readability
+
+    Consider splitting into:
+    - Multiple files by domain/module
+    - Separate files for environments
+    - Modular includes/imports
+    - External data files
+
+    This is a guideline - some legitimate use cases need large files.
+  labels:
+    - "yaml/performance"
+    - "yaml/size"
+    - "validation/maintainability"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^(?:[^\\n]*\\n){1000,}"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    YAML file exceeds 1000 lines.
+
+    Consider splitting large files:
+
+    Instead of one large file:
+    ```
+    config.yaml (2000 lines)
+    ```
+
+    Split by domain:
+    ```
+    config/
+      database.yaml
+      api.yaml
+      cache.yaml
+      logging.yaml
+    ```
+
+    Or by environment:
+    ```
+    config/
+      base.yaml
+      development.yaml
+      production.yaml
+    ```
+
+    Smaller files are easier to maintain.
+  effort: 5
+  category: potential
+  links:
+    - url: https://yaml.org/spec/1.2/spec.html#id2761803
+      title: "YAML Best Practices - File Organization"
+
+---
+- ruleID: yaml-deep-nesting-complexity
+  description: |
+    Warns about deeply nested structures (>6 levels).
+
+    Deep nesting reduces readability and indicates complex structure.
+
+    Issues with deep nesting:
+    - Hard to read and understand
+    - Difficult to navigate
+    - Error-prone editing
+    - May indicate poor data modeling
+
+    Consider:
+    - Flattening structure
+    - Using anchors/aliases for reuse
+    - Splitting into separate files
+    - Restructuring data model
+  labels:
+    - "yaml/performance"
+    - "yaml/complexity"
+    - "validation/structure"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^(\\s{2})(\\s{2})(\\s{2})(\\s{2})(\\s{2})(\\s{2})[a-zA-Z0-9_-]+:"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    YAML has deep nesting (6+ levels).
+
+    Consider flattening or restructuring:
+
+    Deep (hard to read):
+    ```yaml
+    a:
+      b:
+        c:
+          d:
+            e:
+              f:
+                value: data
+    ```
+
+    Flatter (easier):
+    ```yaml
+    config:
+      path: "a.b.c.d.e.f"
+      value: data
+    ```
+
+    Or use anchors for complex reusable structures.
+  effort: 5
+  category: potential
+  links:
+    - url: https://yaml.org/spec/1.2/spec.html
+      title: "YAML Structure Best Practices"
+
+---
+- ruleID: yaml-large-sequence-performance
+  description: |
+    Detects very large sequences/arrays (>100 items).
+
+    Large sequences in YAML can impact:
+    - Parse time
+    - Memory usage
+    - Diff/merge operations
+    - Editor performance
+
+    For large datasets, consider:
+    - External data files (JSON, CSV)
+    - Database storage
+    - Pagination/chunking
+    - Reference by file rather than inline
+
+    YAML works best for configuration, not large datasets.
+  labels:
+    - "yaml/performance"
+    - "yaml/sequences"
+    - "validation/optimization"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*-\\s+[^\\n]+(?:\\n\\s*-\\s+[^\\n]+){100,}"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    YAML sequence contains >100 items.
+
+    Consider alternatives for large datasets:
+
+    Instead of:
+    ```yaml
+    items:
+      - item1
+      - item2
+      # ... 200 more items
+    ```
+
+    Use external file:
+    ```yaml
+    items:
+      source: data/items.json
+      type: json-array
+    ```
+
+    Or database:
+    ```yaml
+    items:
+      query: "SELECT * FROM items"
+      database: main
+    ```
+
+    YAML is for configuration, not data storage.
+  effort: 7
+  category: potential
+  links:
+    - url: https://yaml.org/spec/1.2/spec.html#id2759963
+      title: "YAML Performance Considerations"
+
+---
+- ruleID: yaml-complex-anchor-references
+  description: |
+    Warns about complex anchor/alias usage that may impact parsing.
+
+    While anchors and aliases are powerful, complex usage can:
+    - Slow parsing
+    - Create circular references
+    - Cause memory issues
+    - Confuse readers
+
+    Watch for:
+    - Anchors referencing other anchors (deep chains)
+    - Many merge keys in single mapping
+    - Circular reference patterns
+
+    Keep anchor usage straightforward for best performance.
+  labels:
+    - "yaml/performance"
+    - "yaml/anchors"
+    - "validation/complexity"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)<<:\\s*\\[\\s*\\*[^\\]]+,\\s*\\*[^\\]]+,\\s*\\*[^\\]]+"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    Complex merge key usage with multiple anchors.
+
+    Simplify merge operations:
+
+    Complex:
+    ```yaml
+    config:
+      <<: [ *base, *extra, *override, *more ]
+    ```
+
+    Simpler:
+    ```yaml
+    base: &combined
+      <<: *base
+      <<: *extra
+
+    config:
+      <<: *combined
+    ```
+
+    Or flatten into explicit keys for clarity.
+    Multiple merges can be hard to understand.
+  effort: 3
+  category: potential
+  links:
+    - url: https://yaml.org/type/merge.html
+      title: "YAML Merge Key Specification"

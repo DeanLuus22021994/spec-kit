@@ -1,0 +1,127 @@
+# GitHub Copilot Context: Embeddings Service Configuration
+# Path: semantic/embeddings/.config/
+# Purpose: Text embedding generation service using OpenAI API
+
+context:
+  directory: "semantic/embeddings/.config/"
+  purpose: "Configuration for FastAPI embedding service"
+  pattern: "Aligns with tests/.config/, tools/.config/, src/frontend/.config/"
+
+service:
+  name: "embedding-service"
+  type: "text-embedding"
+  version: "1.0.0"
+  port: 8001
+  framework: "FastAPI 0.109.0"
+  runtime: "Python 3.14 (Alpine)"
+
+configuration_file:
+  path: ".config/config.yml"
+  docker_mount: "/app/config/config.yml"
+  env_override: "CONFIG_PATH environment variable"
+  format: "YAML with embeddings root key"
+
+models:
+  default: "text-embedding-3-small"
+  available:
+    - name: "text-embedding-3-small"
+      dimensions: 1536
+      max_tokens: 8191
+      enabled: true
+      description: "Recommended for most use cases"
+
+    - name: "text-embedding-3-large"
+      dimensions: 3072
+      max_tokens: 8191
+      enabled: false
+      description: "Higher quality, larger vectors"
+
+    - name: "text-embedding-ada-002"
+      dimensions: 1536
+      max_tokens: 8191
+      enabled: false
+      description: "Legacy model"
+
+processing:
+  batch_size: 100
+  max_concurrent: 10
+  timeout_seconds: 30
+  retry_attempts: 3
+  retry_delay_ms: 1000
+
+caching:
+  enabled: true
+  backend: "PostgreSQL"
+  ttl_minutes: 1440 # 24 hours
+  max_entries: 100000
+  purpose: "Reduce API calls to OpenAI"
+
+optimization:
+  normalize: true
+  pool_connections: true
+  max_pool_size: 20
+
+endpoints:
+  embed: "POST /embed - Generate text embeddings"
+  health: "GET /health - Service health check"
+  metrics: "GET /metrics - Service metrics (enabled)"
+
+dependencies:
+  runtime:
+    - "fastapi==0.109.0 - Web framework"
+    - "uvicorn[standard]==0.27.0 - ASGI server"
+    - "openai==1.10.0 - OpenAI SDK"
+    - "pydantic==2.5.3 - Data validation"
+    - "pyyaml==6.0.1 - Config parsing"
+
+docker:
+  base_image: "python:3.14-alpine"
+  user: "appuser:1001 (non-root)"
+  volumes:
+    - "/app/cache - Embedding cache"
+    - "/app/logs - Service logs"
+    - "/app/models - Model metadata"
+  healthcheck: "wget http://localhost:8001/health (30s interval)"
+
+architecture:
+  pattern: "Microservice"
+  communication: "REST API (JSON)"
+  consumers:
+    - "Backend service (src/backend/)"
+    - "Engine service (src/engine/)"
+  data_flow: "Text → Embeddings Service → OpenAI API → Vector (1536 dims)"
+
+file_structure:
+  before_refactoring: |
+    semantic/embeddings/
+    +-- config.yml       # Config at root
+    +-- main.py
+
+  after_refactoring: |
+    semantic/embeddings/
+    +-- .config/
+    |   +-- copilot/
+    |   |   +-- index.yml  # This file
+    |   +-- config.yml     # Service configuration
+    +-- main.py
+
+benefits:
+  - "Pattern consistency with tests/.config/, tools/.config/, frontend/.config/"
+  - "Cleaner embeddings/ root (config separated from code)"
+  - "GitHub Copilot semantic search enabled"
+  - "Easier configuration management and discovery"
+
+usage:
+  dockerfile: "dockerfiles/embeddings.Dockerfile copies .config/config.yml to /app/config/"
+  main_py: "Loads config from CONFIG_PATH env (default: /app/config/config.yml)"
+  docker_compose: "Mounts config as volume in container"
+
+related_services:
+  - "semantic/vector/.config/ - Qdrant vector database configuration"
+  - "src/backend/ - Consumes embedding service"
+  - "src/engine/ - Semantic kernel integration"
+
+related_configs:
+  - "tests/.config/ - Test configuration"
+  - "tools/.config/ - Python tools configuration"
+  - "src/frontend/.config/ - Frontend build configuration"

@@ -1,0 +1,697 @@
+metadata: &metadata
+  name: "validation-profiles-guide"
+  description: "Validation profile usage guide and customization"
+  version: "2.0.0"
+  category: "validation-profiles"
+  updated: "2025-11-25"
+
+<<: *metadata
+
+overview: |
+  This guide covers the five validation profiles (strict, recommended, minimal, ci-cd, development),
+  when to use each profile, how to customize them, and how to create new profiles.
+
+profiles:
+  strict:
+    name: "Strict Profile"
+    description: "All mandatory rules - for production deployments"
+    total_rules: 36
+
+    rule_breakdown:
+      metadata: 8
+      syntax: 14
+      structure: 5
+      mta: 8
+      quality: 5
+      vscode: 1
+
+    characteristics:
+      strictness: "Maximum"
+      coverage: "Mandatory rules only"
+      performance: "Fast (~2-3 seconds)"
+      false_positives: "Very low"
+
+    use_cases:
+      primary:
+        - "Production deployment validation"
+        - "Final validation before merge to main"
+        - "Release quality gates"
+        - "Critical configuration validation"
+
+      scenarios:
+        - "Validating production Dockerfiles"
+        - "Checking infrastructure configurations"
+        - "Final pre-deployment checks"
+        - "Compliance verification"
+
+    configuration:
+      file: "tools/.config/validation/profiles/strict.yml"
+      content: |
+        name: "strict"
+        description: "All mandatory rules for production"
+
+        rules:
+          include_categories: ["mandatory"]
+          exclude_categories: ["optional", "potential"]
+
+        settings:
+          fail_on_warning: true
+          fail_on_error: true
+          show_passed_rules: false
+
+    command_usage: |
+      # Run strict validation
+      python -m core.cli validate --profile strict
+
+      # Strict with report
+      python -m core.cli validate --profile strict --format json --output report.json
+
+      # Strict in Docker
+      docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+        python -m core.cli validate --profile strict
+
+    when_to_use:
+      yes:
+        - "Before production deployment"
+        - "Final validation in CI/CD"
+        - "Quality gate enforcement"
+        - "Compliance checks"
+      no:
+        - "During active development"
+        - "Exploratory coding"
+        - "Draft configurations"
+        - "Learning/tutorial content"
+
+  recommended:
+    name: "Recommended Profile"
+    description: "Mandatory + optional rules - for code reviews"
+    total_rules: 92
+
+    rule_breakdown:
+      metadata: 14
+      syntax: 32
+      structure: 9
+      mta: 24
+      quality: 12
+      vscode: 7
+
+    characteristics:
+      strictness: "High"
+      coverage: "Comprehensive"
+      performance: "Moderate (~5-7 seconds)"
+      false_positives: "Low"
+
+    use_cases:
+      primary:
+        - "Pull request validation"
+        - "Code review preparation"
+        - "Comprehensive quality checks"
+        - "Best practices enforcement"
+
+      scenarios:
+        - "Before submitting PR"
+        - "Weekly code quality audits"
+        - "Onboarding new developers"
+        - "Documentation validation"
+
+    configuration:
+      file: "tools/.config/validation/profiles/recommended.yml"
+      content: |
+        name: "recommended"
+        description: "Mandatory and recommended optional rules"
+
+        rules:
+          include_categories: ["mandatory", "optional"]
+          exclude_categories: ["potential"]
+          exclude_rules:
+            - "syntax-comment-position"  # Too strict for some use cases
+
+        settings:
+          fail_on_warning: false
+          fail_on_error: true
+          show_passed_rules: true
+
+    command_usage: |
+      # Run recommended validation
+      python -m core.cli validate --profile recommended
+
+      # With detailed report
+      python -m core.cli validate --profile recommended --format html
+
+      # In CI/CD
+      docker run --rm -v ${PWD}:/workspace semantic-kernel-tools:latest \
+        python -m core.cli validate --profile recommended
+
+    when_to_use:
+      yes:
+        - "Pull request reviews"
+        - "Pre-merge validation"
+        - "Quality improvement initiatives"
+        - "Documentation reviews"
+      no:
+        - "Rapid prototyping"
+        - "Emergency hotfixes"
+        - "Experimental features"
+        - "Quick local tests"
+
+  minimal:
+    name: "Minimal Profile"
+    description: "Critical rules only - for quick checks"
+    total_rules: 15
+
+    rule_breakdown:
+      metadata: 3
+      syntax: 5
+      structure: 2
+      mta: 3
+      quality: 2
+      vscode: 0
+
+    characteristics:
+      strictness: "Low"
+      coverage: "Critical issues only"
+      performance: "Very fast (~1 second)"
+      false_positives: "Very low"
+
+    use_cases:
+      primary:
+        - "Quick pre-commit checks"
+        - "Fast iteration during development"
+        - "Smoke testing"
+        - "Rapid validation feedback"
+
+      scenarios:
+        - "Every file save in watch mode"
+        - "Before committing changes"
+        - "Quick sanity checks"
+        - "IDE real-time validation"
+
+    configuration:
+      file: "tools/.config/validation/profiles/minimal.yml"
+      content: |
+        name: "minimal"
+        description: "Critical rules for quick validation"
+
+        rules:
+          include_rules:
+            # Metadata critical
+            - "metadata-block-structure"
+            - "metadata-required-fields"
+            - "metadata-version-format"
+
+            # Syntax critical
+            - "syntax-indentation-consistency"
+            - "syntax-quoting-required"
+            - "syntax-collection-block-style"
+            - "syntax-indentation-mixed-spaces-tabs"
+
+            # Structure critical
+            - "structure-file-organization"
+            - "structure-nesting-depth"
+
+            # MTA critical
+            - "mta-rule-structure"
+            - "mta-category-values"
+            - "mta-effort-range"
+
+            # Quality critical
+            - "quality-duplicate-keys"
+            - "quality-undefined-anchors"
+
+        settings:
+          fail_on_warning: false
+          fail_on_error: true
+          show_passed_rules: false
+
+    command_usage: |
+      # Run minimal validation
+      python -m core.cli validate --profile minimal
+
+      # In watch mode
+      python -m core.cli validate --profile minimal --watch
+
+      # Pre-commit hook
+      pre-commit run validate-yaml-minimal
+
+    when_to_use:
+      yes:
+        - "During active development"
+        - "Pre-commit hooks"
+        - "Real-time editor validation"
+        - "Quick sanity checks"
+      no:
+        - "Final validation"
+        - "Production deployments"
+        - "Comprehensive reviews"
+        - "Quality audits"
+
+  ci_cd:
+    name: "CI/CD Profile"
+    description: "CI/CD optimized rules for pipeline validation"
+    total_rules: 45
+
+    rule_breakdown:
+      metadata: 8
+      syntax: 14
+      structure: 5
+      mta: 12
+      quality: 5
+      vscode: 1
+
+    characteristics:
+      strictness: "Medium-High"
+      coverage: "Pipeline-relevant rules"
+      performance: "Fast (~3-4 seconds)"
+      false_positives: "Low"
+
+    use_cases:
+      primary:
+        - "GitHub Actions validation"
+        - "Pipeline quality gates"
+        - "Automated PR checks"
+        - "Continuous validation"
+
+      scenarios:
+        - "Every push to feature branch"
+        - "Pull request creation"
+        - "Merge to main branch"
+        - "Scheduled validation runs"
+
+    configuration:
+      file: "tools/.config/validation/profiles/ci-cd.yml"
+      content: |
+        name: "ci-cd"
+        description: "Optimized for CI/CD pipelines"
+
+        rules:
+          include_categories: ["mandatory"]
+          include_rules:
+            # Additional quality checks for CI/CD
+            - "quality-best-practices"
+            - "quality-naming-conventions"
+            - "quality-consistency-check"
+
+            # MTA compliance for automated checks
+            - "mta-labels"
+            - "mta-links"
+            - "mta-performance-hint"
+
+        settings:
+          fail_on_warning: false
+          fail_on_error: true
+          show_passed_rules: false
+          cache_results: true
+          parallel_execution: true
+
+    command_usage: |
+      # Run CI/CD validation
+      python -m core.cli validate --profile ci-cd
+
+      # With JSON output for parsing
+      python -m core.cli validate --profile ci-cd --format json
+
+      # In GitHub Actions
+      - name: Validate YAML
+        run: |
+          docker run --rm -v $PWD:/workspace semantic-kernel-tools:latest \
+            python -m core.cli validate --profile ci-cd --format json \
+            --output reports/validation.json
+
+    github_actions_integration: |
+      name: YAML Validation
+
+      on:
+        pull_request:
+          paths:
+            - '**.yml'
+            - '**.yaml'
+        push:
+          branches: [main, develop]
+
+      jobs:
+        validate:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v3
+
+            - name: Run validation
+              run: |
+                docker run --rm -v $PWD:/workspace semantic-kernel-tools:latest \
+                  python -m core.cli validate --profile ci-cd
+
+            - name: Upload results
+              if: always()
+              uses: actions/upload-artifact@v3
+              with:
+                name: validation-report
+                path: reports/validation.json
+
+    when_to_use:
+      yes:
+        - "Automated pipeline checks"
+        - "PR validation workflows"
+        - "Scheduled validation jobs"
+        - "Quality gate enforcement"
+      no:
+        - "Local development"
+        - "Manual code reviews"
+        - "Exploratory work"
+        - "Draft PRs"
+
+  development:
+    name: "Development Profile"
+    description: "Development-friendly rules for local work"
+    total_rules: 60
+
+    rule_breakdown:
+      metadata: 10
+      syntax: 20
+      structure: 7
+      mta: 16
+      quality: 7
+      vscode: 5
+
+    characteristics:
+      strictness: "Medium"
+      coverage: "Balanced for productivity"
+      performance: "Moderate (~4-5 seconds)"
+      false_positives: "Low-Medium"
+
+    use_cases:
+      primary:
+        - "Local development validation"
+        - "Pre-commit checks (optional)"
+        - "Interactive validation"
+        - "Learning and experimentation"
+
+      scenarios:
+        - "Writing new YAML files"
+        - "Refactoring existing configs"
+        - "Testing new patterns"
+        - "Developer onboarding"
+
+    configuration:
+      file: "tools/.config/validation/profiles/development.yml"
+      content: |
+        name: "development"
+        description: "Balanced rules for development"
+
+        rules:
+          include_categories: ["mandatory"]
+          include_rules:
+            # Helpful optional rules
+            - "syntax-quoting-unnecessary"
+            - "syntax-multiline-literal-style"
+            - "syntax-comment-spacing"
+            - "structure-section-headers"
+            - "structure-logical-grouping"
+            - "quality-naming-conventions"
+            - "quality-value-consistency"
+            - "vscode-tasks-structure"
+            - "vscode-settings-schema"
+
+          exclude_rules:
+            # Too strict for development
+            - "syntax-comment-position"
+            - "quality-magic-numbers"
+
+        settings:
+          fail_on_warning: false
+          fail_on_error: true
+          show_passed_rules: true
+          interactive_mode: true
+
+    command_usage: |
+      # Run development validation
+      python -m core.cli validate --profile development
+
+      # With interactive fixes
+      python -m core.cli validate --profile development --interactive
+
+      # VS Code task
+      {
+        "label": "Validate YAML (Development)",
+        "type": "shell",
+        "command": "docker run --rm -v ${workspaceFolder}:/workspace semantic-kernel-tools:latest python -m core.cli validate --profile development"
+      }
+
+    when_to_use:
+      yes:
+        - "Local development"
+        - "Learning YAML patterns"
+        - "Trying new configurations"
+        - "Incremental improvements"
+      no:
+        - "Production validation"
+        - "Final PR checks"
+        - "Automated pipelines"
+        - "Compliance audits"
+
+customization:
+  modifying_profiles:
+    description: "Customize existing profiles for specific needs"
+
+    approach_1_copy_and_modify:
+      steps:
+        - "Copy existing profile YAML"
+        - "Rename to custom profile name"
+        - "Modify rule inclusions/exclusions"
+        - "Update settings"
+        - "Test custom profile"
+
+      example: |
+        # Copy strict profile
+        cp tools/.config/validation/profiles/strict.yml \
+           tools/.config/validation/profiles/my-strict.yml
+
+        # Edit my-strict.yml
+        name: "my-strict"
+        description: "Custom strict with extra rules"
+
+        rules:
+          include_categories: ["mandatory"]
+          include_rules:
+            - "quality-naming-conventions"
+            - "structure-section-headers"
+
+    approach_2_extend_profile:
+      steps:
+        - "Create new profile with base reference"
+        - "Add incremental changes"
+        - "Test inheritance"
+
+      example: |
+        name: "custom-ci-cd"
+        description: "Extended CI/CD profile"
+
+        extends: "ci-cd"
+
+        rules:
+          additional_rules:
+            - "quality-url-validation"
+            - "quality-path-validation"
+
+        settings:
+          fail_on_warning: true  # Override base
+
+    approach_3_rule_filters:
+      description: "Use CLI flags to filter rules dynamically"
+
+      examples: |
+        # Include only specific packages
+        python -m core.cli validate --profile strict \
+          --include-packages metadata,syntax
+
+        # Exclude specific rules
+        python -m core.cli validate --profile recommended \
+          --exclude-rules syntax-comment-position,quality-magic-numbers
+
+        # Include additional rules
+        python -m core.cli validate --profile minimal \
+          --include-rules quality-naming-conventions
+
+  creating_new_profiles:
+    process:
+      1: "Identify use case and requirements"
+      2: "Determine appropriate rule set"
+      3: "Create profile YAML file"
+      4: "Configure settings"
+      5: "Test profile thoroughly"
+      6: "Document profile purpose and usage"
+
+    template: |
+      name: "custom-profile"
+      description: "Custom validation profile for specific use case"
+      version: "1.0.0"
+
+      metadata:
+        author: "Your Name"
+        created: "2025-11-25"
+        updated: "2025-11-25"
+        tags: ["custom", "specific-use-case"]
+
+      rules:
+        # Option 1: Include by category
+        include_categories: ["mandatory", "optional"]
+
+        # Option 2: Include specific rules
+        include_rules:
+          - "metadata-block-structure"
+          - "syntax-indentation-consistency"
+          - "quality-duplicate-keys"
+
+        # Option 3: Include all except
+        exclude_rules:
+          - "syntax-comment-position"
+          - "quality-magic-numbers"
+
+        # Option 4: Include packages
+        include_packages: ["metadata", "syntax", "quality"]
+
+      settings:
+        fail_on_warning: false
+        fail_on_error: true
+        show_passed_rules: true
+        cache_results: true
+        parallel_execution: false
+        max_violations: 100
+
+        reporting:
+          format: "json"
+          include_fixes: true
+          include_context: true
+
+      thresholds:
+        max_errors: 0
+        max_warnings: 10
+        min_quality_score: 80
+
+    example_custom_profiles:
+      docker_only: |
+        name: "docker-only"
+        description: "Validate only Dockerfile-related YAML"
+
+        rules:
+          include_packages: ["metadata", "syntax", "structure"]
+          include_rules:
+            - "quality-duplicate-keys"
+            - "quality-best-practices"
+
+        files:
+          include_patterns:
+            - "dockerfiles/**/*.yml"
+            - "docker-compose*.yml"
+
+      infrastructure_only: |
+        name: "infrastructure"
+        description: "Infrastructure configuration validation"
+
+        rules:
+          include_categories: ["mandatory"]
+          include_rules:
+            - "quality-url-validation"
+            - "quality-path-validation"
+            - "quality-consistency-check"
+
+        files:
+          include_patterns:
+            - "infrastructure/**/*.yml"
+            - ".config/**/*.yml"
+
+profile_selection_guide:
+  decision_tree: |
+    Is this for production deployment?
+      Yes → Use STRICT profile
+      No ↓
+
+    Is this for a pull request?
+      Yes → Use RECOMMENDED profile
+      No ↓
+
+    Is this for CI/CD pipeline?
+      Yes → Use CI-CD profile
+      No ↓
+
+    Is this for rapid development?
+      Yes → Use MINIMAL or DEVELOPMENT profile
+      No ↓
+
+    Create custom profile for your specific needs
+
+  by_scenario:
+    new_feature_development:
+      local_work: "development or minimal"
+      pre_commit: "minimal"
+      pre_pr: "recommended"
+      ci_check: "ci-cd"
+      merge_gate: "strict"
+
+    bug_fix:
+      local_work: "minimal"
+      pre_commit: "minimal"
+      pre_pr: "ci-cd"
+      merge_gate: "strict"
+
+    refactoring:
+      local_work: "development"
+      pre_pr: "recommended"
+      merge_gate: "strict"
+
+    documentation:
+      local_work: "minimal"
+      pre_pr: "recommended"
+
+best_practices:
+  profile_usage:
+    - "Start with minimal during development"
+    - "Use recommended before submitting PR"
+    - "Always use strict for production"
+    - "Configure CI/CD with ci-cd profile"
+    - "Create team-specific profiles as needed"
+
+  customization:
+    - "Document custom profile purpose"
+    - "Version control profile files"
+    - "Test profiles thoroughly"
+    - "Share profiles with team"
+    - "Review and update regularly"
+
+  performance:
+    - "Use minimal for real-time validation"
+    - "Enable caching in CI/CD"
+    - "Parallelize when possible"
+    - "Profile validation performance"
+    - "Optimize rule selection"
+
+performance_comparison:
+  benchmark_results:
+    profile: [strict, recommended, minimal, ci-cd, development]
+    single_file_avg: [2.5s, 6.0s, 0.8s, 3.2s, 4.5s]
+    repository_avg: [18s, 42s, 6s, 24s, 32s]
+    cache_hit_improvement: [60%, 65%, 50%, 70%, 60%]
+
+  optimization_tips:
+    - "Enable caching for repeated validations"
+    - "Use parallel execution for large repos"
+    - "Filter files with include/exclude patterns"
+    - "Run minimal profile in watch mode"
+    - "Use incremental validation when possible"
+
+resources:
+  profile_files:
+    - path: "tools/.config/validation/profiles/strict.yml"
+      description: "Strict profile configuration"
+    - path: "tools/.config/validation/profiles/recommended.yml"
+      description: "Recommended profile configuration"
+    - path: "tools/.config/validation/profiles/minimal.yml"
+      description: "Minimal profile configuration"
+    - path: "tools/.config/validation/profiles/ci-cd.yml"
+      description: "CI/CD profile configuration"
+    - path: "tools/.config/validation/profiles/development.yml"
+      description: "Development profile configuration"
+
+  documentation:
+    - path: "tools/.config/validation/README.md"
+      description: "Validation framework overview"
+    - path: "tools/.config/copilot/validation/index.yml"
+      description: "Validation context index"

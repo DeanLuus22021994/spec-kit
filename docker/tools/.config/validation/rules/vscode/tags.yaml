@@ -1,0 +1,123 @@
+# VSCode: Custom Tag Support Rules
+# Purpose: Validate custom YAML tag configuration for VSCode
+# Scope: VSCode settings and YAML files with custom tags
+# Package: vscode
+
+---
+- ruleID: vscode-custom-tags-configuration
+  description: |
+    Ensures custom YAML tags are registered in VSCode settings.
+
+    If using custom tags (like !include, !env, !secret), configure them
+    in .vscode/settings.json to prevent validation errors:
+
+    ```json
+    {
+      "yaml.customTags": [
+        "!include scalar",
+        "!env scalar",
+        "!secret scalar",
+        "!Base64 scalar",
+        "!reference sequence"
+      ]
+    }
+    ```
+
+    Tag format: "!tagName <type>"
+    Types: scalar, sequence, mapping
+  labels:
+    - "vscode/yaml"
+    - "vscode/custom-tags"
+    - "validation/configuration"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)![a-zA-Z][a-zA-Z0-9_-]*\\s"
+      filePattern: "**/*.{yml,yaml}"
+  message: |
+    YAML file uses custom tags (!tag) that may not be configured.
+
+    Register tags in .vscode/settings.json:
+
+    ```json
+    {
+      "yaml.customTags": [
+        "!include scalar",
+        "!env scalar"
+      ]
+    }
+    ```
+
+    Common custom tags:
+    - !include: File inclusion
+    - !env: Environment variables
+    - !secret: Secret references
+    - !Base64: Base64 encoding
+    - !ref: References to other values
+
+    Without configuration, VSCode shows errors on custom tags.
+  effort: 1
+  category: optional
+  links:
+    - url: https://github.com/redhat-developer/vscode-yaml#custom-tags
+      title: "VSCode YAML Custom Tags"
+
+---
+- ruleID: vscode-tag-format-valid
+  description: |
+    Validates custom tag format in VSCode settings.
+
+    Custom tags must follow format: "!tagName type"
+
+    Valid types:
+    - scalar: Single value (!env DATABASE_URL)
+    - sequence: Array (!include [file1, file2])
+    - mapping: Object (!merge {a: 1, b: 2})
+
+    Example configuration:
+    ```json
+    {
+      "yaml.customTags": [
+        "!env scalar",
+        "!include scalar",
+        "!Base64 scalar",
+        "!reference sequence"
+      ]
+    }
+    ```
+
+    Invalid: "!env" (missing type), "env scalar" (missing !)
+  labels:
+    - "vscode/custom-tags"
+    - "vscode/format"
+    - "validation/syntax"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)\"yaml\\.customTags\":\\s*\\[[^\\]]*(?:\"[^!][^\"]*\"|\"![^\"]*(?<!scalar|sequence|mapping)\")"
+      filePattern: "**/.vscode/settings.json"
+  message: |
+    Custom tag format is invalid in VSCode settings.
+
+    Use correct format: "!tagName type"
+
+    Valid:
+    ```json
+    "yaml.customTags": [
+      "!env scalar",
+      "!include scalar",
+      "!reference sequence"
+    ]
+    ```
+
+    Invalid:
+    ```json
+    "yaml.customTags": [
+      "env scalar",      // Missing !
+      "!env",            // Missing type
+      "!env string"      // Wrong type (use scalar/sequence/mapping)
+    ]
+    ```
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/redhat-developer/vscode-yaml#custom-tags
+      title: "Custom Tag Format Specification"

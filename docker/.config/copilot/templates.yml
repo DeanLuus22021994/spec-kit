@@ -1,0 +1,229 @@
+# YAML Templates Reference
+# Standard anchor templates used across .config/ files
+
+overview: |-
+  This file documents standard YAML anchor templates used throughout the .config/ directory.
+  While YAML doesn't support cross-file anchor references natively, these templates serve as:
+
+  1. Reference documentation for maintaining consistency
+  2. Copy-paste source for new configuration files
+  3. Standards guide for template structure
+
+  Always use local anchors in each file, but follow these patterns for consistency.
+
+standard_templates:
+  metadata_template:
+    description: "Standard metadata block for all .config/ files"
+    anchor_name: "metadata"
+    structure:
+      version: "1.0.0"
+      category: "pattern | reference | standard | workflow | config"
+      keywords: ["list", "of", "semantic", "keywords"]
+    usage: |-
+      # At top of file:
+      metadata: &metadata
+        version: "1.0.0"
+        category: reference
+        keywords: [keyword1, keyword2]
+
+      # Merge into document root (optional):
+      <<: *metadata
+
+  service_template:
+    description: "Service specification template"
+    anchor_name: "service_template"
+    structure:
+      technology: null
+      port: null
+      location: null
+      dockerfile: null
+      enabled: true
+      resources: null
+    usage: |-
+      service_template: &service_template
+        technology: null
+        port: null
+        location: null
+        dockerfile: null
+        enabled: true
+        resources: null
+
+      services:
+        my_service:
+          <<: *service_template
+          technology: "React 18"
+          port: 3000
+
+  command_template:
+    description: "Command/task specification template"
+    anchor_name: "command_template"
+    structure:
+      command: null
+      description: null
+      vscode_task: null
+    usage: |-
+      command_template: &command_template
+        command: null
+        description: null
+        vscode_task: null
+
+      commands:
+        build:
+          <<: *command_template
+          command: "dotnet build"
+          description: "Build solution"
+
+  test_template:
+    description: "Test configuration template"
+    anchor_name: "test_template"
+    structure:
+      type: null
+      timeout: null
+      requires_services: false
+      coverage: false
+    usage: |-
+      test_template: &test_template
+        type: null
+        timeout: null
+        requires_services: false
+        coverage: false
+
+      tests:
+        unit:
+          <<: *test_template
+          type: "unit"
+          timeout: 300
+
+  violation_template:
+    description: "Code quality violation template"
+    anchor_name: "violation_template"
+    structure:
+      code: null
+      severity: null
+      message: null
+      file: null
+      line: null
+    usage: |-
+      violation_template: &violation_template
+        code: null
+        severity: null
+        message: null
+        file: null
+        line: null
+
+  issue_template:
+    description: "Issue/problem template"
+    anchor_name: "issue_template"
+    structure:
+      symptom: null
+      possible_causes: []
+      solution: null
+      related_docs: []
+    usage: |-
+      issue_template: &issue_template
+        symptom: null
+        possible_causes: []
+        solution: null
+        related_docs: []
+
+  task_template:
+    description: "VS Code task template"
+    anchor_name: "task_template"
+    structure:
+      type: null
+      label: null
+      command: null
+      args: []
+      problemMatcher: null
+    usage: |-
+      task_template: &task_template
+        type: null
+        label: null
+        command: null
+        args: []
+        problemMatcher: null
+
+resource_templates:
+  description: "Docker resource allocation templates - Canonical definitions in .config/services.yml"
+
+  note: "For actual anchor definitions and usage, see .config/services.yml"
+
+  specifications:
+    resources_small:
+      anchor_name: "resources_small"
+      cpus: 0.25
+      memory: "128M"
+      use_cases: ["nginx", "devsite", "adminer"]
+
+    resources_medium:
+      anchor_name: "resources_medium"
+      cpus: 0.5
+      memory: "256M"
+      use_cases: ["gateway", "frontend", "business"]
+
+    resources_large:
+      anchor_name: "resources_large"
+      cpus: 1.0
+      memory: "512M"
+      use_cases: ["database", "vector", "embeddings"]
+
+    resources_xlarge:
+      anchor_name: "resources_xlarge"
+      cpus: 2.0
+      memory: "1G"
+      use_cases: ["backend", "engine", "runner"]
+
+configuration_templates:
+  default_timeout:
+    anchor_name: "default_timeout"
+    value: 30
+    type: "integer (seconds)"
+
+  default_retries:
+    anchor_name: "default_retries"
+    value: 3
+    type: "integer"
+
+  default_output:
+    anchor_name: "default_output"
+    value: "json"
+    type: "string (json|yaml|table|csv)"
+
+  usage: |-
+    defaults: &defaults
+      timeout: &default_timeout 30
+      retries: &default_retries 3
+      output: &default_output json
+
+file_organization:
+  structure: |-
+    # File comment/description
+
+    # Metadata block
+    metadata: &metadata
+      version: "1.0.0"
+      category: <type>
+      keywords: [...]
+
+    <<: *metadata
+
+    # Anchor definitions
+    template_name: &template_name
+      field1: null
+      field2: null
+
+    # Main content
+    section:
+      item:
+        <<: *template_name
+        field1: value
+
+    # Related documentation (end of file)
+    related_documentation:
+      - "path/to/related/file.yml"
+
+related_documentation:
+  - ".config/copilot/naming-conventions.yml: Naming standards"
+  - ".config/copilot/yaml-best-practices.yml: YAML syntax best practices"
+  - ".config/copilot/index.yml: Semantic search index"
+  - ".config/services.yml: Resource allocation anchors"

@@ -1,0 +1,76 @@
+metadata: &metadata
+  name: "mta-package-ruleset"
+  description: "Rules for MTA 7.2 rule structure, labels, providers, conditions, and variables"
+  version: "1.0.0"
+  category: "validation-rules"
+
+<<: *metadata
+
+# MTA Package - Ruleset Configuration
+# Validates MTA-specific rule structure and patterns
+
+package_info:
+  name: "mta"
+  total_rules: 24
+  rule_files:
+    - structure.yaml # 5 MTA rule structure rules
+    - labels.yaml # 4 label validation rules
+    - providers.yaml # 4 provider usage rules
+    - conditions.yaml # 5 condition logic rules
+    - variables.yaml # 6 variables and categories rules
+
+rule_groups:
+  structure:
+    description: "Validate MTA rule required fields and structure"
+    rule_files:
+      - structure.yaml
+    mandatory_rules: 3
+    optional_rules: 2
+
+  labels:
+    description: "Validate MTA label usage and conventions"
+    rule_files:
+      - labels.yaml
+    mandatory_rules: 1
+    optional_rules: 3
+
+  providers:
+    description: "Validate builtin provider usage"
+    rule_files:
+      - providers.yaml
+    mandatory_rules: 2
+    optional_rules: 2
+
+  conditions:
+    description: "Validate when/or/and/not condition logic"
+    rule_files:
+      - conditions.yaml
+    mandatory_rules: 4
+    potential_rules: 1
+
+  variables:
+    description: "Validate customVariables and category alignment"
+    rule_files:
+      - variables.yaml
+    mandatory_rules: 3
+    optional_rules: 2
+    potential_rules: 1
+
+execution_order:
+  - structure.yaml # Run first - validates basic rule structure
+  - labels.yaml # Run second - validates label conventions
+  - providers.yaml # Run third - validates provider usage
+  - conditions.yaml # Run fourth - validates condition logic
+  - variables.yaml # Run fifth - validates variables and categories
+
+dependencies: [] # No external dependencies
+
+tags:
+  - mta
+  - structure
+  - labels
+  - providers
+  - conditions
+  - variables
+  - categories
+  - effort

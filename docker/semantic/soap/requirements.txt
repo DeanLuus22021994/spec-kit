@@ -1,0 +1,22 @@
+# SOAP Client Dependencies
+# Python 3.13+ compatible
+
+# HTTP client
+httpx>=0.27.0
+
+# Structured logging
+structlog>=24.4.0
+
+# Retry logic
+tenacity>=9.0.0
+
+# SOAP/WSDL
+zeep>=4.3.1
+lxml>=5.3.0
+
+# Settings management
+pydantic>=2.9.0
+pydantic-settings>=2.6.0
+
+# Development/typing
+types-lxml>=2024.11.0

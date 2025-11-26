@@ -1,0 +1,43 @@
+/**
+ * Component Styles
+ * External CSS for Dashboard, AdminPortal, and ErrorBoundary components
+ */
+
+/* Dashboard Styles */
+.dashboard-trend-container {
+  margin-top: 0.5em;
+}
+
+.dashboard-trend-positive {
+  color: green;
+}
+
+.dashboard-trend-negative {
+  color: red;
+}
+
+.dashboard-service-item {
+  margin-bottom: 1em;
+}
+
+.dashboard-service-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.dashboard-gpu-memory {
+  text-align: center;
+  color: grey;
+}
+
+/* AdminPortal Styles */
+.admin-button-group {
+  margin-top: 1em;
+}
+
+/* ErrorBoundary Styles */
+.error-stack-trace {
+  text-align: left;
+  overflow: auto;
+  max-height: 200px;
+}

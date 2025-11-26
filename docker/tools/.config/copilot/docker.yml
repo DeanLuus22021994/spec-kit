@@ -1,0 +1,315 @@
+# Tools Docker Configuration Context
+# Reference for Docker containerization patterns, baked dependencies, and build optimization
+
+version: "1.0.0"
+category: "docker"
+description: "Tools container build patterns and optimization strategies"
+
+dockerfile_location: "tools/.config/docker/Dockerfile"
+
+container_architecture:
+  base_image: "python:3.14-slim"
+  size: "~661MB"
+  working_directory: "/app/tools"
+  user: "toolsuser:1001 (non-root)"
+  pattern: "Single-stage with baked dependencies"
+
+baked_dependencies:
+  philosophy: "All pip packages installed at build time - zero pip install latency at runtime"
+
+  packages:
+    core:
+      - "PyYAML>=6.0.1"
+      - "requests>=2.31.0"
+      - "click>=8.1.7"
+      - "rich>=13.7.0"
+      - "python-dotenv>=1.0.0"
+      - "colorlog>=6.8.2"
+
+    database:
+      - "psycopg2-binary>=2.9.9"
+
+    ai_ml:
+      - "qdrant-client>=1.7.0"
+      - "openai>=1.12.0"
+
+    code_quality:
+      - "pre-commit>=3.4.0"
+      - "black==25.11.0"
+      - "isort==5.12.0"
+      - "ruff==0.14.6"
+      - "sqlfluff==3.5.0"
+
+  advantages:
+    - "Instant container startup (no dependency installation)"
+    - "Consistent environment across all developers"
+    - "Reproducible builds"
+    - "Offline execution capability"
+    - "Cache persistence across rebuilds (named volumes)"
+
+  trade_offs:
+    - "Larger image size (~661MB vs minimal)"
+    - "Rebuild required for dependency updates"
+    - "Must use `--no-cache` when changing requirements.txt"
+
+build_process:
+  layers:
+    1_base:
+      instruction: "FROM python:3.14-slim"
+      cacheability: "High (rarely changes)"
+
+    2_system_deps:
+      instruction: "RUN apt-get update && apt-get install -y git"
+      cacheability: "High (rarely changes)"
+      purpose: "Minimal system dependencies (git for pre-commit)"
+
+    3_user_creation:
+      instruction: "RUN groupadd -r toolsuser && useradd -r -g toolsuser -u 1001 toolsuser"
+      cacheability: "High (never changes)"
+
+    4_pip_install:
+      instruction: "RUN pip install --no-cache-dir <packages>"
+      cacheability: "Medium (changes when requirements.txt changes)"
+      optimization: "All packages in single layer to reduce image size"
+
+    5_copy_scripts:
+      instruction: "COPY cli.py docgen.py .config/scripts/ ."
+      cacheability: "Low (changes frequently during development)"
+      placement: "After dependencies to maximize cache reuse"
+
+    6_cache_dirs:
+      instruction: "RUN mkdir -p .mypy_cache .pytest_cache __pycache__"
+      cacheability: "High (one-time setup)"
+
+    7_permissions:
+      instruction: "RUN chown -R toolsuser:toolsuser /app/tools"
+      cacheability: "Medium (changes if file structure changes)"
+
+    8_user_switch:
+      instruction: "USER toolsuser"
+      cacheability: "High (never changes)"
+
+build_context_optimization:
+  dockerignore_file: "tools/.config/docker/.dockerignore"
+
+  excluded_patterns:
+    python_cache:
+      - "__pycache__/"
+      - "*.py[cod]"
+      - "*$py.class"
+      - "*.so"
+      - ".Python"
+
+    cache_dirs:
+      - ".mypy_cache/"
+      - ".pytest_cache/"
+      - ".ruff_cache/"
+      - ".coverage"
+      - "htmlcov/"
+
+    virtual_envs:
+      - "venv/"
+      - "env/"
+      - ".venv"
+      - "ENV/"
+
+    ide:
+      - ".vscode/"
+      - ".idea/"
+      - "*.swp"
+      - "*.swo"
+
+    os:
+      - ".DS_Store"
+      - "Thumbs.db"
+      - "*.log"
+
+    git:
+      - ".git/"
+      - ".gitignore"
+      - ".gitattributes"
+
+    documentation:
+      - "site/"
+      - "docs/_build/"
+
+    testing:
+      - ".tox/"
+      - ".nox/"
+
+    distribution:
+      - "build/"
+      - "dist/"
+      - "*.egg-info/"
+      - "*.egg"
+
+  impact:
+    before: "~500MB build context"
+    after: "~50MB build context"
+    reduction: "90% smaller"
+    benefit: "Faster builds, less Docker cache pollution"
+
+docker_commands:
+  build:
+    standard: "docker build -f tools/.config/docker/Dockerfile -t semantic-kernel-tools:latest tools/"
+    no_cache: "docker build --no-cache -f tools/.config/docker/Dockerfile -t semantic-kernel-tools:latest tools/"
+    when_no_cache: "When requirements.txt changes or dependency corruption suspected"
+
+  run_cli:
+    command: "docker run --rm -v $(pwd):/workspace semantic-kernel-tools:latest python cli.py --help"
+    purpose: "Execute CLI commands"
+
+  run_docgen:
+    command: "docker run --rm -v $(pwd):/workspace semantic-kernel-tools:latest python docgen.py"
+    purpose: "Generate documentation"
+
+  run_lint:
+    command: "docker run --rm -v $(pwd):/workspace semantic-kernel-tools:latest python -m pylint tools/"
+    purpose: "Run code quality checks"
+
+  run_pre_commit:
+    command: "docker run --rm -v $(pwd):/workspace semantic-kernel-tools:latest pre-commit run --all-files"
+    purpose: "Execute pre-commit hooks"
+
+  interactive_shell:
+    command: "docker run -it --rm -v $(pwd):/workspace semantic-kernel-tools:latest bash"
+    purpose: "Debug container or run ad-hoc commands"
+
+named_volumes:
+  none: "Tools container doesn't use named volumes (unlike tests)"
+  rationale: "Tools run quickly and don't need persistent cache like browser binaries"
+  alternative: "Could add pip cache volume if needed: -v pip-cache:/root/.cache/pip"
+
+health_check:
+  command: 'python -c "import sys; sys.exit(0)"'
+  interval: "30s"
+  timeout: "3s"
+  start_period: "5s"
+  retries: 3
+  purpose: "Verify Python interpreter is functional"
+
+environment_variables:
+  PYTHONUNBUFFERED: "1 (ensures real-time log output)"
+  PYTHONDONTWRITEBYTECODE: "1 (prevents .pyc file creation)"
+
+security:
+  non_root_user:
+    user: "toolsuser"
+    uid: 1001
+    gid: 1001
+    reason: "Security best practice - avoid running as root"
+
+  minimal_base:
+    image: "python:3.14-slim"
+    size: "~124MB base"
+    advantage: "Smaller attack surface vs full python:3.14"
+
+pattern_comparison:
+  tools_vs_tests:
+    similarities:
+      - "Baked dependencies at build time"
+      - "Non-root user (UID 1001)"
+      - ".dockerignore optimization (90% reduction)"
+      - ".config/ directory organization"
+      - "Health checks for container readiness"
+      - "Single working directory (/app/{tools,tests})"
+
+    differences:
+      base_image:
+        tools: "python:3.14-slim (~661MB)"
+        tests: "mcr.microsoft.com/playwright:v1.40.0-jammy (~1.2GB)"
+
+      dependencies:
+        tools: "pip packages (pre-commit, black, pylint)"
+        tests: "npm packages (@playwright/test, typescript)"
+
+      volumes:
+        tools: "None (fast execution, no cache needed)"
+        tests: "4 named volumes (playwright-cache, npm-cache, artifacts, reports)"
+
+      multi_stage:
+        tools: "Single stage (simple CLI tools)"
+        tests: "Multi-stage (dev + ci targets)"
+
+      startup_time:
+        tools: "<1s (Python interpreter only)"
+        tests: "15-30s (service health checks + browser validation)"
+
+best_practices:
+  dependency_management:
+    - "Update requirements.txt with specific versions (black==25.11.0)"
+    - "Rebuild with --no-cache when requirements.txt changes"
+    - "Test container after rebuild: docker run semantic-kernel-tools:latest python -c 'import <package>'"
+
+  layer_optimization:
+    - "Place frequently changing files (cli.py, docgen.py) after dependencies"
+    - "Combine RUN commands where possible to reduce layers"
+    - "Use --no-cache-dir with pip to avoid cache in final image"
+
+  build_context:
+    - "Keep .dockerignore comprehensive (currently excludes 90% of files)"
+    - "Don't COPY unnecessary files (venv/, .git/, __pycache__/)"
+    - "Build context should be tools/ directory, not root"
+
+  security:
+    - "Always run as non-root user"
+    - "Use specific Python version (3.11-slim, not 'latest')"
+    - "Minimize system dependencies (only git for pre-commit)"
+    - "Regular security scanning: docker scout cve semantic-kernel-tools:latest"
+
+troubleshooting:
+  build_failures:
+    symptom: "Dependency installation fails"
+    solutions:
+      - "Check internet connectivity"
+      - "Verify package versions in requirements.txt"
+      - "Rebuild with --no-cache"
+      - "Check Docker daemon resources (RAM, disk)"
+
+  cache_corruption:
+    symptom: "Container builds but commands fail"
+    solutions:
+      - "docker build --no-cache -f tools/.config/docker/Dockerfile -t semantic-kernel-tools:latest tools/"
+      - "docker system prune -af (nuclear option)"
+
+  permission_issues:
+    symptom: "File ownership errors inside container"
+    solutions:
+      - "Ensure chown -R toolsuser:toolsuser is last before USER"
+      - "Check volume mount permissions (host filesystem)"
+
+  slow_builds:
+    symptoms: "Build takes >5 minutes"
+    solutions:
+      - "Check .dockerignore excludes cache dirs"
+      - "Use Docker BuildKit: DOCKER_BUILDKIT=1 docker build ..."
+      - "Verify layer caching: docker build --progress=plain"
+
+makefile_integration:
+  lint_target:
+    command: "tools/.config/scripts/lint.sh"
+    note: "Calls script from .config/scripts/ subdirectory"
+
+vscode_tasks:
+  pylint_report:
+    command: "docker run --rm -v ${workspaceFolder}:/workspace semantic-kernel-tools:latest python -m pylint ..."
+    note: "Uses semantic-kernel-tools:latest image"
+
+  pre_commit:
+    command: "docker run --rm -v ${workspaceFolder}:/workspace semantic-kernel-tools:latest pre-commit run --all-files"
+    note: "Executes pre-commit hooks in isolated container"
+
+migration_notes:
+  from: "tools/ (root level Dockerfile and .dockerignore)"
+  to: "tools/.config/docker/ (organized structure)"
+
+  changes:
+    - "Dockerfile: COPY .config/scripts/ instead of scripts/"
+    - "Makefile: tools/.config/scripts/lint.sh instead of tools/scripts/lint.sh"
+    - "Documentation: Update all references to new paths"
+
+  benefits:
+    - "Consistent with tests/ directory pattern"
+    - "Clear separation of config vs code"
+    - "Easier discovery via .config/ namespace"
+    - "Better alignment with root .config/ directory"

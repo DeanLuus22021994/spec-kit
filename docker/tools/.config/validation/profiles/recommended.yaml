@@ -1,0 +1,47 @@
+# Validation Profiles
+metadata: &metadata
+  name: recommended
+  description: "Balanced validation profile - default for most use cases"
+  version: "1.0.0"
+
+<<: *metadata
+
+# Rule package configuration
+rules:
+  # Metadata validation - all mandatory
+  metadata:
+    severity: mandatory
+
+  # Syntax validation - mandatory and optional
+  syntax:
+    severity:
+      - mandatory
+      - optional
+
+  # Structure validation - all mandatory
+  structure:
+    severity: mandatory
+
+  # MTA-specific validation - mandatory and optional
+  mta:
+    severity:
+      - mandatory
+      - optional
+
+  # Quality validation - mandatory only
+  quality:
+    severity: mandatory
+
+  # VS Code integration - optional only
+  vscode:
+    severity: optional
+
+# Profile options
+options:
+  failOnWarning: false
+  failOnInfo: false
+  maxViolations: 10
+# Description
+# This profile balances strictness with practicality, enforcing critical rules
+# while allowing some flexibility for optional guidelines.
+# Use for: Day-to-day development, pre-commit checks, CI/CD pipelines

@@ -1,0 +1,389 @@
+# Host Analysis Report - Generated from actual system inspection
+# Note: This file uses custom structure for host analysis data
+# Date: 2025-11-25
+
+metadata: &metadata
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: reference
+  keywords:
+    - host
+    - analysis
+    - baseline
+    - optimization
+    - docker
+    - wsl2
+    - gpu
+    - resources
+
+<<: *metadata
+
+# =============================================================================
+# System Overview
+# =============================================================================
+system:
+  os:
+    name: "Microsoft Windows 11 Home Single Language"
+    version: "10.0.26200"
+    build: 26200
+    type: "x64-based PC"
+    edition: "Home"
+    # NOTE: Home edition has some limitations vs Pro
+    limitations:
+      - "No Hyper-V management console (uses WSL2 backend)"
+      - "No group policy editor"
+      - "BitLocker device encryption only"
+
+  processor:
+    count: 1
+    # Actual cores exposed to Docker: 16 (likely 8 cores + HT)
+    docker_visible_cpus: 16
+
+  memory:
+    total_mb: 16085 # ~16 GB
+    total_gb: 15.7
+    available_mb: 3485 # At time of inspection
+    available_gb: 3.4
+    virtual_max_mb: 38428
+    virtual_used_mb: 34684
+    utilization_percent: 78
+
+  hypervisor:
+    detected: true
+    type: "WSL2/Hyper-V"
+    note: "Windows 11 Home uses WSL2 backend for Docker"
+
+# =============================================================================
+# WSL2 Configuration
+# =============================================================================
+wsl2:
+  status: "Running"
+  default_distribution: "docker-desktop"
+  version: 2
+  kernel: "6.6.87.2-microsoft-standard-WSL2"
+
+  # .wslconfig CREATED during this analysis
+  wslconfig:
+    exists: true
+    created: "2025-11-25"
+    file_path: "C:\\Users\\Dean\\.wslconfig"
+    settings:
+      memory: "10GB"
+      processors: 12
+      swap: "4GB"
+      localhostForwarding: true
+      autoMemoryReclaim: "gradual"
+      sparseVhd: true
+      dnsTunneling: true
+    previous_state: "No .wslconfig - using WSL2 defaults (50% = 8GB)"
+    new_state: "10GB allocated (62.5% of 16GB)"
+
+  # ACTION REQUIRED: Restart WSL2 to apply changes
+  restart_required: true
+  restart_command: "wsl --shutdown"
+
+# =============================================================================
+# Storage Analysis
+# =============================================================================
+storage:
+  primary_drive:
+    letter: "C"
+    total_gb: 930.58
+    used_gb: 264.44
+    free_gb: 666.14
+    utilization_percent: 28.4
+    status: "HEALTHY - Ample space available"
+
+  docker_storage:
+    root_dir: "/var/lib/docker"
+    driver: "overlayfs"
+    usage:
+      images:
+        size_gb: 28.68
+        reclaimable_gb: 28.68
+        reclaimable_percent: 100
+      containers:
+        size_gb: 0
+        note: "No running containers at inspection time"
+      volumes:
+        size_gb: 1.3
+        reclaimable_gb: 1.3
+      build_cache:
+        size_gb: 24.9
+        reclaimable_gb: 20.61
+    total_usage_gb: 54.88
+    recommendation: "Run 'docker system prune' to reclaim ~50GB"
+
+# =============================================================================
+# GPU Analysis
+# =============================================================================
+gpu:
+  device:
+    name: "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
+    index: "0"
+    architecture: "Ampere"
+    compute_capability: "8.6"
+
+  memory:
+    total_mib: 6144 # 6 GB
+    used_mib: 275
+    free_mib: 5728
+    utilization_percent: 4.5
+    status: "HEALTHY - GPU mostly idle"
+
+  driver:
+    version: "581.57"
+    status: "Current"
+
+  cuda:
+    toolkit_version: "13.0"
+    release: "13.0"
+    build: "V13.0.88"
+    status: "Verified - CUDA 13.0 installed"
+
+  docker_gpu_support:
+    nvidia_runtime: true
+    runtimes_available:
+      - "io.containerd.runc.v2"
+      - "nvidia"
+      - "runc"
+    default_runtime: "runc"
+    recommendation: "GPU runtime available and functional"
+
+# =============================================================================
+# Docker Configuration
+# =============================================================================
+docker:
+  version: "28.5.2"
+  context:
+    active: "default"
+    endpoint: "npipe:////./pipe/docker_engine"
+  backend: "WSL2"
+
+  resources:
+    cpus: 16
+    total_memory_gib: 7.61 # Docker sees 7.6GB, not full 16GB
+    memory_constraint: "WSL2 default 50% limit in effect"
+
+  storage:
+    driver: "overlayfs"
+    root: "/var/lib/docker"
+
+  contexts:
+    - name: "default"
+      endpoint: "npipe:////./pipe/docker_engine"
+      active: true
+    - name: "desktop-linux"
+      endpoint: "npipe:////./pipe/dockerDesktopLinuxEngine"
+      active: false
+
+# =============================================================================
+# Docker Images Analysis
+# =============================================================================
+images:
+  total_count: 19
+  total_size_gb: 28.68
+  project_images:
+    - repository: "semantic-kernel-app-frontend"
+      tag: "latest"
+      size_mb: 790
+    - repository: "semantic-kernel-app-runner"
+      tag: "latest"
+      size_mb: 2070
+      note: "Large - consider optimization"
+    - repository: "semantic-kernel-app-gateway"
+      tag: "latest"
+      size_mb: 1180
+    - repository: "semantic-kernel-app-backend"
+      tag: "latest"
+      size_mb: 1380
+    - repository: "semantic-kernel-app-engine"
+      tag: "latest"
+      size_mb: 1120
+    - repository: "semantic-kernel-app-embeddings"
+      tag: "latest"
+      size_mb: 163
+      note: "Small - may be CPU-only build"
+    - repository: "semantic-kernel-app-vector"
+      tag: "latest"
+      size_mb: 328
+    - repository: "semantic-kernel-app-devcontainer"
+      tag: "latest"
+      size_mb: 1930
+    - repository: "semantic-kernel-app-business"
+      tag: "latest"
+      size_mb: 1060
+    - repository: "semantic-kernel-app-database"
+      tag: "latest"
+      size_mb: 845
+
+  external_images:
+    - repository: "pgvector/pgvector"
+      tag: "pg16"
+      size_mb: 723
+    - repository: "ghcr.io/github/github-mcp-server"
+      tag: "latest"
+      size_mb: 54
+    - repository: "adminer"
+      tag: "latest"
+      size_mb: 168
+    - repository: "mcp/playwright"
+      tag: "<none>"
+      size_mb: 1670
+
+# =============================================================================
+# Process Analysis (at inspection time)
+# =============================================================================
+processes:
+  top_memory_consumers:
+    - name: "Code - Insiders"
+      memory_mb: 2095
+      note: "VS Code consuming significant memory"
+    - name: "Code - Insiders (2)"
+      memory_mb: 1493
+    - name: "vmmemWSL"
+      memory_mb: 977
+      note: "WSL2 VM memory allocation"
+    - name: "Memory Compression"
+      memory_mb: 491
+    - name: "Docker Desktop"
+      memory_mb: 250
+    - name: "com.docker.backend"
+      memory_mb: 209
+    - name: "Copilot"
+      memory_mb: 194
+
+  analysis:
+    vs_code_total_mb: 4261
+    docker_total_mb: 459
+    wsl_vm_mb: 977
+    recommendation: "VS Code consuming ~4GB - consider closing unused windows"
+
+# =============================================================================
+# Critical Issues Identified
+# =============================================================================
+critical_issues:
+  - id: "WSL_MEMORY_LIMIT"
+    severity: "RESOLVED"
+    issue: "No .wslconfig - WSL2 uses default 50% memory limit"
+    impact: "Docker only sees 7.6GB of 16GB total RAM"
+    resolution:
+      status: "FIXED"
+      action_taken: "Created .wslconfig with optimized memory settings"
+      file_created: "C:\\Users\\Dean\\.wslconfig"
+      new_allocation: "10GB memory, 12 processors, 4GB swap"
+      next_step: "Restart WSL2 with 'wsl --shutdown'"
+
+  - id: "DOCKER_BUILD_CACHE"
+    severity: "MEDIUM"
+    issue: "24.9GB build cache, 20.6GB reclaimable"
+    impact: "Wasted disk space, slower builds"
+    solution:
+      action: "Run docker system prune to reclaim space"
+      command: "docker builder prune --force"
+
+  - id: "EMBEDDINGS_IMAGE_SIZE"
+    severity: "MEDIUM"
+    issue: "Embeddings image only 163MB - likely CPU-only build"
+    impact: "May not include CUDA support"
+    solution:
+      action: "Verify embeddings Dockerfile uses CUDA base image"
+      verify_command: "docker inspect semantic-kernel-app-embeddings | Select-String CUDA"
+
+  - id: "HIGH_VS_CODE_MEMORY"
+    severity: "LOW"
+    issue: "VS Code consuming ~4GB RAM"
+    impact: "Reduces available memory for Docker/GPU"
+    solution:
+      action: "Close unused VS Code windows/extensions"
+
+# =============================================================================
+# Optimization Recommendations
+# =============================================================================
+recommendations:
+  immediate_actions:
+    - priority: 1
+      action: "Restart WSL2 to apply .wslconfig changes"
+      status: "READY"
+      impact: "Docker memory: 7.6GB → 10GB"
+      command: "wsl --shutdown; Start-Sleep -Seconds 5; docker info | Select-String 'Total Memory'"
+
+    - priority: 2
+      action: "Prune Docker build cache"
+      status: "PENDING"
+      impact: "Reclaim ~20GB disk space"
+      command: "docker builder prune --keep-storage 5GB --force"
+
+    - priority: 3
+      action: "Verify embeddings has GPU support"
+      status: "PENDING"
+      impact: "Ensure local GPU acceleration works"
+      command: "docker run --rm --gpus all semantic-kernel-app-embeddings nvidia-smi"
+
+  configuration_updates:
+    - file: ".config/gpu-resources.yml"
+      updates:
+        - "Confirmed: RTX 3050 6GB, CUDA 13.0, Driver 581.57"
+        - "GPU currently 4.5% utilized - ready for workloads"
+        - "VRAM partitioning validated"
+
+    - file: ".config/services.yml"
+      updates:
+        - "Docker memory limit: 7.6GB (needs .wslconfig)"
+        - "16 CPUs available to Docker"
+        - "WSL2 kernel: 6.6.87.2-microsoft-standard-WSL2"
+
+    - file: ".config/optimization-toggles.yml"
+      updates:
+        - "Add WSL2 memory management toggle"
+        - "Add build cache management toggle"
+
+# =============================================================================
+# Validation Commands
+# =============================================================================
+validation_commands:
+  verify_wslconfig:
+    command: "Get-Content $env:USERPROFILE\\.wslconfig"
+    expected: "Memory and processor limits defined"
+
+  verify_docker_memory:
+    command: "docker info | Select-String 'Total Memory'"
+    expected: "Total Memory: 10GiB (after restart)"
+
+  verify_gpu_in_container:
+    command: "docker run --rm --gpus all nvidia/cuda:13.0.1-base-ubuntu22.04 nvidia-smi"
+    expected: "RTX 3050 visible with 6GB VRAM"
+
+  verify_embeddings_gpu:
+    command: "docker run --rm --gpus all semantic-kernel-app-embeddings python -c 'import torch; print(torch.cuda.is_available())'"
+    expected: "True"
+
+# =============================================================================
+# Next Steps
+# =============================================================================
+next_steps:
+  phase_1_immediate:
+    - "Create .wslconfig with optimized settings"
+    - "Restart WSL2 (wsl --shutdown)"
+    - "Verify Docker memory increased"
+
+  phase_2_optimization:
+    - "Prune Docker build cache"
+    - "Rebuild embeddings with CUDA support if needed"
+    - "Start local registry for faster builds"
+
+  phase_3_validation:
+    - "Run GPU workloads and monitor VRAM usage"
+    - "Validate embedding generation performance"
+    - "Test service tier profiles"
+
+# =============================================================================
+# Related Files
+# =============================================================================
+related_files:
+  - ".config/gpu-resources.yml: GPU VRAM partitioning"
+  - ".config/services.yml: Service tier definitions"
+  - ".config/optimization-toggles.yml: Real-time toggles"
+  - ".config/docker/registry/config.yml: Local registry config"
+  - ".config/copilot/workflows/local-docker-stack.yml: Docker stack integration"
+  - "docker-compose.yml: Docker service definitions"

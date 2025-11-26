@@ -1,0 +1,297 @@
+# Tools Scripts Configuration Context
+# Reference for script automation, workflows, and operational procedures
+
+version: "1.0.0"
+category: "scripts"
+description: "Tools automation scripts and operational workflows"
+
+script_locations:
+  directory: "tools/.config/scripts/"
+
+  scripts:
+    lint:
+      file: "lint.sh"
+      purpose: "Run code quality checks (pylint, pre-commit, sqlfluff)"
+      entry_point: true
+      called_from:
+        - "Makefile (lint target)"
+        - "Manual execution"
+        - "CI/CD pipelines"
+
+    precommit_autoupdate:
+      file: "precommit-autoupdate.sh"
+      purpose: "Auto-update pre-commit hooks and create PR"
+      automation: true
+      dependencies:
+        - "gh CLI (for PR creation)"
+        - "git (for commits)"
+
+lint_workflow:
+  location: "tools/.config/scripts/lint.sh"
+
+  steps:
+    1_create_reports_dir:
+      action: "mkdir -p reports"
+      purpose: "Ensure reports directory exists"
+
+    2_run_pylint:
+      action: "Run pylint with .pylintrc config"
+      command: "python -m pylint --rcfile=.pylintrc --output-format=text --jobs=4 tools src tests"
+      output: "reports/pylint_report.txt (via tee)"
+      parallel_jobs: 4
+
+    3_run_pre_commit:
+      action: "Execute all pre-commit hooks"
+      command: "pre-commit run --all-files || true"
+      fail_behavior: "Continue even if hooks fail"
+      hooks_run:
+        - "black (Python formatter)"
+        - "isort (import sorter)"
+        - "ruff (linter)"
+        - "prettier (JS/TS formatter)"
+        - "eslint (JS/TS linter)"
+        - "dotnet-format (.NET formatter)"
+        - "sqlfluff (SQL linter)"
+        - "shellcheck (bash linter)"
+        - "yaml-check (YAML validator)"
+        - "end-of-file-fixer"
+        - "trailing-whitespace"
+
+    4_optional_sqlfluff:
+      action: "Run SQL linting if sqlfluff is available"
+      command: "sqlfluff lint infrastructure/database || true"
+      condition: "command -v sqlfluff >/dev/null 2>&1"
+      target: "infrastructure/database/"
+
+  error_handling:
+    set_euo_pipefail: "Exit on error, undefined variables, pipe failures"
+    pre_commit_continue: "|| true prevents script exit if hooks fail"
+    sqlfluff_optional: "Only runs if sqlfluff is installed"
+
+  outputs:
+    pylint_report:
+      path: "reports/pylint_report.txt"
+      format: "Text (human-readable)"
+      content: "Code quality score, violations, suggestions"
+
+    console:
+      pylint: "Real-time output via tee"
+      pre_commit: "Hook status (passed/failed)"
+      sqlfluff: "SQL violations if any"
+
+precommit_autoupdate_workflow:
+  location: "tools/.config/scripts/precommit-autoupdate.sh"
+
+  steps:
+    1_autoupdate:
+      action: "Update pre-commit hook versions"
+      command: "pre-commit autoupdate"
+      effect: "Modifies .pre-commit-config.yaml with latest hook versions"
+
+    2_check_changes:
+      action: "Check if .pre-commit-config.yaml changed"
+      command: "git status --porcelain"
+      branching: "If changes exist, proceed; else exit"
+
+    3_commit_changes:
+      action: "Stage and commit .pre-commit-config.yaml"
+      commands:
+        - "git add .pre-commit-config.yaml"
+        - "git commit -m 'chore(pre-commit): autoupdate hooks'"
+
+    4_push_branch:
+      action: "Push changes to remote"
+      command: "git push origin HEAD"
+
+    5_create_pr:
+      action: "Create pull request via gh CLI"
+      command: "gh pr create --title 'chore(pre-commit): autoupdate hooks' --body 'Automated pre-commit autoupdate' --base semantic-foundation --head $(git rev-parse --abbrev-ref HEAD)"
+      condition: "gh CLI available"
+      fallback: "Manual PR creation message if gh not found"
+
+  error_handling:
+    set_euo_pipefail: "Exit on error, undefined variables, pipe failures"
+    gh_cli_optional: "|| true prevents exit if gh CLI fails"
+    no_changes: "Graceful exit if no updates available"
+
+  dependencies:
+    required:
+      - "pre-commit (installed in container)"
+      - "git (available in container)"
+
+    optional:
+      - "gh CLI (for automated PR creation)"
+
+  automation_use_case:
+    trigger: "Monthly cron job or manual execution"
+    purpose: "Keep pre-commit hooks up-to-date with latest versions"
+    benefit: "Automated dependency management for hooks"
+
+bash_best_practices:
+  shebang:
+    value: "#!/usr/bin/env bash"
+    reason: "Portable across systems (finds bash in PATH)"
+
+  error_handling:
+    set_flags: "set -euo pipefail"
+    breakdown:
+      e: "Exit on any command failure"
+      u: "Exit on undefined variable usage"
+      o_pipefail: "Pipe fails if any command in pipe fails"
+
+  continue_on_error:
+    pattern: "|| true"
+    use_cases:
+      - "pre-commit run (continue even if hooks fail)"
+      - "sqlfluff lint (optional tool)"
+      - "gh pr create (optional gh CLI)"
+
+  output_redirection:
+    tee_pattern: "command | tee file.txt"
+    purpose: "Show output to console AND save to file"
+    example: "pylint ... | tee reports/pylint_report.txt"
+
+common_commands:
+  pylint:
+    command: "python -m pylint --rcfile=.pylintrc --output-format=text --jobs=4 <paths>"
+    options:
+      rcfile: "Configuration file (.pylintrc)"
+      output_format: "text (human-readable) or json (machine-readable)"
+      jobs: "4 (parallel execution for speed)"
+
+  pre_commit:
+    run_all: "pre-commit run --all-files"
+    run_specific: "pre-commit run <hook-id>"
+    autoupdate: "pre-commit autoupdate"
+    install: "pre-commit install"
+
+  sqlfluff:
+    lint: "sqlfluff lint <directory>"
+    fix: "sqlfluff fix <directory>"
+    config: ".sqlfluff (configuration file)"
+
+  git:
+    check_changes: "git status --porcelain"
+    add: "git add <file>"
+    commit: "git commit -m '<message>'"
+    push: "git push origin HEAD"
+
+  gh_cli:
+    create_pr: "gh pr create --title '<title>' --body '<body>' --base <base> --head <head>"
+    list_prs: "gh pr list"
+
+makefile_integration:
+  lint_target:
+    name: "lint"
+    command: "tools/.config/scripts/lint.sh"
+    description: "Running lint (console)..."
+    usage: "make lint"
+
+  lint_report_target:
+    name: "lint-report"
+    command: "python -m pylint --rcfile=.pylintrc --output-format=text --jobs=4 tools src tests | tee reports/pylint_report.txt"
+    description: "Generating lint report..."
+    usage: "make lint-report"
+    note: "Duplicates lint.sh functionality (could consolidate)"
+
+docker_integration:
+  run_lint_in_container:
+    command: "docker run --rm -v $(pwd):/workspace semantic-kernel-tools:latest bash .config/scripts/lint.sh"
+    purpose: "Execute lint in isolated container"
+
+  run_precommit_update:
+    command: "docker run --rm -v $(pwd):/workspace semantic-kernel-tools:latest bash .config/scripts/precommit-autoupdate.sh"
+    purpose: "Automated hook updates in container"
+
+vscode_tasks:
+  generate_pylint_report:
+    label: "Generate Pylint Report"
+    command: "docker run --rm -v ${workspaceFolder}:/workspace semantic-kernel-tools:latest sh -c 'python -m pylint ...'"
+    note: "Uses container for consistency"
+
+  run_pre_commit_hooks:
+    label: "Run Pre-commit Hooks"
+    command: "docker run --rm -v ${workspaceFolder}:/workspace semantic-kernel-tools:latest pre-commit run --all-files"
+    note: "Isolated execution in container"
+
+environment_requirements:
+  python_packages:
+    - "pylint (code quality)"
+    - "pre-commit (hook management)"
+    - "black (formatter)"
+    - "isort (import sorter)"
+    - "ruff (linter)"
+    - "sqlfluff (SQL linter)"
+
+  system_tools:
+    - "git (version control)"
+    - "gh (GitHub CLI, optional)"
+    - "bash (script interpreter)"
+
+troubleshooting:
+  pylint_fails:
+    symptom: "pylint exits with errors"
+    solutions:
+      - "Check .pylintrc configuration"
+      - "Verify Python files have no syntax errors"
+      - "Ensure pylint is installed: pip list | grep pylint"
+
+  pre_commit_fails:
+    symptom: "Hooks fail even with || true"
+    solutions:
+      - "Run pre-commit run --all-files manually to see specific failures"
+      - "Update hooks: pre-commit autoupdate"
+      - "Clean cache: pre-commit clean"
+
+  sqlfluff_not_found:
+    symptom: "sqlfluff not available"
+    solution: "Optional tool - script continues without it"
+
+  gh_cli_not_found:
+    symptom: "Cannot create PR automatically"
+    solutions:
+      - "Install gh CLI: https://cli.github.com/"
+      - "Authenticate: gh auth login"
+      - "Create PR manually if gh not available"
+
+  permission_denied:
+    symptom: "bash: permission denied"
+    solution: "chmod +x tools/.config/scripts/*.sh"
+
+migration_notes:
+  from: "tools/scripts/"
+  to: "tools/.config/scripts/"
+
+  changes:
+    - "Makefile: Updated lint target to tools/.config/scripts/lint.sh"
+    - "Docker COPY: Updated to .config/scripts/ in Dockerfile"
+    - "Documentation: All references updated to new path"
+
+  benefits:
+    - "Consistent with tests/.config/scripts/ pattern"
+    - "Clear separation of config vs code"
+    - "Easier discovery via .config/ namespace"
+
+pattern_comparison:
+  tools_vs_tests_scripts:
+    tools:
+      scripts:
+        - "lint.sh (pylint + pre-commit + sqlfluff)"
+        - "precommit-autoupdate.sh (automated PR creation)"
+      purpose: "Code quality and automation"
+
+    tests:
+      scripts:
+        - "run-tests.sh (Playwright test execution)"
+        - "validate-build-cache.sh (cache corruption detection)"
+        - "validate-playwright-cache.sh (browser validation)"
+        - "seed-test-data.sh (database seeding)"
+        - "cleanup.sh (artifact cleanup)"
+      purpose: "Test execution and validation"
+
+    consistency:
+      - "Both use .config/scripts/ directory"
+      - "Both use bash with set -e error handling"
+      - "Both have color-coded output (tests more extensive)"
+      - "Both integrate with Makefile"
+      - "Both executable in Docker containers"

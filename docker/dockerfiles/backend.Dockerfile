@@ -1,0 +1,56 @@
+# Multi-stage build for Backend API
+# Optimized for minimal size and fast startup with volume persistence
+# PRECOMPILED: All dependencies baked in
+
+# Stage 1: Build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+
+WORKDIR /src
+
+# Copy csproj and restore dependencies (cached layer)
+COPY src/backend/backend.csproj ./backend/
+COPY src/Directory.Packages.props ./Directory.Packages.props
+RUN dotnet restore ./backend/backend.csproj
+
+# Copy source and build
+COPY src/backend/ ./backend/
+WORKDIR /src/backend
+RUN dotnet publish backend.csproj -c Release -o /app/publish --no-restore
+
+# Stage 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
+
+WORKDIR /app
+
+# Install ICU libraries for globalization support and wget for healthchecks
+RUN apk add --no-cache icu-libs icu-data-full wget
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S appuser && \
+    adduser -S appuser -u 1001 -G appuser
+
+# Create directories for persistent volumes
+RUN mkdir -p /app/logs /app/data && \
+    chown -R appuser:appuser /app
+
+# Copy published output
+COPY --from=build --chown=appuser:appuser /app/publish .
+
+# Switch to non-root user
+USER appuser
+
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:80 \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+# Volume mount points for persistence
+VOLUME ["/app/logs", "/app/data"]
+
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
+
+ENTRYPOINT ["dotnet", "backend.dll"]

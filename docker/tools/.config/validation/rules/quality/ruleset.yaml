@@ -1,0 +1,62 @@
+metadata: &metadata
+  name: "quality-package-ruleset"
+  description: "Rules for YAML quality: duplicates, unused elements, naming, performance"
+  version: "1.0.0"
+  category: "validation-rules"
+
+<<: *metadata
+
+# Quality Package - Ruleset Configuration
+# Validates YAML code quality and best practices
+
+package_info:
+  name: "quality"
+  total_rules: 12
+  rule_files:
+    - duplicates.yaml # 2 duplicate detection rules
+    - unused.yaml # 2 unused element rules
+    - naming.yaml # 4 naming convention rules
+    - performance.yaml # 4 performance and size rules
+
+rule_groups:
+  duplicates:
+    description: "Detect duplicate keys and anchors"
+    rule_files:
+      - duplicates.yaml
+    mandatory_rules: 2
+
+  unused:
+    description: "Detect unused anchors and merge keys"
+    rule_files:
+      - unused.yaml
+    optional_rules: 1
+    potential_rules: 1
+
+  naming:
+    description: "Enforce consistent naming conventions"
+    rule_files:
+      - naming.yaml
+    optional_rules: 4
+
+  performance:
+    description: "Monitor file size and complexity"
+    rule_files:
+      - performance.yaml
+    potential_rules: 4
+
+execution_order:
+  - duplicates.yaml # Run first - catch duplicates early
+  - unused.yaml # Run second - find dead code
+  - naming.yaml # Run third - check naming consistency
+  - performance.yaml # Run fourth - check size/complexity
+
+dependencies: [] # No external dependencies
+
+tags:
+  - quality
+  - duplicates
+  - unused
+  - naming
+  - performance
+  - maintainability
+  - best-practices

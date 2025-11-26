@@ -1,0 +1,190 @@
+# MTA Label Validation Rules
+# Purpose: Ensure proper use of MTA labels for categorization and filtering
+# Scope: All MTA ruleset YAML files
+# Package: mta
+
+---
+- ruleID: mta-labels-reserved-konveyor
+  description: |
+    Validates proper use of reserved konveyor.io/ label namespace.
+
+    The konveyor.io/ prefix is reserved for official MTA labels:
+    - konveyor.io/source=<technology>: Source technology/framework
+    - konveyor.io/target=<technology>: Target technology/framework
+
+    Examples:
+    - konveyor.io/source=java-ee
+    - konveyor.io/source=dotnet
+    - konveyor.io/target=quarkus
+    - konveyor.io/target=kubernetes
+
+    Custom labels should use different namespaces (e.g., organization.com/).
+  labels:
+    - "mta/labels"
+    - "mta/namespaces"
+    - "validation/conventions"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*-\\s+['\"]?konveyor\\.io/(?!source=|target=)[^'\"\\n]*['\"]?"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Using konveyor.io/ namespace for non-standard labels.
+
+    konveyor.io/ is reserved for:
+    - konveyor.io/source=<technology>
+    - konveyor.io/target=<technology>
+
+    For custom labels, use your own namespace:
+    - myorg.com/category=<value>
+    - project/type=<value>
+
+    Example:
+    ```yaml
+    labels:
+      - konveyor.io/source=java-ee
+      - konveyor.io/target=quarkus
+      - mycompany.com/priority=high
+    ```
+  effort: 1
+  category: mandatory
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#labels
+      title: "MTA Label Namespace Guidelines"
+
+---
+- ruleID: mta-labels-format-valid
+  description: |
+    Ensures labels follow proper key=value or key format.
+
+    MTA labels can be:
+    - Simple tags: "validation", "syntax", "security"
+    - Key-value pairs: "category=mandatory", "language=java"
+    - Namespaced: "konveyor.io/source=spring-boot"
+
+    Label format rules:
+    - Use lowercase for consistency
+    - Separate words with hyphens in keys
+    - Use forward slashes for namespaces
+    - No spaces around = in key=value pairs
+  labels:
+    - "mta/labels"
+    - "mta/format"
+    - "validation/syntax"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*-\\s+['\"]?[^'\"\\n]*\\s+=\\s+[^'\"\\n]*['\"]?|^\\s*-\\s+['\"]?[A-Z_][^'\"\\n]*['\"]?"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Label format is invalid.
+
+    Use proper formats:
+    - Simple tags: validation, syntax
+    - Key-value: category=mandatory (no spaces around =)
+    - Namespaced: konveyor.io/source=java-ee
+
+    Avoid:
+    - Uppercase: VALIDATION
+    - Spaces: category = mandatory
+    - Underscores in keys: my_category=value
+
+    Example:
+    ```yaml
+    labels:
+      - validation
+      - category=mandatory
+      - konveyor.io/source=spring-boot
+    ```
+  effort: 1
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#label-format
+      title: "MTA Label Format Specification"
+
+---
+- ruleID: mta-labels-category-values
+  description: |
+    Validates that category labels use standard MTA values.
+
+    When using category= labels, use standard MTA categories:
+    - mandatory: Must be addressed for migration
+    - optional: Recommended improvements
+    - potential: Possible issues to review
+
+    These align with the rule category field and help filter rules.
+  labels:
+    - "mta/labels"
+    - "mta/categories"
+    - "validation/standards"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*-\\s+['\"]?category=(?!mandatory|optional|potential)[^'\"\\n]+['\"]?"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Category label uses non-standard value.
+
+    Use standard MTA categories:
+    - category=mandatory: Must fix
+    - category=optional: Should fix
+    - category=potential: May need review
+
+    These match the rule category field values.
+
+    Example:
+    ```yaml
+    labels:
+      - category=mandatory
+      - validation/syntax
+    category: mandatory
+    ```
+  effort: 1
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#categories
+      title: "MTA Category Values"
+
+---
+- ruleID: mta-labels-usage-guidelines
+  description: |
+    Provides guidance on effective label usage for rule organization.
+
+    Good labeling practices:
+    - Use 3-7 labels per rule for optimal categorization
+    - Include technology/domain labels (yaml/, java/, dotnet/)
+    - Add validation type labels (syntax, structure, security)
+    - Use konveyor.io/source and target for migration rules
+    - Include category labels for severity
+    - Add specific feature labels (indentation, naming, etc.)
+
+    Labels enable powerful filtering in MTA analysis.
+  labels:
+    - "mta/labels"
+    - "mta/guidelines"
+    - "validation/best-practices"
+  when:
+    builtin.filecontent:
+      pattern: "(?m)^\\s*labels:\\s*\\[\\s*\\]|^\\s*labels:\\s*$"
+      filePattern: "**/*ruleset*.{yml,yaml}"
+  message: |
+    Rule has no labels defined.
+
+    Add meaningful labels to enable filtering and categorization:
+
+    Example:
+    ```yaml
+    labels:
+      - "yaml/syntax"
+      - "yaml/indentation"
+      - "validation/formatting"
+      - "category=mandatory"
+    ```
+
+    Include:
+    - Technology domain (yaml/, java/, etc.)
+    - Validation type (syntax, structure, security)
+    - Specific feature being validated
+    - Category/severity indicators
+  effort: 1
+  category: optional
+  links:
+    - url: https://github.com/konveyor/analyzer-lsp/blob/main/docs/rules.md#labeling-best-practices
+      title: "MTA Labeling Best Practices"

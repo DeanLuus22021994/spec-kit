@@ -1,0 +1,49 @@
+# Table of Contents for Semantic Kernel Application Documentation
+# Metadata: version: 1.1.0 | category: config | updated: 2025-11-25
+# Related: docs/mkdocs.yml, docs/index.md
+
+- name: Home
+  href: index.md
+
+- name: Architecture
+  items:
+    - name: Overview
+      href: ../ARCHITECTURE.md
+
+- name: Getting Started
+  items:
+    - name: Development Guide
+      href: ../DEVELOPMENT.md
+    - name: Configuration
+      href: configuration/yaml-files.md
+
+- name: API Reference
+  items:
+    - name: API Overview
+      href: api/README.md
+
+- name: Development
+  items:
+    - name: Config Pattern Guide
+      href: development/config-pattern-guide.md
+    - name: Copilot Patterns
+      href: development/copilot-patterns.md
+
+- name: Docker
+  items:
+    - name: Dockerfiles Overview
+      href: dockerfiles/overview.md
+    - name: Tools Container
+      href: tools-container.md
+
+- name: CLI Reference
+  items:
+    - name: Python CLI
+      href: cli/python-cli.md
+    - name: GitHub CLI
+      href: github-cli-reference.md
+
+- name: Analysis
+  items:
+    - name: Analysis Overview
+      href: ANALYSIS/ANALYSIS.md

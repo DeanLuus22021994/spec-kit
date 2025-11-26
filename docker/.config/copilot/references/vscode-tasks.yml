@@ -1,0 +1,154 @@
+# VS Code Tasks Reference
+# Automation tasks available in .vscode/tasks.json
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: reference
+  keywords:
+    - vscode
+    - tasks
+    - automation
+    - commands
+    - shortcuts
+
+<<: *metadata
+
+task_file: .vscode/tasks.json
+total_tasks: 22
+
+# Task Template
+task_template: &task_template
+  id: null
+  command: null
+  description: null
+
+categories:
+  code_quality:
+    - <<: *task_template
+      id: Generate Pylint Report
+      command: docker run --rm -v ${workspaceFolder}:/workspace -w /workspace semantic-kernel-tools:latest pylint --output-format=text src/ > reports/pylint_report.txt
+      description: Generate combined Pylint report for src/ directory
+
+    - <<: *task_template
+      id: Generate Pylint Tools Report
+      command: docker run --rm -v ${workspaceFolder}:/workspace -w /workspace semantic-kernel-tools:latest pylint --output-format=text tools/ > reports/pylint_tools_report.txt
+      description: Generate Pylint report for tools/ directory only
+
+    - <<: *task_template
+      id: Run Pre-commit Hooks
+      command: docker run --rm -v ${workspaceFolder}:/workspace -w /workspace semantic-kernel-tools:latest pre-commit run --all-files
+      description: Execute pre-commit hooks across all files
+
+  github_cli:
+    - id: "GitHub: Check PR"
+      command: "gh pr status"
+      description: "Check current pull request status"
+
+    - id: "GitHub: Get Default Branch"
+      command: "gh repo view --json defaultBranchRef --jq .defaultBranchRef.name"
+      description: "Get repository default branch name"
+
+    - id: "GitHub: View PR"
+      command: "gh pr view"
+      description: "View current pull request details"
+
+  tools_container:
+    - id: "Tools: CLI Config"
+      command: "docker run --rm -it -v ${workspaceFolder}:/workspace -w /workspace semantic-kernel-tools:latest python tools/cli.py --config"
+      description: "Interactive CLI configuration tool"
+
+    - id: "Tools: Generate Documentation"
+      command: "docker run --rm -v ${workspaceFolder}:/workspace -w /workspace semantic-kernel-tools:latest python tools/docgen.py"
+      description: "Generate documentation using docgen tool"
+
+  docker:
+    - id: "Docker: Build All Services"
+      command: "docker-compose build"
+      description: "Build all service images from docker-compose.yml"
+
+    - id: "Docker: Start Services"
+      command: "docker-compose up -d"
+      description: "Start all services in detached mode"
+
+    - id: "Docker: Stop Services"
+      command: "docker-compose down"
+      description: "Stop and remove all running services"
+
+    - id: "Docker: View Logs"
+      command: "docker-compose logs -f"
+      description: "Follow logs from all running services"
+
+  dotnet:
+    - id: ".NET: Build Solution"
+      command: "dotnet build semantic-kernel-app.sln"
+      description: "Build entire .NET solution"
+
+    - id: ".NET: Clean Solution"
+      command: "dotnet clean semantic-kernel-app.sln"
+      description: "Clean build artifacts from solution"
+
+    - id: ".NET: Restore Packages"
+      command: "dotnet restore semantic-kernel-app.sln"
+      description: "Restore NuGet packages for solution"
+
+  testing:
+    - id: "Playwright: Run E2E Tests"
+      command: "npm test --prefix tests"
+      description: "Execute end-to-end tests with Playwright"
+
+    - id: "Playwright: UI Mode"
+      command: "npm run test:ui --prefix tests"
+      description: "Run Playwright tests in interactive UI mode"
+
+    - id: ".NET: Run Unit Tests"
+      command: "dotnet test semantic-kernel-app.sln"
+      description: "Execute all xUnit tests in solution"
+
+  documentation:
+    - id: "Docs: Build MkDocs"
+      command: "docker run --rm -v ${workspaceFolder}:/workspace -w /workspace semantic-kernel-tools:latest mkdocs build"
+      description: "Build static documentation site"
+
+    - id: "Docs: Serve MkDocs"
+      command: "docker run --rm -v ${workspaceFolder}:/workspace -w /workspace -p 8000:8000 semantic-kernel-tools:latest mkdocs serve"
+      description: "Serve documentation locally on port 8000"
+
+  gpu:
+    - id: "GPU: Check Status"
+      command: "nvidia-smi"
+      description: "Display NVIDIA GPU status and memory usage"
+
+    - id: "GPU: Verify PyTorch CUDA"
+      command: 'python -c "import torch; print(f''CUDA available: {torch.cuda.is_available()}, Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}'')"'
+      description: "Verify PyTorch can access CUDA GPU"
+
+    - id: "GPU: Docker Test"
+      command: "docker run --rm --gpus all nvidia/cuda:13.0.0-base-ubuntu24.04 nvidia-smi"
+      description: "Test GPU access from Docker container"
+
+usage:
+  how_to_run:
+    - "Press Ctrl+Shift+P (Cmd+Shift+P on macOS)"
+    - "Type 'Tasks: Run Task'"
+    - "Select task from list"
+
+  common_workflows:
+    pre_commit_validation:
+      - "Run Pre-commit Hooks"
+      - "Generate Pylint Report"
+      - "Review reports/pylint_report.txt"
+
+    github_pr_workflow:
+      - "GitHub: Check PR"
+      - "GitHub: View PR"
+
+    docker_development:
+      - "Docker: Build All Services"
+      - "Docker: Start Services"
+      - "Docker: View Logs"
+
+    documentation_preview:
+      - "Docs: Build MkDocs"
+      - "Docs: Serve MkDocs"
+      - "Open http://localhost:8000"

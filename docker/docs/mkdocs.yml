@@ -1,0 +1,201 @@
+# MkDocs Configuration for Semantic Kernel Application
+# Documentation site configuration with Material theme
+
+metadata: &metadata
+  version: "1.0.0"
+  category: config
+  keywords: [mkdocs, documentation, material-theme, markdown, navigation, plugins]
+  updated: "2025-11-24"
+
+<<: *metadata
+
+site_name: Semantic Kernel Application
+site_description: Production-grade semantic kernel application documentation
+site_author: Semantic Kernel Team
+site_url: https://semantic-kernel-app.local
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/link
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - content.tabs.link
+    - content.tooltips
+    - header.autohide
+    - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.path
+    - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    - toc.integrate
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+nav:
+  - Home: index.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Services: architecture/services.md
+      - Network: architecture/network.md
+  - Configuration:
+      - YAML Files: configuration/yaml-files.md
+      - Copilot Context: ../config/copilot/index.yml
+      - Docker Compose: configuration/docker-compose.md
+      - Environment Variables: configuration/environment.md
+  - Dockerfiles:
+      - Overview: dockerfiles/overview.md
+      - Service Images: dockerfiles/services.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Configuration: getting-started/configuration.md
+      - Deployment: getting-started/deployment.md
+  - API Reference:
+      - Backend API: api/backend.md
+      - Gateway API: api/gateway.md
+      - Engine API: api/engine.md
+  - Development:
+      - Setup: development/setup.md
+      - Debugging: development/debugging.md
+      - Testing: development/testing.md
+  - Reference:
+      - GitHub CLI: github-cli-reference.md
+  - Development:
+      - Copilot Patterns: development/copilot-patterns.md
+  - CLI Tools:
+      - Python CLI: cli/python-cli.md
+      - Tools Container: tools-container.md
+  - Deferred Items:
+      - Overview: deferred/README.md
+      - DevContainer Validation: deferred/devcontainer-validation-participant.md
+      - Python Package Updates: deferred/python-package-updates.md
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: semantic-kernel
+      repo: semantic-kernel-app
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.snippets:
+      auto_append:
+        - includes/abbreviations.md
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+plugins:
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+
+extra:
+  version:
+    provider: mike
+    default: latest
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/semantic-kernel/semantic-kernel-app
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/r/semantic-kernel/app
+  analytics:
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback! Help us improve this page by
+            using our <a href="..." target="_blank" rel="noopener">feedback form</a>.
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+cross_references:
+  - "docs/index.md: Documentation homepage"
+  - ".config/copilot/index.yml: Copilot context index"
+  - "README.md: Project README"
+
+related_documentation:
+  - "docs/index.md"
+  - ".config/copilot/index.yml"
+  - "README.md"
+  - ".config/copilot/yaml-best-practices.yml"
