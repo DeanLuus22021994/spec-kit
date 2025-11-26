@@ -79,7 +79,7 @@ for migration_file in $MIGRATION_FILES; do
     description=$(echo "$filename" | sed 's/V[0-9]*__\(.*\)\.sql/\1/' | tr '_' ' ')
 
     # Check if migration is already applied
-    if echo "$APPLIED_MIGRATIONS" | grep -q "^[[:space:]]*$version[[:space:]]*$"; then
+    if echo "$APPLIED_MIGRATIONS" | grep -q "^[[:space:]]*${version}[[:space:]]*$"; then
         echo -e "${BLUE}[SKIP]${NC} V$version - $description (already applied)"
         MIGRATIONS_SKIPPED=$((MIGRATIONS_SKIPPED + 1))
         continue

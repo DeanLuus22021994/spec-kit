@@ -16,6 +16,7 @@ BACKUP_NAME="${1:-backup_$(date +%Y%m%d_%H%M%S)}"
 COMPRESSION="${COMPRESSION:-gzip}"
 
 # Colors for output
+# shellcheck disable=SC2034
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
