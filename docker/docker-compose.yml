@@ -489,8 +489,8 @@ services:
 
   vector:
     build:
-      context: ..
-      dockerfile: docker/dockerfiles/vector.Dockerfile
+      context: .
+      dockerfile: dockerfiles/vector.Dockerfile
       cache_from:
         - localhost:5000/semantic-kernel/vector:cache
     image: localhost:5000/semantic-kernel/vector:latest
@@ -538,8 +538,8 @@ services:
 
   embeddings:
     build:
-      context: ..
-      dockerfile: docker/dockerfiles/embeddings.Dockerfile
+      context: .
+      dockerfile: dockerfiles/embeddings.Dockerfile
       cache_from:
         - localhost:5000/semantic-kernel/embeddings:cache
     image: localhost:5000/semantic-kernel/embeddings:latest
@@ -722,7 +722,7 @@ services:
       dockerfile: docker/dockerfiles/playwright.Dockerfile
     working_dir: /app
     volumes:
-      - ./docker/tests:/app
+      - ./tests:/app
       - /app/node_modules
       - playwright-report:/app/playwright-report
       - test-results:/app/test-results
