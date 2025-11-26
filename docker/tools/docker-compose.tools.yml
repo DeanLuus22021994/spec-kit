@@ -104,10 +104,23 @@ volumes:
     driver: local
     name: semantic-kernel-app-pytest-cache
 
+  # Required by extended validation service
+  validation-workspace:
+    driver: local
+    name: semantic-kernel-app-validation-workspace
+
+  validation-test-data:
+    driver: local
+    name: semantic-kernel-app-validation-test-data
+
 networks:
   tools-network:
     driver: bridge
     name: semantic-kernel-app-tools-network
+
+  validation-network:
+    driver: bridge
+    name: semantic-kernel-app-validation-network
 
 # Cross-references and related documentation
 x-cross-references:
