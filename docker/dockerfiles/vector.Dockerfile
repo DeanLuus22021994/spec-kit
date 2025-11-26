@@ -1,6 +1,23 @@
 # Lightweight Qdrant vector database for semantic search
 FROM qdrant/qdrant:v1.7.4-unprivileged
 
+# Standard Build Arguments
+ARG VERSION=latest
+ARG BUILD_DATE
+ARG BUILDKIT_INLINE_CACHE=1
+ARG DOCKER_BUILDKIT=1
+
+# OCI Labels
+LABEL org.opencontainers.image.title="spec-kit-vector"
+LABEL org.opencontainers.image.description="Qdrant Vector Database for Semantic Kernel Application"
+LABEL org.opencontainers.image.source="https://github.com/github/spec-kit"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.vendor="GitHub"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL cache.version="1.0"
+LABEL performance.optimized="true"
+
 # Copy vector configuration
 COPY semantic/vector/.config/config.yml /qdrant/config/production.yaml
 
