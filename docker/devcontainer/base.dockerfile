@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get -y install --no-install-recommends \
       curl wget git openssh-client \
     && apt-get -y install --no-install-recommends \
-      vim-tiny nano htop tree jq \
+      vim-tiny nano htop tree jq shellcheck \
     && apt-get -y install --no-install-recommends \
       parallel rsync \
     && apt-get -y install --no-install-recommends \
