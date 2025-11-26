@@ -7,8 +7,8 @@ param([string]$AgentType)
 Invoke-SpecKitBlock -Name "Update-Agent-Context" -ScriptBlock {
     param($logger)
 
-    $AgentType = $using:AgentType
     $MaxFileSize = 1MB
+
     $RegexTimeout = [TimeSpan]::FromSeconds(2)
 
     # Validate Git Environment

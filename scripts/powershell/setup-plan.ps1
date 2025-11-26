@@ -7,9 +7,8 @@ param([switch]$Json)
 Invoke-SpecKitBlock -Name "Setup-Plan" -ScriptBlock {
     param($logger)
 
-    $Json = $using:Json
-
     $paths = Get-FeaturePathsEnv
+
     if (-not (Test-FeatureBranch -Branch $paths.CURRENT_BRANCH -Logger $logger)) { exit 1 }
 
     New-Item -ItemType Directory -Path $paths.FEATURE_DIR -Force | Out-Null
