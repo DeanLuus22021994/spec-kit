@@ -1,0 +1,150 @@
+{
+  // Copilot Configuration (Critical)
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": true,
+    "markdown": true,
+    "scminput": false,
+    "javascript": true,
+    "typescript": true,
+    "python": true,
+    "yaml": true,
+    "shellscript": true,
+    "dockerfile": true,
+    "dockercompose": true,
+    "json": true,
+    "jsonc": true,
+    "toml": true
+  },
+  "github.copilot.advanced": {
+    "debug.overrideEngine": "copilot-codex",
+    "debug.testOverrideProxyUrl": "",
+    "debug.overrideProxyUrl": ""
+  },
+  "github.copilot.chat.followUps": "always",
+  "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.editor.enableCodeActions": true,
+  "github.copilot.conversation.enableDebugChatPane": true,
+
+  // Python Configuration (Ruff optimized for Copilot)
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.linting.enabled": false, // Using Ruff extension instead
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll.ruff": "explicit"
+    },
+    "editor.formatOnSave": true
+  },
+
+  // Ruff Configuration (Native Language Server)
+  "ruff.enable": true,
+  "ruff.nativeServer": true,
+
+  // Editor Configuration (Copilot-optimized)
+  "editor.formatOnSave": true,
+  "editor.rulers": [88],
+  "editor.tabSize": 4,
+  "editor.insertSpaces": true,
+  "editor.wordWrap": "bounded",
+  "editor.wordWrapColumn": 88,
+  "editor.suggest.insertMode": "replace",
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggestSelection": "first",
+
+  // Copilot-specific editor settings
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": true,
+    "strings": true
+  },
+  "editor.quickSuggestionsDelay": 10,
+  "editor.suggest.showKeywords": true,
+  "editor.suggest.showSnippets": true,
+  "editor.inlineSuggest.suppressSuggestions": false,
+  "editor.suggest.preview": true,
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.parameterHints.enabled": true,
+  "editor.hover.enabled": true,
+  "editor.hover.delay": 300,
+
+  // Terminal Configuration
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
+
+  // File Management
+  "files.exclude": {
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/*.pyc": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/*.egg-info": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // Search Configuration
+  "search.exclude": {
+    "**/.venv": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/*.egg-info": true,
+    "**/__pycache__": true
+  },
+
+  // Git Configuration
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "git.autofetch": true,
+
+  // Language-specific
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[markdown]": {
+    "editor.wordWrap": "on"
+  },
+
+  // Extensions
+  "errorLens.enabled": true,
+  "todo-tree.general.tags": ["TODO", "FIXME", "HACK", "NOTE"],
+
+  // AI Integration Settings
+  "editor.semanticHighlighting.enabled": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.linkedEditing": true,
+  "editor.matchBrackets": "always",
+  "editor.showFoldingControls": "always",
+  "editor.foldingStrategy": "indentation",
+  "editor.minimap.enabled": true,
+  "editor.minimap.showSlider": "always",
+
+  // Copilot Chat Integration
+  "chat.editor.wordWrap": "on",
+  "chat.experimental.offtopic.enabled": true,
+
+  // Advanced Copilot Settings
+  "github.copilot.conversation.localeOverride": "en",
+  "github.copilot.editor.iterativeFixing": true,
+  "github.copilot.renameSuggestions.triggerAutomatically": true,
+
+  // Performance optimizations for large codebases
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": false,
+
+  // Additional Python optimizations
+  "python.analysis.completeFunctionParens": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.autoFormatStrings": true,
+
+  // Workspace Trust
+  "security.workspace.trust.untrustedFiles": "open"
+}

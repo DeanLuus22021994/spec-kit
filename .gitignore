@@ -22,25 +22,33 @@ wheels/
 
 # Virtual environments
 venv/
-ENV/
-env/
 .venv
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
 .DS_Store
-*.tmp
 
 # Project specific
 *.log
-.env
 .env.local
 *.lock
 
-# Spec Kit-specific files
-.genreleases/
-*.zip
-sdd-*/
+# Devcontainer environment (contains tokens)
+.devcontainer/.env
+
+# Security: GitHub tokens and secrets
+**/.env.local
+**/.env.secret
+**/.env.production
+**/.env.staging
+.github_token
+github_*.txt
+**/secrets/
+.devcontainer/env/.env.local
+.devcontainer/env/.env.secret
+
+# GitHub PAT patterns (extra protection)
+# Note: These patterns help prevent accidental commits
+# but should not be relied upon as the only security measure

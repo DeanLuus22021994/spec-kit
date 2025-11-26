@@ -1,0 +1,63 @@
+{
+  "Key-Value": {
+    "prefix": "kv",
+    "body": "${1:key}: ${2:value}",
+    "description": "YAML key-value pair"
+  },
+
+  "Command List": {
+    "prefix": "cmds",
+    "body": [
+      "commands:",
+      "  - name: \"${1:cmd_name}\"",
+      "    description: \"${2:Brief desc}\"",
+      "    command: |",
+      "      ${3:shell command}",
+      "    expected: \"success\"",
+      "${0}"
+    ],
+    "description": "Command execution list"
+  },
+
+  "Config Block": {
+    "prefix": "config",
+    "body": [
+      "${1:section}:",
+      "  ${2:key}: ${3:value}",
+      "  ${4:nested}:",
+      "    ${5:subkey}: ${6:subvalue}",
+      "${0}"
+    ],
+    "description": "Configuration block"
+  },
+
+  "Task Definition": {
+    "prefix": "task",
+    "body": [
+      "{",
+      "  \"label\": \"${1:Task}\",",
+      "  \"type\": \"shell\",",
+      "  \"command\": \"${2:cmd}\",",
+      "  \"group\": \"${3:build}\"",
+      "}"
+    ],
+    "description": "VS Code task config"
+  },
+
+  "Docker Compose Service": {
+    "prefix": "docker-service",
+    "body": [
+      "${1:service-name}:",
+      "  image: ${2:image:tag}",
+      "  container_name: ${3:container-name}",
+      "  volumes:",
+      "    - ${4:./src}:${5:/app}",
+      "  environment:",
+      "    - ${6:ENV_VAR}=${7:value}",
+      "  ports:",
+      "    - \"${8:3000}:${9:3000}\"",
+      "${0}"
+    ],
+    "description": "Create Docker Compose service"
+  }
+}

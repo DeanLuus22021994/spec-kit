@@ -1,0 +1,276 @@
+# =============================================================================
+# SPEC-KIT DEVELOPMENT ENVIRONMENT
+# Optimized Docker Compose configuration for development performance
+# =============================================================================
+
+x-common-env: &common-env
+  # Consolidated environment variables
+  # Build and Docker optimizations
+  COMPOSE_PROFILES: "dev"
+  DOCKER_BUILDKIT: "1"
+  BUILDKIT_PROGRESS: "plain"
+  COMPOSE_DOCKER_CLI_BUILD: "1"
+  DOCKER_CLI_EXPERIMENTAL: "enabled"
+  DOCKER_CONTENT_TRUST: "0"
+  DOCKER_SCAN_SUGGEST: "false"
+
+  # Python optimizations
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+  PYTHONIOENCODING: "utf-8"
+  PYTHON_GIL_DISABLED: "0"
+  PYTHONHTTPSVERIFY: "0"
+
+  # UV package manager optimizations
+  UV_NO_EMOJI: "1"
+  UV_LINK_MODE: "copy"
+  UV_CACHE_DIR: "/home/vscode/.uv-cache"
+  UV_CONCURRENT_DOWNLOADS: "10"
+  UV_HTTP_TIMEOUT: "30"
+  UV_CONCURRENT_BUILDS: "4"
+
+  # pip optimizations
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_CACHE_DIR: "/home/vscode/.pip-cache"
+  PIP_TIMEOUT: "30"
+  PIP_RETRIES: "3"
+  PIP_DEFAULT_TIMEOUT: "60"
+  PIP_NO_WARN_SCRIPT_LOCATION: "1"
+
+  # Build tool optimizations
+  MAKEFLAGS: "-j4"
+  CC: "gcc"
+  CXX: "g++"
+  CMAKE_BUILD_PARALLEL_LEVEL: "4"
+  NINJA_STATUS: "[%f/%t %es] "
+
+  # Node.js optimizations
+  NPM_CONFIG_CACHE: "/home/vscode/.npm-cache"
+  NPM_CONFIG_UPDATE_NOTIFIER: "false"
+  NPM_CONFIG_FUND: "false"
+  NPM_CONFIG_AUDIT: "false"
+  NPM_CONFIG_PROGRESS: "true"
+  NPM_CONFIG_LOGLEVEL: "warn"
+  NPM_CONFIG_MAXSOCKETS: "15"
+  NPM_CONFIG_NETWORK_TIMEOUT: "300000"
+  NODE_OPTIONS: "--max-old-space-size=4096"
+  NODE_ENV: "development"
+  NODE_NO_WARNINGS: "1"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+
+  # Yarn optimizations
+  YARN_CACHE_FOLDER: "/home/vscode/.yarn-cache"
+  YARN_ENABLE_TELEMETRY: "false"
+  YARN_NETWORK_TIMEOUT: "300000"
+
+  # Locale and timezone
+  LANG: "C.UTF-8"
+  LC_ALL: "C.UTF-8"
+  LANGUAGE: "en_US.UTF-8"
+  TZ: "UTC"
+
+  # Memory optimizations
+  MALLOC_ARENA_MAX: "4"
+  MALLOC_MMAP_THRESHOLD_: "131072"
+  MALLOC_TRIM_THRESHOLD_: "131072"
+  MALLOC_TOP_PAD_: "131072"
+
+  # Shell and history optimizations
+  HISTSIZE: "10000"
+  HISTFILESIZE: "20000"
+  HISTCONTROL: "ignoreboth:erasedups"
+  HISTTIMEFORMAT: "%F %T "
+
+  # Git optimizations
+  GIT_PAGER: "cat"
+  GIT_EDITOR: "nano"
+
+  # Temp directories
+  TMPDIR: "/tmp"
+  TEMP: "/tmp"
+  TMP: "/tmp"
+
+  # Process optimizations
+  IONICE_CLASS: "1"
+  IONICE_PRIORITY: "4"
+
+  # Network optimizations
+  HTTP_TIMEOUT: "30"
+  HTTPS_TIMEOUT: "30"
+  HTTP_MAX_REDIRECTS: "10"
+  RESOLV_MULTI: "on"
+  CURL_CA_BUNDLE: ""
+  SSL_VERIFY: "false"
+
+  # Development configuration
+  SPEC_KIT_CONFIG_DIR: "/workspaces/spec-kit/.devcontainer"
+  DEVELOPMENT_MODE: "1"
+  DEBUG_MODE: "0"
+  VERBOSE_LOGGING: "0"
+  TRACE_BUILDS: "0"
+
+  # Performance monitoring
+  ENABLE_BUILD_CACHE_STATS: "1"
+  ENABLE_PERFORMANCE_MONITORING: "1"
+  ENABLE_PROFILING: "0"
+  PROFILE_MEMORY: "0"
+  PROFILE_CPU: "0"
+
+  # Feature flags
+  SPEC_KIT_CACHE_ENABLED: "1"
+  SPEC_KIT_PARALLEL_BUILDS: "1"
+  SPEC_KIT_AUTO_CLEANUP: "1"
+  EXPERIMENTAL_FEATURES: "1"
+  USE_NATIVE_BUILD_TOOLS: "1"
+  ENABLE_PARALLEL_PROCESSING: "1"
+
+  # MCP (Model Context Protocol) configuration
+  MCP_GITHUB_ENABLED: "1"
+  MCP_FILESYSTEM_ENABLED: "1"
+  MCP_PLAYWRIGHT_ENABLED: "0"
+  MCP_TIMEOUT: "30"
+  MCP_MAX_CONNECTIONS: "10"
+  MCP_CACHE_ENABLED: "1"
+
+  # Endpoint configuration
+  PERFORMANCE_MONITOR_ENDPOINT: "http://localhost:3000/metrics"
+  BUILD_CACHE_ENDPOINT: "http://localhost:3001/cache-stats"
+
+x-common-volumes: &common-volumes # Workspace and source code
+  - ../..:/workspaces/spec-kit:cached
+  # Persistent cache volumes for maximum performance
+  - devcontainer-features:/usr/local/share/devcontainer-features:cached
+  - node-modules-cache:/home/vscode/.npm-cache:cached
+  - yarn-cache:/home/vscode/.yarn-cache:cached
+  - uv-cache:/home/vscode/.uv-cache:cached
+  - pip-cache:/home/vscode/.pip-cache:cached
+  - apt-cache:/var/cache/apt:cached
+  - apt-lib:/var/lib/apt:cached
+  # Development tools cache
+  - vscode-server:/home/vscode/.vscode-server:cached
+  - vscode-extensions:/home/vscode/.vscode-server/extensions:cached
+  # Shell and configuration persistence
+  - bash-history:/home/vscode/.bash_history:cached
+  - zsh-history:/home/vscode/.zsh_history:cached
+
+services:
+  # ==========================================================================
+  # PRIMARY DEVELOPMENT WORKSPACE
+  # ==========================================================================
+  workspace:
+    build:
+      context: ../..
+      dockerfile: docker/devcontainer/Dockerfile
+      args:
+        USERNAME: vscode
+        USER_UID: 1000
+        USER_GID: 1000
+        GCM_VERSION: ${GCM_VERSION:-2.6.1}
+      # Advanced BuildKit caching for optimal build performance
+      target: ${BUILD_TARGET:-}
+      cache_from:
+        - type=gha
+        - type=registry,ref=ghcr.io/spec-kit/devcontainer:cache
+      cache_to:
+        - type=gha,mode=max
+        - type=registry,ref=ghcr.io/spec-kit/devcontainer:cache,mode=max
+      # Network optimization for faster downloads
+      network: default
+    container_name: spec-kit-workspace
+    hostname: spec-kit-dev
+    working_dir: /workspaces/spec-kit
+    init: true
+    tty: true
+    stdin_open: true
+    # Security and capabilities handled by devcontainer.json to avoid conflicts
+    command: /bin/bash -c "sleep infinity"
+    environment:
+      <<: *common-env
+      # Development mode flags (GitHub tokens handled by devcontainer.json remoteEnv)
+      DEVELOPMENT_MODE: "true"
+      WORKSPACE_TYPE: "primary"
+      # SSH Auth Socket (preserve from host if available)
+      SSH_AUTH_SOCK: "${SSH_AUTH_SOCK:-}"
+    volumes: *common-volumes
+    networks:
+      - spec-kit-network
+    # Optimized for SSD performance and development workflow
+    shm_size: "2gb"
+    tmpfs:
+      - /tmp:size=1G,mode=1777
+      - /var/tmp:size=512M,mode=1777
+    # Resource limits for optimal performance
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    # Health check for development workflow
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    profiles:
+      - development
+      - default
+
+# =============================================================================
+# PERSISTENT VOLUMES FOR PERFORMANCE OPTIMIZATION
+# =============================================================================
+volumes:
+  devcontainer-features:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DEVCONTAINER_FEATURES_CACHE:-${HOME}/.devcontainer-features}
+    name: spec-kit-devcontainer-features
+
+  # Performance-optimized package caches
+  node-modules-cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${NPM_CACHE_DIR:-${HOME}/.cache/spec-kit-npm}
+    name: spec-kit-npm-cache
+
+  yarn-cache:
+    driver: local
+  uv-cache:
+    driver: local
+  pip-cache:
+    driver: local
+  # System cache volumes
+  apt-cache:
+    driver: local
+  apt-lib:
+    driver: local
+  # VS Code server and extensions cache
+  vscode-server:
+    driver: local
+  vscode-extensions:
+    driver: local
+  # Shell history persistence
+  bash-history:
+    driver: local
+  zsh-history:
+    driver: local
+
+# =============================================================================
+# NETWORK CONFIGURATION
+# =============================================================================
+networks:
+  spec-kit-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: spec-kit-br
+      com.docker.network.driver.mtu: 1500
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1

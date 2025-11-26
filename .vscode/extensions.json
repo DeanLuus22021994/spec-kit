@@ -1,0 +1,32 @@
+{
+  "recommendations": [
+    // DevContainer Extensions (automatically installed)
+    "github.copilot",
+    "GitHub.copilot-chat",
+    "redhat.vscode-yaml",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.autopep8",
+    "ms-python.flake8",
+    "ms-python.black-formatter",
+    "charliermarsh.ruff",
+    "ms-vscode.powershell",
+    "timonwong.shellcheck",
+    "mads-hartmann.bash-ide-vscode",
+    "DotJoshJohnson.xml",
+
+    // Additional Recommendations (host environment)
+    "ms-vscode-remote.remote-containers",
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "gruntfuggly.todo-tree",
+    "christian-kohler.path-intellisense",
+    "aaron-bond.better-comments",
+    "pkief.material-icon-theme"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.anaconda-extension-pack",
+    "ms-python.pylint",
+    "ms-python.mypy-type-checker"
+  ]
+}

@@ -1,0 +1,468 @@
+---
+# DevContainer Factory Configuration
+# Consolidated configuration for simplified script management
+version: "1.0.0"
+name: "spec-kit-devcontainer"
+description: "Consolidated DevContainer configuration following factory pattern"
+updated: "2025-01-14"
+
+# System Configuration
+system:
+  base:
+    debian: "13"
+    codename: "trixie"
+    python: "3.11"
+    node: "22"
+    git_from_source: false
+
+  tools:
+    gcm: "2.6.1"
+    uv: "latest"
+    docker_buildx: true
+    eslint: "latest"
+
+  features:
+    git: "1.3.4"
+    docker_in_docker: "2.12.4"
+    github_cli: "1.0.15"
+    common_utils: "2.5.4"
+    python: "1.7.1"
+    powershell: "1.5.1"
+    nvidia_cuda: "2.0.0"
+    node: "1.6.0"
+
+# Git Configuration
+git:
+  user:
+    name: "DeanLuus22021994"
+    email: "dean.luus22021994@gmail.com"
+  settings:
+    defaultBranch: "main"
+    pullRebase: false
+    autocrlf: "input"
+    safecrlf: true
+    editor: "code --wait"
+    merge_tool: "vscode"
+    diff_tool: "vscode"
+
+# Docker Configuration
+docker:
+  build:
+    buildkit_enabled: true
+    buildkit_progress: "plain"
+    multi_stage: true
+    layer_caching: "aggressive"
+    parallel_builds: true
+    cache_mount_enabled: true
+
+  cache:
+    apt_cache: true
+    pip_cache: true
+    uv_cache: true
+    npm_cache: true
+    docker_layer_cache: true
+    prewarm_dependencies: true
+
+  container:
+    base_image: "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm"
+    context_path: "../.."
+    dockerfile_path: "docker/devcontainer/Dockerfile"
+    service_name: "workspace"
+
+# Environment Flags
+flags:
+  environment:
+    uv_no_emoji: true
+    uv_link_mode: "copy"
+    uv_venv_clear: false
+    pip_disable_version_check: true
+    auto_activate_venv: true
+    ext_autoupdate: true
+
+  resources:
+    min_cpus: 2
+    min_memory: "4gb"
+    min_storage: "16gb"
+    gpu_support: "optional"
+    shm_size: "2gb"
+
+  security:
+    privileged_mode: true
+    update_remote_user_uid: true
+    use_init: true
+    network_mode: "bridge"
+
+  features:
+    docker_buildx: true
+    moby_engine: false
+    git_credential_manager: true
+    python_optimize: true
+
+  cache:
+    mount_apt_cache: true
+    mount_uv_cache: true
+    mount_pip_cache: true
+    prewarm_dependencies: true
+
+# Development Environment Validation
+validation:
+  commands:
+    # Core Infrastructure
+    - name: "check_devcontainer_cli"
+      description: "DevContainer CLI available"
+      command: "command -v devcontainer >/dev/null 2>&1"
+      expected: "success"
+      error_message: "DevContainer CLI not installed or not in PATH"
+
+    - name: "check_git_config"
+      description: "Git configuration complete"
+      command: "git config --get user.name && git config --get user.email"
+      expected: "success"
+      error_message: "Git user configuration missing"
+
+    - name: "check_docker_access"
+      description: "Docker daemon accessible"
+      command: "docker info > /dev/null 2>&1"
+      expected: "success"
+      error_message: "Docker not accessible"
+
+    - name: "check_node_npm"
+      description: "Node.js runtime available"
+      command: "node --version && npm --version"
+      expected: "success"
+      error_message: "Node.js or npm not available"
+
+    # Project Structure
+    - name: "check_devcontainer_files"
+      description: "DevContainer files present"
+      command: "[ -f '.devcontainer/devcontainer.json' ] && [ -f 'docker/devcontainer/docker-compose.yml' ]"
+      expected: "success"
+      error_message: "Essential DevContainer files missing"
+
+    - name: "check_script_permissions"
+      description: "Script permissions configured"
+      command: "[ -x '.devcontainer/scripts/validate.sh' ] && [ -x '.devcontainer/scripts/post-create.sh' ]"
+      expected: "success"
+      error_message: "Scripts missing execute permissions"
+
+    - name: "check_post_create_implementation"
+      description: "Post-create script functional"
+      command: "bash -n .devcontainer/scripts/post-create.sh && grep -q 'run_setup' .devcontainer/scripts/post-create.sh"
+      expected: "success"
+      error_message: "Post-create script has syntax errors or missing functions"
+
+    - name: "check_yaml_syntax"
+      description: "Configuration syntax valid"
+      command: 'python3 -c ''import yaml; yaml.safe_load(open(".devcontainer/config.yaml"))'''
+      expected: "success"
+      error_message: "Configuration YAML syntax invalid"
+
+    - name: "check_github_token"
+      description: "GitHub token configured"
+      command: 'if [ -n "${GITHUB_TOKEN:-}" ]; then echo "Token available in environment"; elif gh auth status >/dev/null 2>&1; then echo "Token available via GitHub CLI"; else exit 1; fi'
+      expected: "success"
+      error_message: "GitHub token not available (set GITHUB_TOKEN or run 'gh auth login')"
+
+    # Python Development Environment
+    - name: "check_python_interpreter"
+      description: "Python interpreter available"
+      command: "python3 --version && python3 -c 'import sys; print(sys.executable)'"
+      expected: "success"
+      error_message: "Python interpreter not available or misconfigured"
+
+    - name: "check_ruff_installation"
+      description: "Ruff formatter/linter installed"
+      command: "python3 -m ruff --version"
+      expected: "success"
+      error_message: "Ruff not installed - run 'pip install ruff'"
+
+    - name: "check_ruff_configuration"
+      description: "Ruff configuration valid"
+      command: "python3 -m ruff check --show-settings > /dev/null 2>&1"
+      expected: "success"
+      error_message: "Ruff configuration invalid - check pyproject.toml"
+
+    - name: "check_mypy_installation"
+      description: "MyPy type checker available"
+      command: "python3 -m mypy --version"
+      expected: "success"
+      error_message: "MyPy not installed - run 'pip install mypy'"
+
+    - name: "check_autopep8_installation"
+      description: "autopep8 formatter available"
+      command: "autopep8 --version"
+      expected: "success"
+      error_message: "autopep8 not installed - Python feature may not be configured properly"
+
+    - name: "check_black_installation"
+      description: "Black formatter available"
+      command: "black --version"
+      expected: "success"
+      error_message: "Black not installed - Python feature may not be configured properly"
+
+    - name: "check_flake8_installation"
+      description: "Flake8 linter available"
+      command: "flake8 --version"
+      expected: "success"
+      error_message: "Flake8 not installed - Python feature may not be configured properly"
+
+    - name: "check_pylint_installation"
+      description: "Pylint linter available"
+      command: "pylint --version"
+      expected: "success"
+      error_message: "Pylint not installed - Python feature may not be configured properly"
+
+    - name: "check_pytest_installation"
+      description: "Pytest testing framework available"
+      command: "pytest --version"
+      expected: "success"
+      error_message: "Pytest not installed - Python feature may not be configured properly"
+
+    # VS Code Extensions (Configuration)
+    - name: "check_copilot_extension"
+      description: "GitHub Copilot extension configured"
+      command: "grep -q 'github.copilot' .devcontainer/devcontainer.json"
+      expected: "success"
+      error_message: "GitHub Copilot extension not configured in devcontainer.json"
+
+    - name: "check_ruff_extension"
+      description: "Ruff VS Code extension configured"
+      command: "grep -q 'charliermarsh.ruff' .devcontainer/devcontainer.json"
+      expected: "success"
+      error_message: "Ruff VS Code extension not configured in devcontainer.json"
+
+    - name: "check_python_extension"
+      description: "Python extension configured"
+      command: "grep -q 'ms-python.python' .devcontainer/devcontainer.json"
+      expected: "success"
+      error_message: "Python extension not configured in devcontainer.json"
+
+    - name: "check_autopep8_extension"
+      description: "autopep8 VS Code extension configured"
+      command: "grep -q 'ms-python.autopep8' .devcontainer/devcontainer.json"
+      expected: "success"
+      error_message: "autopep8 VS Code extension not configured in devcontainer.json"
+
+    - name: "check_black_extension"
+      description: "Black VS Code extension configured"
+      command: "grep -q 'ms-python.black-formatter' .devcontainer/devcontainer.json"
+      expected: "success"
+      error_message: "Black VS Code extension not configured in devcontainer.json"
+
+    - name: "check_flake8_extension"
+      description: "Flake8 VS Code extension configured"
+      command: "grep -q 'ms-python.flake8' .devcontainer/devcontainer.json"
+      expected: "success"
+      error_message: "Flake8 VS Code extension not configured in devcontainer.json"
+
+    # Ruff Integration Tests
+    - name: "check_ruff_format"
+      description: "Ruff formatting functional"
+      command: "python3 -m ruff format --check src/ >/dev/null 2>&1 || python3 -m ruff format src/ --diff >/dev/null 2>&1"
+      expected: "success"
+      error_message: "Ruff formatting not working - check ruff installation"
+
+    - name: "check_ruff_linting"
+      description: "Ruff linting functional"
+      command: "python3 -m ruff check src/ --exit-zero >/dev/null 2>&1"
+      expected: "success"
+      error_message: "Ruff linting not working - check configuration"
+
+    # Final Integration Check
+    - name: "check_devcontainer_config"
+      description: "DevContainer configuration valid"
+      command: "devcontainer read-configuration --workspace-folder ."
+      expected: "success"
+      error_message: "DevContainer configuration invalid"
+
+# Post-Create Setup Commands (Factory Pattern)
+setup:
+  commands:
+    - name: "validate_github_token"
+      description: "Validate and configure GitHub token"
+      command: |
+        # Check if GitHub token is available
+        if [ -z "${GITHUB_TOKEN:-}" ]; then
+          echo "Warning: No GitHub token found in environment variables"
+          echo "Please set GITHUB_TOKEN for GitHub CLI authentication"
+          exit 1
+        fi
+
+        # Test GitHub CLI authentication
+        if command -v gh >/dev/null 2>&1; then
+          if gh auth status >/dev/null 2>&1; then
+            echo "GitHub CLI authentication verified"
+          else
+            echo "GitHub CLI not authenticated - token may be invalid"
+            exit 1
+          fi
+        fi
+      expected: "success"
+
+    - name: "configure_git"
+      description: "Configure Git from YAML settings"
+      command: |
+        git config --global user.name "DeanLuus22021994"
+        git config --global user.email "dean.luus22021994@gmail.com"
+        git config --global init.defaultBranch "main"
+        git config --global pull.rebase false
+        git config --global core.autocrlf input
+        git config --global core.safecrlf true
+        git config --global core.editor "code --wait"
+        git config --global merge.tool "vscode"
+        git config --global mergetool.vscode.cmd 'code --wait $MERGED'
+        git config --global diff.tool "vscode"
+        git config --global difftool.vscode.cmd 'code --wait --diff $LOCAL $REMOTE'
+        git config --global --add safe.directory "/workspaces/spec-kit"
+      expected: "success"
+
+    - name: "setup_python_env"
+      description: "Setup Python environment with caching"
+      command: |
+        # Performance optimization - check if venv already exists and is current
+        if [ -f ".venv/pyvenv.cfg" ] && [ -f ".venv/bin/python" ]; then
+          echo "Python virtual environment already exists - validating..."
+          if .venv/bin/python -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
+            echo "Virtual environment is valid - skipping creation"
+            exit 0
+          fi
+        fi
+
+        if command -v uv >/dev/null 2>&1; then
+          mkdir -p "$HOME/.uv-cache" "$HOME/.pip-cache"
+          export UV_CACHE_DIR="$HOME/.uv-cache"
+          export PIP_CACHE_DIR="$HOME/.pip-cache"
+          export UV_CONCURRENT_DOWNLOADS=10
+          export UV_HTTP_TIMEOUT=30
+
+          if [ ! -d ".venv" ]; then
+            uv venv --python "3.11" --seed
+          fi
+
+          if [ -f "pyproject.toml" ]; then
+            uv sync --frozen || uv pip install -e . --no-deps
+          fi
+        else
+          python -m venv .venv --upgrade-deps
+          .venv/bin/pip install --cache-dir="$HOME/.pip-cache" --upgrade pip setuptools wheel
+          .venv/bin/pip install --cache-dir="$HOME/.pip-cache" -e . 2>/dev/null || true
+        fi
+      expected: "success"
+
+    - name: "install_python_tools"
+      description: "Install essential Python development tools"
+      command: |
+        # Ensure all Python development tools are available
+        echo "Installing Python development tools..."
+
+        # Define required tools
+        PYTHON_TOOLS=(
+          "autopep8"
+          "black"
+          "flake8"
+          "pylint"
+          "mypy"
+          "pytest"
+          "bandit"
+          "yapf"
+          "pycodestyle"
+          "pydocstyle"
+          "ruff"
+        )
+
+        # Check and install missing tools
+        MISSING_TOOLS=()
+        for tool in "${PYTHON_TOOLS[@]}"; do
+          if ! command -v "$tool" >/dev/null 2>&1; then
+            MISSING_TOOLS+=("$tool")
+          fi
+        done
+
+        if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then
+          echo "Installing missing tools: ${MISSING_TOOLS[*]}"
+          python3 -m pip install --user --upgrade "${MISSING_TOOLS[@]}"
+          echo "Python tools installation completed"
+        else
+          echo "All Python development tools already available"
+        fi
+      expected: "success"
+
+    - name: "setup_node_cache"
+      description: "Configure Node.js package manager caches"
+      command: |
+        if command -v npm >/dev/null 2>&1; then
+          mkdir -p "$HOME/.npm-cache" "$HOME/.yarn-cache"
+          npm config set cache "$HOME/.npm-cache" --global
+          export NPM_CONFIG_CACHE="$HOME/.npm-cache"
+          export YARN_CACHE_FOLDER="$HOME/.yarn-cache"
+        fi
+      expected: "success"
+
+    - name: "setup_shell_integration"
+      description: "Setup shell auto-activation"
+      command: |
+        VENV_PATH="/workspaces/spec-kit/.venv"
+        START="# >>> spec-kit venv auto-activate >>>"
+        END="# <<< spec-kit venv auto-activate <<<"
+        for shell_config in "$HOME/.bashrc" "$HOME/.zshrc"; do
+          if [ -f "$shell_config" ] && ! grep -q "$START" "$shell_config"; then
+            echo "" >> "$shell_config"
+            echo "$START" >> "$shell_config"
+            echo 'if [ -f "/workspaces/spec-kit/.venv/bin/activate" ] && [ -z "${VIRTUAL_ENV:-}" ]; then' >> "$shell_config"
+            echo '    source "/workspaces/spec-kit/.venv/bin/activate"' >> "$shell_config"
+            echo 'fi' >> "$shell_config"
+            echo "$END" >> "$shell_config"
+          fi
+        done
+      expected: "success"
+
+    - name: "optimize_permissions"
+      description: "Optimize file permissions and ownership"
+      command: |
+        for cache_dir in "$HOME/.uv-cache" "$HOME/.pip-cache" "$HOME/.npm-cache" "$HOME/.yarn-cache"; do
+          if [ -d "$cache_dir" ]; then
+            chmod 755 "$cache_dir" 2>/dev/null || true
+          fi
+        done
+        if [ -f "/workspaces/spec-kit/.venv/bin/activate" ]; then
+          chmod +x "/workspaces/spec-kit/.venv/bin/activate" 2>/dev/null || true
+        fi
+      expected: "success"
+
+    - name: "setup_performance_monitoring"
+      description: "Configure performance monitoring and build cache stats"
+      command: |
+        # Create performance monitoring directories
+        mkdir -p "$HOME/.devcontainer-metrics" "$HOME/.build-cache-stats"
+
+        # Setup build cache monitoring
+        if [ -n "${ENABLE_BUILD_CACHE_STATS:-}" ]; then
+          echo "Build cache statistics enabled for performance monitoring"
+          echo "timestamp=$(date -Iseconds)" > "$HOME/.build-cache-stats/session.log"
+          echo "session_id=$(uuidgen 2>/dev/null || date +%s)" >> "$HOME/.build-cache-stats/session.log"
+        fi
+
+        # Setup container performance baseline
+        echo "container_start=$(date -Iseconds)" > "$HOME/.devcontainer-metrics/startup.log"
+        echo "setup_complete=true" >> "$HOME/.devcontainer-metrics/startup.log"
+      expected: "success"
+
+# Performance Optimization Settings
+performance:
+  build:
+    parallel_downloads: 10
+    concurrent_builds: 4
+    cache_compression: "gzip"
+    max_parallelism: 4
+
+  network:
+    timeout: 30
+    retries: 3
+    keep_alive: true
+    http2_enabled: true
+
+  storage:
+    storage_driver: "overlay2"
+    mount_options: ["noatime", "relatime"]
+    tmp_size: "1G"
+    shm_size: "2G"

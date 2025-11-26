@@ -1,0 +1,68 @@
+{
+  "folders": [
+    {
+      "name": "spec-kit",
+      "path": ".."
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "github.copilot.enable": {
+      "*": true,
+      "yaml": true,
+      "markdown": true
+    },
+    "files.associations": {
+      "*.md": "markdown",
+      "*.code-snippets": "jsonc"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "github.copilot",
+      "github.copilot-chat",
+      "ms-python.python",
+      "ms-python.pylance",
+      "charliermarsh.ruff",
+      "eamodio.gitlens",
+      "usernamehw.errorlens",
+      "ms-vscode.vscode-json",
+      "yzhang.markdown-all-in-one",
+      "davidanson.vscode-markdownlint",
+      "bierner.markdown-mermaid",
+      "shd101wyy.markdown-preview-enhanced",
+      "usernamehw.errorlens",
+      "gruntfuggly.todo-tree",
+      "ms-vsliveshare.vsliveshare",
+      "github.copilot",
+      "github.copilot-chat",
+      "ms-azuretools.vscode-docker",
+      "ms-vscode-remote.remote-containers",
+      "redhat.vscode-yaml",
+      "ms-kubernetes-tools.vscode-kubernetes-tools",
+      "ms-python.pytest",
+      "littlefoxteam.vscode-python-test-adapter",
+      "anthropic.claude-dev",
+      "continue.continue"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Quick Test",
+        "type": "shell",
+        "command": "python3 src/specify_cli/__init__.py check",
+        "group": "test",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": []
+  }
+}

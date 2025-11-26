@@ -1,0 +1,17 @@
+version: "1.0"
+
+metadata:
+  name: spec-kit startup commands
+  description:
+    - Preflight: validate Specfy prerequisites
+    - Bootstrap: initialize here via Copilot
+  schema: https://example.com/schemas/vscode-startup-commands-v1.json
+
+execution:
+  shell: bash
+  workingDirectory: /workspaces/spec-kit
+  stopOnError: true
+
+steps:
+  - run: specify check
+  - run: specify init --here --ai copilot

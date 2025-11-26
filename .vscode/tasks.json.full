@@ -1,0 +1,321 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Startup: Run YAML commands",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "bash .vscode/scripts/yaml-runner.sh .vscode/commands/startup.yaml"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+          "UV_NO_EMOJI": "1"
+        }
+      },
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "pip", "install", "--break-system-packages", "-e", "."],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Specify CLI - Help",
+      "type": "shell",
+      "command": "python3",
+      "args": ["src/specify_cli/__init__.py", "--help"],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src"
+        }
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Specify CLI - Check",
+      "type": "shell",
+      "command": "python3",
+      "args": ["src/specify_cli/__init__.py", "check"],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src"
+        }
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Format Code",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "black", "--line-length", "88", "src/"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint Code",
+      "type": "shell",
+      "command": "python3",
+      "args": [
+        "-m",
+        "flake8",
+        "src/",
+        "--max-line-length=88",
+        "--extend-ignore=E203,W503"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        {
+          "owner": "flake8",
+          "fileLocation": ["relative", "${workspaceFolder}"],
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(\\w+\\d+)\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "code": 4,
+            "message": 5
+          }
+        }
+      ]
+    },
+    {
+      "label": "Type Check",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "mypy", "src/", "--ignore-missing-imports"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [
+        {
+          "owner": "mypy",
+          "fileLocation": ["relative", "${workspaceFolder}"],
+          "pattern": {
+            "regexp": "^(.*):(\\d+):\\s*(.*?):\\s*(.*)$",
+            "file": 1,
+            "line": 2,
+            "severity": 3,
+            "message": 4
+          }
+        }
+      ]
+    },
+    {
+      "label": "Build Package",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Clean Build Artifacts",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "rm -rf build/ dist/ *.egg-info/ src/**/__pycache__/ src/**/*.pyc .pytest_cache/ .coverage"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Full Development Cycle",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Clean Build Artifacts",
+        "Install Dependencies",
+        "Format Code",
+        "Lint Code",
+        "Type Check",
+        "Run Specify CLI - Check"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "MCP: Start Development Servers",
+      "type": "shell",
+      "command": "bash",
+      "args": [".vscode/scripts/mcp-server.sh", "start", "development"],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+        }
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Start Testing Servers (with Playwright)",
+      "type": "shell",
+      "command": "bash",
+      "args": [".vscode/scripts/mcp-server.sh", "start", "testing"],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+        }
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    {
+      "label": "MCP: Stop Servers",
+      "type": "shell",
+      "command": "bash",
+      "args": [".vscode/scripts/mcp-server.sh", "stop"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: Check Status",
+      "type": "shell",
+      "command": "bash",
+      "args": [".vscode/scripts/mcp-server.sh", "status"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP: View Logs",
+      "type": "shell",
+      "command": "bash",
+      "args": [".vscode/scripts/mcp-server.sh", "logs"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "MCP: Install Local Servers",
+      "type": "shell",
+      "command": "bash",
+      "args": [".vscode/scripts/mcp-server.sh", "install-local"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Create Debug Directory",
+      "type": "shell",
+      "command": "mkdir",
+      "args": ["-p", "/tmp/debug-init-here"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,275 @@
+{
+  "CLI Command": {
+    "prefix": "cmd",
+    "body": [
+      "@app.command()",
+      "def ${1:cmd_name}(",
+      "    ${2:arg}: ${3:str} = typer.Argument(..., help=\"${4:Arg desc}\"),",
+      "    ${5:flag}: bool = typer.Option(False, \"--${6:flag}\", help=\"${7:Flag desc}\"),",
+      "):",
+      "    \"\"\"${8:Brief command purpose}.\"\"\"",
+      "    ${0:# Implementation}"
+    ],
+    "description": "CLI command with args/opts"
+  },
+
+  "App Bootstrap": {
+    "prefix": "app",
+    "body": [
+      "import typer",
+      "from rich.console import Console",
+      "",
+      "app = typer.Typer(name=\"${1:name}\", help=\"${2:Brief desc}\")",
+      "console = Console()",
+      "",
+      "if __name__ == \"__main__\":",
+      "    app()",
+      "$0"
+    ],
+    "description": "Minimal app bootstrap"
+  },
+
+  "Status Output": {
+    "prefix": "status",
+    "body": ["console.print(\"${1:[green]✓[/green] ${2:message}}\")"],
+    "description": "Status message output"
+  },
+
+  "Rich Panel": {
+    "prefix": "rich-panel",
+    "body": [
+      "from rich.panel import Panel",
+      "",
+      "panel = Panel(",
+      "    \"${1:Panel content}\",",
+      "    title=\"${2:Panel Title}\",",
+      "    border_style=\"${3:cyan}\",",
+      "    padding=(${4:1}, ${5:2})",
+      ")",
+      "console.print(panel)"
+    ],
+    "description": "Create a Rich panel with content and styling"
+  },
+
+  "Rich Progress Bar": {
+    "prefix": "rich-progress",
+    "body": [
+      "from rich.progress import Progress, SpinnerColumn, TextColumn",
+      "",
+      "with Progress(",
+      "    SpinnerColumn(),",
+      "    TextColumn(\"[progress.description]{task.description}\"),",
+      "    console=console,",
+      ") as progress:",
+      "    task = progress.add_task(\"${1:Processing...}\", total=${2:100})",
+      "    for i in range(${2:100}):",
+      "        ${3:# Do work}",
+      "        progress.update(task, completed=i+1)"
+    ],
+    "description": "Create a Rich progress bar with spinner"
+  },
+
+  "Rich Table": {
+    "prefix": "rich-table",
+    "body": [
+      "from rich.table import Table",
+      "",
+      "table = Table(title=\"${1:Table Title}\")",
+      "table.add_column(\"${2:Column 1}\", style=\"${3:cyan}\")",
+      "table.add_column(\"${4:Column 2}\", style=\"${5:magenta}\")",
+      "",
+      "table.add_row(\"${6:Row 1 Col 1}\", \"${7:Row 1 Col 2}\")",
+      "table.add_row(\"${8:Row 2 Col 1}\", \"${9:Row 2 Col 2}\")",
+      "",
+      "console.print(table)"
+    ],
+    "description": "Create a Rich table with columns and rows"
+  },
+
+  "HTTPx Client": {
+    "prefix": "httpx-client",
+    "body": [
+      "import httpx",
+      "",
+      "async with httpx.AsyncClient() as client:",
+      "    response = await client.get(\"${1:https://api.example.com}\")",
+      "    response.raise_for_status()",
+      "    data = response.json()",
+      "    ${2:# Process data}"
+    ],
+    "description": "Create an HTTPx async client for API requests"
+  },
+
+  "HTTPx Sync Request": {
+    "prefix": "httpx-sync",
+    "body": [
+      "import httpx",
+      "",
+      "response = httpx.get(\"${1:https://api.example.com}\")",
+      "response.raise_for_status()",
+      "data = response.json()",
+      "${2:# Process data}"
+    ],
+    "description": "Make a synchronous HTTP request with HTTPx"
+  },
+
+  "Path Operations": {
+    "prefix": "path-ops",
+    "body": [
+      "from pathlib import Path",
+      "",
+      "path = Path(\"${1:file_path}\")",
+      "if path.exists():",
+      "    ${2:# File exists}",
+      "    if path.is_file():",
+      "        content = path.read_text()",
+      "    elif path.is_dir():",
+      "        files = list(path.iterdir())",
+      "else:",
+      "    ${3:# File doesn't exist}",
+      "    path.parent.mkdir(parents=True, exist_ok=True)",
+      "    path.write_text(\"${4:content}\")"
+    ],
+    "description": "Common Path operations for file handling"
+  },
+
+  "Async Function": {
+    "prefix": "async-func",
+    "body": [
+      "async def ${1:function_name}(${2:params}) -> ${3:ReturnType}:",
+      "    \"\"\"${4:Function description}.\"\"\"",
+      "    ${5:# Implementation}",
+      "    return ${6:result}"
+    ],
+    "description": "Create an async function with type hints"
+  },
+
+  "Error Handler": {
+    "prefix": "error-handler",
+    "body": [
+      "try:",
+      "    ${1:# Code that might raise an exception}",
+      "except ${2:SpecificError} as e:",
+      "    console.print(f\"[red]Error:[/red] {e}\")",
+      "    ${3:# Handle specific error}",
+      "except Exception as e:",
+      "    console.print(f\"[red]Unexpected error:[/red] {e}\")",
+      "    ${4:# Handle general error}",
+      "finally:",
+      "    ${5:# Cleanup code}"
+    ],
+    "description": "Create a comprehensive error handler"
+  },
+
+  "CLI Exit with Code": {
+    "prefix": "cli-exit",
+    "body": [
+      "console.print(\"[red]${1:Error message}[/red]\")",
+      "raise typer.Exit(${2:1})"
+    ],
+    "description": "Exit CLI with error message and code"
+  },
+
+  "Config Class": {
+    "prefix": "config-class",
+    "body": [
+      "from dataclasses import dataclass",
+      "from pathlib import Path",
+      "from typing import Optional",
+      "",
+      "@dataclass",
+      "class ${1:Config}:",
+      "    \"\"\"${2:Configuration class description}.\"\"\"",
+      "    ${3:param1}: ${4:str}",
+      "    ${5:param2}: Optional[${6:int}] = None",
+      "    ${7:param3}: ${8:bool} = False",
+      "",
+      "    @classmethod",
+      "    def from_file(cls, path: Path) -> \"${1:Config}\":",
+      "        \"\"\"Load configuration from file.\"\"\"",
+      "        ${9:# Implementation}",
+      "        pass",
+      "",
+      "    def save(self, path: Path) -> None:",
+      "        \"\"\"Save configuration to file.\"\"\"",
+      "        ${10:# Implementation}",
+      "        pass"
+    ],
+    "description": "Create a configuration dataclass with file I/O"
+  },
+
+  "Subprocess Runner": {
+    "prefix": "subprocess-run",
+    "body": [
+      "import subprocess",
+      "",
+      "def run_command(cmd: list[str], check: bool = True) -> str:",
+      "    \"\"\"Run a shell command and return output.\"\"\"",
+      "    try:",
+      "        result = subprocess.run(",
+      "            cmd,",
+      "            check=check,",
+      "            capture_output=True,",
+      "            text=True",
+      "        )",
+      "        return result.stdout.strip()",
+      "    except subprocess.CalledProcessError as e:",
+      "        console.print(f\"[red]Command failed:[/red] {' '.join(cmd)}\")",
+      "        console.print(f\"[red]Exit code:[/red] {e.returncode}\")",
+      "        if e.stderr:",
+      "            console.print(f\"[red]Error:[/red] {e.stderr}\")",
+      "        raise"
+    ],
+    "description": "Create a subprocess command runner with error handling"
+  },
+
+  "File Watcher": {
+    "prefix": "file-watcher",
+    "body": [
+      "import time",
+      "from pathlib import Path",
+      "",
+      "def watch_file(file_path: Path, callback):",
+      "    \"\"\"Watch a file for changes and call callback.\"\"\"",
+      "    last_modified = file_path.stat().st_mtime if file_path.exists() else 0",
+      "    ",
+      "    while True:",
+      "        try:",
+      "            current_modified = file_path.stat().st_mtime if file_path.exists() else 0",
+      "            if current_modified != last_modified:",
+      "                callback(file_path)",
+      "                last_modified = current_modified",
+      "            time.sleep(${1:1})",
+      "        except KeyboardInterrupt:",
+      "            break"
+    ],
+    "description": "Create a simple file watcher with callback"
+  },
+
+  "JSON Config Handler": {
+    "prefix": "json-config",
+    "body": [
+      "import json",
+      "from pathlib import Path",
+      "from typing import Any, Dict",
+      "",
+      "def load_config(path: Path) -> Dict[str, Any]:",
+      "    \"\"\"Load JSON configuration file.\"\"\"",
+      "    if not path.exists():",
+      "        console.print(f\"[yellow]Config file not found:[/yellow] {path}\")",
+      "        return {}",
+      "    ",
+      "    try:",
+      "        return json.loads(path.read_text())",
+      "    except json.JSONDecodeError as e:",
+      "        console.print(f\"[red]Invalid JSON in config file:[/red] {e}\")",
+      "        raise typer.Exit(1)",
+      "",
+      "def save_config(config: Dict[str, Any], path: Path) -> None:",
+      "    \"\"\"Save configuration to JSON file.\"\"\"",
+      "    path.parent.mkdir(parents=True, exist_ok=True)",
+      "    path.write_text(json.dumps(config, indent=2))"
+    ],
+    "description": "Create JSON configuration file handlers"
+  }
+}

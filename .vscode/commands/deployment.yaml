@@ -1,0 +1,20 @@
+version: "1.0"
+
+metadata:
+  name: spec-kit deployment commands
+  description: Deployment and production tasks for Spec-Kit
+  schema: https://example.com/schemas/vscode-deployment-commands-v1.json
+
+execution:
+  shell: bash
+  workingDirectory: /projects/spec-kit
+  stopOnError: true
+  env:
+    PYTHONPATH: /projects/spec-kit/src
+
+steps:
+  - run: .vscode/scripts/development.sh clean
+  - run: .vscode/scripts/development.sh quality
+  - run: .vscode/scripts/development.sh test
+  - run: .vscode/scripts/development.sh build
+  - run: echo "Package ready for deployment in dist/"

@@ -1,0 +1,136 @@
+# =============================================================================
+# DOCKER COMPOSE OVERRIDE - VOLUME DEFINITIONS & LOCAL OPTIMIZATIONS
+# Defines persistent volumes for optimal development performance
+# =============================================================================
+
+services:
+  workspace:
+    # Additional local development optimizations
+    volumes:
+      # Ensure VS Code server persistence
+      - vscode-server:/home/vscode/.vscode-server
+      - vscode-extensions:/home/vscode/.vscode-server/extensions
+    # Local development specific settings
+    environment:
+      - LOCAL_DEVELOPMENT=true
+      - CACHE_OPTIMIZATION=true
+      # Additional local development optimizations
+      - VSCODE_WORKSPACE=/workspaces/spec-kit
+      - DEVCONTAINER_ENV=local
+
+# =============================================================================
+# PERSISTENT VOLUME DEFINITIONS
+# Volumes are crucial for performance - they persist across container rebuilds
+# =============================================================================
+volumes:
+  # VS Code Server and Extensions (essential for development continuity)
+  vscode-server:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${HOME}/.vscode-server-spec-kit
+    name: spec-kit-vscode-server
+
+  vscode-extensions:
+    driver: local
+    name: spec-kit-vscode-extensions
+
+  # DevContainer Features (massive performance improvement)
+  devcontainer-features:
+    driver: local
+    name: spec-kit-devcontainer-features
+    labels:
+      - "com.spec-kit.volume.type=features"
+      - "com.spec-kit.volume.description=DevContainer features cache"
+
+  # Package Manager Caches (critical for fast rebuilds)
+  node-modules-cache:
+    driver: local
+    name: spec-kit-npm-cache
+    labels:
+      - "com.spec-kit.volume.type=package-cache"
+      - "com.spec-kit.volume.description=npm package cache"
+
+  yarn-cache:
+    driver: local
+    name: spec-kit-yarn-cache
+    labels:
+      - "com.spec-kit.volume.type=package-cache"
+      - "com.spec-kit.volume.description=Yarn package cache"
+
+  uv-cache:
+    driver: local
+    name: spec-kit-uv-cache
+    labels:
+      - "com.spec-kit.volume.type=package-cache"
+      - "com.spec-kit.volume.description=UV Python package manager cache"
+
+  pip-cache:
+    driver: local
+    name: spec-kit-pip-cache
+    labels:
+      - "com.spec-kit.volume.type=package-cache"
+      - "com.spec-kit.volume.description=pip package cache"
+
+  # System Package Caches (reduces apt update/install times)
+  apt-cache:
+    driver: local
+    name: spec-kit-apt-cache
+    labels:
+      - "com.spec-kit.volume.type=system-cache"
+      - "com.spec-kit.volume.description=APT package cache"
+
+  apt-lib:
+    driver: local
+    name: spec-kit-apt-lib
+    labels:
+      - "com.spec-kit.volume.type=system-cache"
+      - "com.spec-kit.volume.description=APT library cache"
+
+  # Development Environment Persistence
+  bash-history:
+    driver: local
+    name: spec-kit-bash-history
+    labels:
+      - "com.spec-kit.volume.type=development"
+      - "com.spec-kit.volume.description=Bash command history"
+
+  zsh-history:
+    driver: local
+    name: spec-kit-zsh-history
+    labels:
+      - "com.spec-kit.volume.type=development"
+      - "com.spec-kit.volume.description=Zsh command history"
+
+  # MCP Server Data and Configuration
+  mcp-data:
+    driver: local
+    name: spec-kit-mcp-data
+    labels:
+      - "com.spec-kit.volume.type=mcp"
+      - "com.spec-kit.volume.description=Model Context Protocol server data"
+
+  # Browser Automation Cache (for Playwright)
+  playwright-browsers:
+    driver: local
+    name: spec-kit-playwright-browsers
+    labels:
+      - "com.spec-kit.volume.type=browser-cache"
+      - "com.spec-kit.volume.description=Playwright browser binaries cache"
+# =============================================================================
+# PERFORMANCE MONITORING & CLEANUP
+# Use these commands to manage volume performance:
+#
+# View volume usage:
+#   docker system df -v
+#
+# Clean unused volumes:
+#   docker volume prune
+#
+# Backup specific volume:
+#   docker run --rm -v spec-kit-[volume-name]:/data -v $(pwd):/backup alpine tar czf /backup/[volume-name]-backup.tar.gz -C /data .
+#
+# Restore specific volume:
+#   docker run --rm -v spec-kit-[volume-name]:/data -v $(pwd):/backup alpine tar xzf /backup/[volume-name]-backup.tar.gz -C /data
+# =============================================================================

@@ -1,0 +1,227 @@
+[
+  // Copilot-optimized keybindings for spec-kit development
+
+  // Copilot shortcuts
+  {
+    "key": "ctrl+i",
+    "command": "github.copilot.generate",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+i",
+    "command": "workbench.panel.chat.view.copilot.focus"
+  },
+
+  // Quick tasks
+  {
+    "key": "ctrl+shift+r",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Run Specify CLI - Help"
+  },
+  {
+    "key": "ctrl+shift+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Run Specify CLI - Check"
+  },
+
+  // MCP management
+  {
+    "key": "ctrl+alt+m",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Start Development Servers"
+  },
+  {
+    "key": "ctrl+alt+m t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Start Testing Servers (with Playwright)"
+  },
+  {
+    "key": "ctrl+alt+m x",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Stop Servers"
+  },
+  {
+    "key": "ctrl+alt+m c",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: Check Status"
+  },
+  {
+    "key": "ctrl+alt+m l",
+    "command": "workbench.action.tasks.runTask",
+    "args": "MCP: View Logs"
+  },
+
+  // === Debug Shortcuts ===
+  {
+    "key": "f6",
+    "command": "workbench.action.debug.selectandstart"
+  },
+  {
+    "key": "ctrl+f6",
+    "command": "workbench.action.debug.restart"
+  },
+  {
+    "key": "shift+f6",
+    "command": "workbench.action.debug.stop"
+  },
+
+  // === Terminal Management ===
+  {
+    "key": "ctrl+shift+`",
+    "command": "workbench.action.terminal.newWithCwd",
+    "args": {
+      "cwd": "${workspaceFolder}"
+    }
+  },
+  {
+    "key": "ctrl+alt+`",
+    "command": "workbench.action.terminal.split"
+  },
+
+  // === File Navigation ===
+  {
+    "key": "ctrl+shift+o",
+    "command": "workbench.action.quickOpen",
+    "args": "src/"
+  },
+  {
+    "key": "ctrl+shift+f",
+    "command": "workbench.view.search",
+    "when": "!searchViewletVisible"
+  },
+  {
+    "key": "ctrl+shift+g",
+    "command": "workbench.view.scm",
+    "when": "!scmFocus"
+  },
+
+  // === Python-specific ===
+  {
+    "key": "ctrl+shift+p ctrl+r",
+    "command": "python.execInTerminal"
+  },
+  {
+    "key": "ctrl+shift+p ctrl+i",
+    "command": "python.setInterpreter"
+  },
+  {
+    "key": "ctrl+shift+p ctrl+t",
+    "command": "python.runTestsInCurrentFile"
+  },
+
+  // === Git Operations ===
+  {
+    "key": "ctrl+alt+g s",
+    "command": "git.stage"
+  },
+  {
+    "key": "ctrl+alt+g u",
+    "command": "git.unstage"
+  },
+  {
+    "key": "ctrl+alt+g c",
+    "command": "git.commitStaged"
+  },
+  {
+    "key": "ctrl+alt+g p",
+    "command": "git.push"
+  },
+  {
+    "key": "ctrl+alt+g l",
+    "command": "git.pull"
+  },
+
+  // === Code Navigation ===
+  {
+    "key": "ctrl+shift+.",
+    "command": "editor.action.goToDeclaration"
+  },
+  {
+    "key": "ctrl+shift+,",
+    "command": "workbench.action.navigateBack"
+  },
+  {
+    "key": "alt+up",
+    "command": "editor.action.moveLinesUpAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "alt+down",
+    "command": "editor.action.moveLinesDownAction",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+
+  // === Multi-cursor ===
+  {
+    "key": "ctrl+alt+up",
+    "command": "editor.action.insertCursorAbove",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+alt+down",
+    "command": "editor.action.insertCursorBelow",
+    "when": "editorTextFocus"
+  },
+
+  // === Folding ===
+  {
+    "key": "ctrl+shift+[",
+    "command": "editor.fold",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+shift+]",
+    "command": "editor.unfold",
+    "when": "editorTextFocus"
+  },
+
+  // === Error Navigation ===
+  {
+    "key": "f8",
+    "command": "editor.action.marker.nextInFiles"
+  },
+  {
+    "key": "shift+f8",
+    "command": "editor.action.marker.prevInFiles"
+  },
+
+  // === Workspace Management ===
+  {
+    "key": "ctrl+k ctrl+w",
+    "command": "workbench.action.closeAllEditors"
+  },
+  {
+    "key": "ctrl+k ctrl+s",
+    "command": "workbench.action.files.saveAll"
+  },
+
+  // === AI Assistance ===
+  {
+    "key": "ctrl+shift+a",
+    "command": "github.copilot.generate",
+    "when": "editorTextFocus && github.copilot.activated"
+  },
+  {
+    "key": "ctrl+shift+c",
+    "command": "workbench.panel.chat.view.copilot.focus",
+    "when": "github.copilot.activated"
+  },
+
+  // === Extension-specific ===
+  {
+    "key": "ctrl+shift+e l",
+    "command": "errorLens.toggle"
+  },
+  {
+    "key": "ctrl+shift+e t",
+    "command": "todo-tree.showTodos"
+  },
+  {
+    "key": "ctrl+shift+d c",
+    "command": "docker.containers.showAll"
+  },
+  {
+    "key": "ctrl+shift+d i",
+    "command": "docker.images.showAll"
+  }
+]

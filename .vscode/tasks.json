@@ -1,0 +1,92 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Setup",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        ".vscode/scripts/yaml-runner.sh",
+        ".vscode/commands/startup.yaml"
+      ],
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "options": { "env": { "UV_NO_EMOJI": "1" } }
+    },
+    {
+      "label": "CLI Help",
+      "type": "shell",
+      "command": "python3",
+      "args": ["src/specify_cli/__init__.py", "--help"],
+      "group": "test",
+      "options": { "env": { "PYTHONPATH": "${workspaceFolder}/src" } }
+    },
+    {
+      "label": "CLI Check",
+      "type": "shell",
+      "command": "python3",
+      "args": ["src/specify_cli/__init__.py", "check"],
+      "group": "test",
+      "options": { "env": { "PYTHONPATH": "${workspaceFolder}/src" } }
+    },
+    {
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "pip", "install", "-e", ".[dev]"],
+      "group": "build",
+      "options": { "cwd": "${workspaceFolder}" }
+    },
+    {
+      "label": "Format",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "ruff", "format", "src/"],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Lint",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "ruff", "check", "src/", "--fix"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Type Check",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "mypy", "src/"],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "MCP Start",
+      "type": "shell",
+      "command": "bash",
+      "args": [".vscode/scripts/mcp-server.sh", "start", "development"],
+      "group": "build",
+      "options": { "env": { "GITHUB_TOKEN": "${env:GITHUB_TOKEN}" } }
+    },
+    {
+      "label": "MCP Stop",
+      "type": "shell",
+      "command": "bash",
+      "args": [".vscode/scripts/mcp-server.sh", "stop"],
+      "group": "build"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "Brief Header": {
+    "prefix": "hdr",
+    "body": [
+      "# ${1:Title}",
+      "",
+      "${2:Brief description}",
+      "",
+      "## ${3:Key Points}",
+      "",
+      "${0}"
+    ],
+    "description": "Concise header with brief desc"
+  },
+
+  "Code Block": {
+    "prefix": "code",
+    "body": ["```${1:lang}", "${2:code}", "```", "${0}"],
+    "description": "Code block with language"
+  },
+
+  "Status Table": {
+    "prefix": "status",
+    "body": [
+      "| Component | Status | Notes |",
+      "|-----------|--------|-------|",
+      "| ${1:Item} | ${2:✅/❌/🟡} | ${3:Brief note} |",
+      "${0}"
+    ],
+    "description": "Status tracking table"
+  },
+
+  "Quick Link": {
+    "prefix": "link",
+    "body": "[${1:text}](${2:url})",
+    "description": "Quick markdown link"
+  },
+
+  "Asset Reference": {
+    "prefix": "img",
+    "body": "![${1:alt}](${2:path})",
+    "description": "Image/asset reference"
+  },
+
+  "Task List": {
+    "prefix": "tasks",
+    "body": [
+      "**${1:Sprint/Phase}:**",
+      "",
+      "- [x] ${2:Completed}",
+      "- [ ] ${3:In progress}",
+      "- [ ] ${4:Planned}",
+      "${0}"
+    ],
+    "description": "Task tracking list"
+  },
+
+  "Tech Spec": {
+    "prefix": "spec",
+    "body": [
+      "## ${1:Component} Specification",
+      "",
+      "**Purpose:** ${2:Brief function description}",
+      "",
+      "**Dependencies:** ${3:Key deps}",
+      "",
+      "**Interface:**",
+      "```${4:lang}",
+      "${5:API/Interface definition}",
+      "```",
+      "",
+      "${0}"
+    ],
+    "description": "Technical specification template"
+  },
+
+  "Implementation Note": {
+    "prefix": "impl",
+    "body": [
+      "> **Implementation:** ${1:Key approach/pattern}",
+      "> ",
+      "> ${2:Brief technical detail}",
+      "${0}"
+    ],
+    "description": "Implementation callout"
+  },
+
+  "Warning Block": {
+    "prefix": "warn",
+    "body": ["> ⚠️ **${1:Warning Type}:** ${2:Brief warning message}", "${0}"],
+    "description": "Warning callout block"
+  }
+}
