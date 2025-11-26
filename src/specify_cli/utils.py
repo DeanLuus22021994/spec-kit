@@ -32,13 +32,13 @@ class TelemetryClient:
             return
         # Placeholder for actual OTel implementation
         # In a real scenario, this would send data to the collector
-        pass
+        console.print(f"[dim]Telemetry: {event_name} ({properties})[/dim]")
 
     def track_exception(self, exception: Exception) -> None:
         """Track an exception."""
         if not self.enabled:
             return
-        pass
+        console.print(f"[dim]Telemetry Error: {exception}[/dim]")
 
 
 telemetry = TelemetryClient()
