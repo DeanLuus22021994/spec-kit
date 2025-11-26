@@ -66,3 +66,5 @@ Invoke-SpecKitBlock -Name "Create-New-Feature" -ScriptBlock {
         $logger.Info("SPEC_FILE: $specFile")
         $logger.Info("FEATURE_NUM: $featureNum")
     }
+}
+

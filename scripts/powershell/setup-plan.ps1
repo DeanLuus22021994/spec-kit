@@ -29,3 +29,5 @@ Invoke-SpecKitBlock -Name "Setup-Plan" -ScriptBlock {
         $logger.Info("SPECS_DIR: $($paths.FEATURE_DIR)")
         $logger.Info("BRANCH: $($paths.CURRENT_BRANCH)")
     }
+}
+
