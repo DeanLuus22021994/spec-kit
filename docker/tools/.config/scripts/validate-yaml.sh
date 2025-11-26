@@ -14,16 +14,21 @@ readonly NC='\033[0m' # No Color
 
 # Paths
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-readonly RULES_DIR="${WORKSPACE_ROOT}/tools/.config/validation/rules"
-readonly REPORTS_DIR="${WORKSPACE_ROOT}/tools/.config/validation/reports/latest"
-readonly INPUT_DIR="${WORKSPACE_ROOT}"
 
-# Configuration
-PROFILE="${PROFILE:-recommended}"
-LABEL_SELECTOR="${LABEL_SELECTOR:-}"
-RUN_MODE="${RUN_MODE:-local}"  # local or hybrid
-PROFILES_DIR="${WORKSPACE_ROOT}/tools/.config/validation/profiles"
+# Detect if running in container (script in /usr/local/bin)
+if [[ "${SCRIPT_DIR}" == "/usr/local/bin" ]]; then
+    readonly WORKSPACE_ROOT="/workspace"
+    readonly RULES_DIR="${WORKSPACE_ROOT}/.config/validation/rules"
+    readonly REPORTS_DIR="${WORKSPACE_ROOT}/.config/validation/reports/latest"
+    readonly PROFILES_DIR="${WORKSPACE_ROOT}/.config/validation/profiles"
+    readonly INPUT_DIR="${WORKSPACE_ROOT}"
+else
+    readonly WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+    readonly RULES_DIR="${WORKSPACE_ROOT}/tools/.config/validation/rules"
+    readonly REPORTS_DIR="${WORKSPACE_ROOT}/tools/.config/validation/reports/latest"
+    readonly PROFILES_DIR="${WORKSPACE_ROOT}/tools/.config/validation/profiles"
+    readonly INPUT_DIR="${WORKSPACE_ROOT}"
+fi
 
 # Functions
 log_info() {
