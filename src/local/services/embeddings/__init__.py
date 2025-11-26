@@ -6,7 +6,13 @@ functionality using OpenAI's text-embedding models.
 Includes Redis-based caching for performance optimization.
 """
 
-from semantic.embeddings.cache import CacheMetrics, CacheStrategy, EmbeddingCache, EmbeddingCacheConfig, get_embedding_cache
+from .cache import (
+    CacheMetrics,
+    CacheStrategy,
+    EmbeddingCache,
+    EmbeddingCacheConfig,
+    get_embedding_cache,
+)
 
 __all__ = [
     "EmbeddingCache",

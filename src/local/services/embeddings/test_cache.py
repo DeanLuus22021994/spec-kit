@@ -13,7 +13,7 @@ from pathlib import Path
 # Add semantic package to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from semantic.embeddings.cache import EmbeddingCache, EmbeddingCacheConfig
+from services.embeddings.cache import EmbeddingCache, EmbeddingCacheConfig
 
 
 def run_basic_set_get(cache: EmbeddingCache) -> str:

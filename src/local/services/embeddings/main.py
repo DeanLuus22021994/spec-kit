@@ -15,7 +15,7 @@ import uvicorn
 try:
     import openai  # type: ignore[import-not-found]
 except ImportError:  # pragma: no cover - optional openai dependency
-    openai = None  # type: ignore[misc,assignment]
+    openai = None
 else:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     if OPENAI_API_KEY:
@@ -30,13 +30,13 @@ from pydantic import BaseModel, Field
 
 # Handle imports for both standalone and package execution
 try:
-    from semantic.embeddings.cache import (  # type: ignore[import-not-found]
+    from cache import (  # type: ignore[import-not-found]
         EmbeddingCache,
         EmbeddingCacheConfig,
     )
 except ImportError:  # pragma: no cover - optional cache
-    EmbeddingCache = None  # type: ignore[misc,assignment]
-    EmbeddingCacheConfig = None  # type: ignore[misc,assignment]
+    EmbeddingCache = None
+    EmbeddingCacheConfig = None
 
 # Configure logging
 logging.basicConfig(
@@ -93,13 +93,13 @@ def load_config() -> dict:
     config_path = os.getenv("CONFIG_PATH", "/app/config/config.yml")
     try:
         if os.path.exists(config_path):
-            with open(config_path, "r", encoding="utf-8") as f:
+            with open(config_path, encoding="utf-8") as f:
                 result = yaml.safe_load(f)
                 return result if isinstance(result, dict) else {}
         else:
             logger.warning("Config file not found at %s, using defaults", config_path)
             return {}
-    except (OSError, IOError, yaml.YAMLError) as e:
+    except (OSError, yaml.YAMLError) as e:
         logger.error("Error loading config: %s", e)
         return {}
 
