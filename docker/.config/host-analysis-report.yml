@@ -4,6 +4,8 @@
 # Date: 2025-11-25
 
 metadata: &metadata
+  name: "host-analysis-report"
+  description: "Report on host system resources and capabilities"
   version: "1.0.0"
   updated: "2025-11-25"
   category: reference

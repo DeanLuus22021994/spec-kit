@@ -3,6 +3,8 @@
 # Controls for runtime optimization adjustments
 
 metadata: &metadata
+  name: "optimization-toggles"
+  description: "Real-time optimization toggles configuration"
   version: "1.0.0"
   updated: "2025-11-25"
   category: config
