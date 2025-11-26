@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
 """Test the embedding cache functionality."""
-# pylint: disable=wrong-import-position
-# ruff: noqa: E402
-# flake8: noqa: E402
 
 from __future__ import annotations
 
-import sys
 import time
-from pathlib import Path
 
-# Add semantic package to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from services.embeddings.cache import EmbeddingCache, EmbeddingCacheConfig
+from services.embeddings.cache import EmbeddingCache
+from services.embeddings.config import EmbeddingCacheConfig
 
 
 def run_basic_set_get(cache: EmbeddingCache) -> str:

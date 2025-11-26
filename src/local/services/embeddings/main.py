@@ -1,7 +1,4 @@
-"""Embeddings Service - FastAPI Application.
-
-Provides text embedding generation using OpenAI API with Redis caching.
-"""
+"""Embeddings Service - FastAPI Application."""
 
 from __future__ import annotations
 
@@ -11,39 +8,21 @@ from datetime import datetime
 from typing import Any
 
 import uvicorn
-
-try:
-    import openai  # type: ignore[import-not-found]
-except ImportError:  # pragma: no cover - optional openai dependency
-    openai = None
-else:
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    if OPENAI_API_KEY:
-        try:
-            openai.api_key = OPENAI_API_KEY
-        except AttributeError:
-            # newer SDKs may use different client config; we'll set api_key if supported
-            pass
 import yaml
 from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel, Field
 
-# Handle imports for both standalone and package execution
-try:
-    from cache import (  # type: ignore[import-not-found]
-        EmbeddingCache,
-        EmbeddingCacheConfig,
-    )
-except ImportError:  # pragma: no cover - optional cache
-    EmbeddingCache = None
-    EmbeddingCacheConfig = None
+from .cache import EmbeddingCache, EmbeddingCacheConfig
+from .models import EmbeddingRequest, EmbeddingResponse, HealthResponse
+from .provider import (
+    generate_embedding_with_openai,
+    generate_embeddings_batch_with_openai,
+)
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
-
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -53,43 +32,9 @@ app = FastAPI(
 )
 
 
-# Models
-class EmbeddingRequest(BaseModel):
-    """Request model for embedding generation."""
-
-    text: str = Field(..., min_length=1, description="Text to embed")
-    model: str = Field(
-        default="text-embedding-3-small", description="Embedding model to use"
-    )
-    user: str | None = Field(None, description="User ID for tracking")
-
-
-class EmbeddingResponse(BaseModel):
-    """Response model for embedding generation."""
-
-    embedding: list[float] = Field(..., description="Vector embedding")
-    model: str = Field(..., description="Model used")
-    dimensions: int = Field(..., description="Embedding dimensions")
-    tokens_used: int = Field(default=0, description="Tokens consumed")
-    created_at: str = Field(..., description="Timestamp of creation")
-
-
-class HealthResponse(BaseModel):
-    """Health check response."""
-
-    status: str
-    service: str
-    timestamp: str
-    version: str
-
-
 # Configuration
-def load_config() -> dict:
-    """Load configuration from YAML file.
-
-    Returns:
-        Configuration dictionary.
-    """
+def load_config() -> dict[str, Any]:
+    """Load configuration from YAML file."""
     config_path = os.getenv("CONFIG_PATH", "/app/config/config.yml")
     try:
         if os.path.exists(config_path):
@@ -108,11 +53,8 @@ config = load_config()
 
 
 # Initialize embedding cache
-def init_cache() -> Any:
+def init_cache() -> EmbeddingCache | None:
     """Initialize the embedding cache if Redis is available."""
-    if EmbeddingCache is None or EmbeddingCacheConfig is None:
-        logger.info("Embedding cache not available (cache module not loaded)")
-        return None
     try:
         cache_config = EmbeddingCacheConfig.from_env()
         cache = EmbeddingCache(cache_config)
@@ -128,60 +70,18 @@ def init_cache() -> Any:
             "Embedding cache unhealthy: %s", cache_health.get("error", "unknown")
         )
         return None
-    except Exception as e:  # pylint: disable=broad-except
-        logger.warning("Embedding cache initialization failed: %s", e)
+    except (ValueError, RuntimeError, ImportError):
+        logger.warning("Embedding cache initialization failed")
         return None
 
 
-embedding_cache: Any = init_cache()
-
-
-# OpenAI helpers
-def _openai_available() -> bool:
-    return openai is not None and bool(os.getenv("OPENAI_API_KEY"))
-
-
-def generate_embedding_with_openai(text: str, model: str) -> tuple[list[float], int]:
-    """Call OpenAI to generate a single embedding; returns (vector, tokens_used).
-
-    If OpenAI is not available, returns a placeholder vector and token estimate.
-    """
-    dimensions = 1536 if "3-small" in model else 3072
-    if not _openai_available():
-        return [0.0] * dimensions, len(text.split())
-    # Use the OpenAI Embeddings API via getattr to avoid static analysis errors
-    embedding_api = getattr(openai, "Embedding", None)
-    if embedding_api is None:
-        return [0.0] * dimensions, len(text.split())
-    resp = embedding_api.create(model=model, input=text)
-    vector = resp["data"][0]["embedding"]
-    usage = resp.get("usage", {})
-    tokens = usage.get("total_tokens", len(text.split()))
-    return vector, tokens
-
-
-def generate_embeddings_batch_with_openai(
-    texts: list[str], model: str
-) -> list[list[float]]:
-    """Call OpenAI for batch embeddings; fallback to placeholders if unavailable."""
-    dimensions = 1536 if "3-small" in model else 3072
-    if not _openai_available():
-        return [[0.0] * dimensions for _ in texts]
-    embedding_api = getattr(openai, "Embedding", None)
-    if embedding_api is None:
-        return [[0.0] * dimensions for _ in texts]
-    resp = embedding_api.create(model=model, input=texts)
-    return [d["embedding"] for d in resp["data"]]
+embedding_cache = init_cache()
 
 
 # Endpoints
 @app.get("/", tags=["root"])
-async def root() -> dict:
-    """Root endpoint.
-
-    Returns:
-        Service information dictionary.
-    """
+async def root() -> dict[str, str]:
+    """Root endpoint."""
     return {
         "service": "Semantic Kernel Embedding Service",
         "version": "1.0.0",
@@ -191,11 +91,7 @@ async def root() -> dict:
 
 @app.get("/health", response_model=HealthResponse, tags=["health"])
 async def health() -> HealthResponse:
-    """Health check endpoint.
-
-    Returns:
-        Health status response.
-    """
+    """Health check endpoint."""
     return HealthResponse(
         status="healthy",
         service="embeddings",
@@ -205,40 +101,22 @@ async def health() -> HealthResponse:
 
 
 @app.get("/ready", tags=["health"])
-async def ready() -> dict:
-    """Readiness check endpoint.
-
-    Returns:
-        Readiness status dictionary.
-    """
-    # Check cache connectivity
+async def ready() -> dict[str, str]:
+    """Readiness check endpoint."""
     cache_health = (
         embedding_cache.health_check() if embedding_cache else {"status": "disabled"}
     )
     return {
         "status": "ready",
-        "cache": cache_health.get("status", "unknown"),
+        "cache": str(cache_health.get("status", "unknown")),
         "timestamp": datetime.utcnow().isoformat(),
     }
 
 
 @app.post("/embeddings", response_model=EmbeddingResponse, tags=["embeddings"])
 async def create_embedding(request: EmbeddingRequest) -> EmbeddingResponse:
-    """Generate embeddings for the provided text.
-
-    Uses Redis cache for performance - cache hits are ~100x faster than API calls.
-
-    Args:
-        request: The embedding request containing text and model.
-
-    Returns:
-        Embedding response with vector and metadata.
-
-    Raises:
-        HTTPException: If embedding generation fails.
-    """
+    """Generate embeddings for the provided text."""
     try:
-        # Check cache first
         if embedding_cache:
             cached = embedding_cache.get(request.text, model=request.model)
             if cached:
@@ -247,7 +125,7 @@ async def create_embedding(request: EmbeddingRequest) -> EmbeddingResponse:
                     embedding=cached,
                     model=request.model,
                     dimensions=len(cached),
-                    tokens_used=0,  # No tokens used for cache hit
+                    tokens_used=0,
                     created_at=datetime.utcnow().isoformat(),
                 )
 
@@ -255,14 +133,11 @@ async def create_embedding(request: EmbeddingRequest) -> EmbeddingResponse:
             "Cache MISS - Generating embedding for text (length: %d)", len(request.text)
         )
 
-        # Use OpenAI or placeholder implementation
         dimensions = 1536 if "3-small" in request.model else 3072
-        tokens_used = len(request.text.split())
         embedding, tokens_used = generate_embedding_with_openai(
             request.text, request.model
         )
 
-        # Cache the result
         if embedding_cache:
             embedding_cache.set(
                 request.text,
@@ -288,21 +163,8 @@ async def create_embedding(request: EmbeddingRequest) -> EmbeddingResponse:
 @app.post("/embeddings/batch", tags=["embeddings"])
 async def create_embeddings_batch(
     texts: list[str], model: str = "text-embedding-3-small"
-) -> dict:
-    """Generate embeddings for multiple texts in batch.
-
-    Uses Redis cache - only generates embeddings for cache misses.
-
-    Args:
-        texts: List of text strings to embed.
-        model: The embedding model to use.
-
-    Returns:
-        Dictionary containing embeddings and metadata.
-
-    Raises:
-        HTTPException: If batch embedding generation fails.
-    """
+) -> dict[str, Any]:
+    """Generate embeddings for multiple texts in batch."""
     try:
         logger.info("Generating batch embeddings for %d texts", len(texts))
 
@@ -310,14 +172,9 @@ async def create_embeddings_batch(
         cache_misses = 0
         embeddings: list[list[float] | None] = []
 
-        # Check cache for all texts
         cached_results: dict[str, list[float] | None] = {}
         if embedding_cache:
             cached_results = embedding_cache.get_many(texts, model=model)
-
-        # Process each text
-        to_cache: list[tuple[str, list[float]]] = []
-        dimensions = 1536 if "3-small" in model else 3072
 
         miss_texts: list[str] = []
         for text in texts:
@@ -330,13 +187,11 @@ async def create_embeddings_batch(
                 miss_texts.append(text)
                 cache_misses += 1
 
-        # Generate embeddings for misses in batch, if any
         generated: list[list[float]] = []
         if miss_texts:
             generated = generate_embeddings_batch_with_openai(miss_texts, model)
 
-        # Fill embeddings and prepare cache list
-        to_cache = []
+        to_cache: list[tuple[str, list[float]]] = []
         gen_idx = 0
         for i, text in enumerate(texts):
             if embeddings[i] is None:
@@ -345,20 +200,18 @@ async def create_embeddings_batch(
                 to_cache.append((text, emb))
                 gen_idx += 1
 
-        # Cache the misses
         if embedding_cache and to_cache:
             embedding_cache.set_many(to_cache, model=model)
 
         return {
             "embeddings": embeddings,
             "model": model,
-            "dimensions": dimensions,
+            "dimensions": 1536 if "3-small" in model else 3072,
             "count": len(texts),
             "cache_hits": cache_hits,
             "cache_misses": cache_misses,
             "created_at": datetime.utcnow().isoformat(),
         }
-        # No placeholder implementation remains here
     except ValueError as e:
         logger.error("Error in batch embedding: %s", e)
         raise HTTPException(
@@ -368,15 +221,7 @@ async def create_embeddings_batch(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(_request: Request, exc: Exception) -> dict[str, Any]:
-    """Global exception handler.
-
-    Args:
-        _request: The request object (unused).
-        exc: The exception that was raised.
-
-    Returns:
-        Error response dictionary.
-    """
+    """Global exception handler."""
     logger.error("Unhandled exception: %s", exc)
     return {
         "error": "Internal server error",
@@ -386,7 +231,6 @@ async def global_exception_handler(_request: Request, exc: Exception) -> dict[st
 
 
 if __name__ == "__main__":
-    # Get configuration from environment
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8001"))
     reload_enabled = os.getenv("RELOAD", "false").lower() == "true"

@@ -1,131 +1,36 @@
-"""Redis-based embedding cache for semantic operations.
-
-This module provides caching for embeddings to:
-- Reduce API costs (embeddings are expensive to generate)
-- Improve latency (cache hits are ~100x faster)
-- Enable offline operation (cached embeddings work without API)
-- Track usage patterns and hit rates
-
-Features:
-- Content-based hashing for cache keys
-- TTL-based expiration for freshness
-- Batch operations with pipelining
-- Compression for large embeddings
-- Metrics and hit rate tracking
-"""
+"""Redis-based embedding cache implementation."""
 
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import logging
-import os
 import time
 import zlib
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum, auto
 from typing import Any
 
-import redis  # type: ignore[import-not-found]
+from .config import CacheStrategy, EmbeddingCacheConfig
+from .metrics import CacheMetrics
 
 logger = logging.getLogger(__name__)
 
-
-class CacheStrategy(Enum):
-    """Cache eviction/storage strategy."""
-
-    LRU = auto()  # Least Recently Used (default)
-    LFU = auto()  # Least Frequently Used
-    TTL = auto()  # Time-based expiration only
-    HYBRID = auto()  # LRU + TTL
+# Dynamic import to avoid static analysis errors if package is missing
+redis: Any
+try:
+    redis = importlib.import_module("redis")
+except ImportError:
+    redis = None
 
 
-@dataclass
-class EmbeddingCacheConfig:
-    """Configuration for embedding cache."""
+class EmbeddingCache:
+    """Redis-based cache for embeddings with compression and metrics."""
 
-    host: str = "localhost"
-    port: int = 6379
-    db: int = 1  # Use separate DB for embeddings
-    password: str | None = None
-    key_prefix: str = "emb"
-    default_ttl: int = 86400 * 7  # 7 days default
-    max_memory_mb: int = 512
-    enable_compression: bool = True
-    compression_threshold: int = 1024  # Compress if > 1KB
-    enable_metrics: bool = True
-    strategy: CacheStrategy = CacheStrategy.HYBRID
+    _instance: EmbeddingCache | None = None
+    _client: Any = None
+    _initialized: bool = False
 
-    @classmethod
-    def from_env(cls) -> "EmbeddingCacheConfig":
-        """Load configuration from environment."""
-        return cls(
-            host=os.getenv("REDIS_HOST", "localhost"),
-            port=int(os.getenv("REDIS_PORT", "6379")),
-            db=int(os.getenv("REDIS_EMBEDDINGS_DB", "1")),
-            password=os.getenv("REDIS_PASSWORD"),
-            key_prefix=os.getenv("REDIS_EMBEDDING_PREFIX", "emb"),
-            default_ttl=int(os.getenv("REDIS_EMBEDDING_TTL", "604800")),
-            enable_compression=os.getenv("REDIS_EMBEDDING_COMPRESS", "true").lower()
-            == "true",
-        )
-
-
-@dataclass
-class CacheMetrics:
-    """Cache performance metrics."""
-
-    hits: int = 0
-    misses: int = 0
-    sets: int = 0
-    deletes: int = 0
-    bytes_saved: int = 0
-    compression_ratio: float = 1.0
-    avg_latency_ms: float = 0.0
-    last_reset: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-
-    @property
-    def hit_rate(self) -> float:
-        """Calculate cache hit rate."""
-        total = self.hits + self.misses
-        return self.hits / total if total > 0 else 0.0
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return {
-            "hits": self.hits,
-            "misses": self.misses,
-            "sets": self.sets,
-            "deletes": self.deletes,
-            "hit_rate": f"{self.hit_rate:.2%}",
-            "bytes_saved": self.bytes_saved,
-            "compression_ratio": f"{self.compression_ratio:.2f}",
-            "avg_latency_ms": f"{self.avg_latency_ms:.2f}",
-            "last_reset": self.last_reset,
-        }
-
-
-class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
-    """Redis-based cache for embeddings with compression and metrics.
-
-    Example usage:
-        cache = EmbeddingCache()
-
-        # Cache an embedding
-        cache.set("Hello world", [0.1, 0.2, ...], model="text-embedding-3-small")
-
-        # Retrieve from cache
-        embedding = cache.get("Hello world", model="text-embedding-3-small")
-
-        # Batch operations
-        results = cache.get_many(["text1", "text2", "text3"])
-    """
-
-    _instance: "EmbeddingCache | None" = None
-    _client: "redis.Redis[bytes] | None" = None
-
-    def __new__(cls, config: EmbeddingCacheConfig | None = None) -> "EmbeddingCache":
+    def __new__(cls, config: EmbeddingCacheConfig | None = None) -> EmbeddingCache:
         """Singleton pattern for cache instance."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -145,13 +50,18 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
 
     def _connect(self) -> None:
         """Establish Redis connection."""
+        if redis is None:
+            logger.warning("Redis package not installed. Cache disabled.")
+            self._client = None
+            return
+
         try:
             pool = redis.ConnectionPool(
                 host=self.config.host,
                 port=self.config.port,
                 db=self.config.db,
                 password=self.config.password,
-                decode_responses=False,  # We handle bytes for compression
+                decode_responses=False,
                 socket_timeout=5.0,
                 max_connections=20,
             )
@@ -169,7 +79,7 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             self._client = None
 
     @property
-    def client(self) -> "redis.Redis[bytes]":
+    def client(self) -> Any:
         """Get Redis client with auto-reconnect."""
         if self._client is None:
             self._connect()
@@ -178,10 +88,7 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
         return self._client
 
     def _make_key(self, text: str, model: str) -> str:
-        """Generate cache key from text and model.
-
-        Uses SHA-256 hash of text + model for consistent keys.
-        """
+        """Generate cache key from text and model."""
         content = f"{model}:{text}"
         hash_digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
         return f"{self.config.key_prefix}:{model}:{hash_digest}"
@@ -194,7 +101,7 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             return data, False
 
         compressed = zlib.compress(data, level=6)
-        if len(compressed) < len(data) * 0.9:  # At least 10% savings
+        if len(compressed) < len(data) * 0.9:
             return compressed, True
         return data, False
 
@@ -209,9 +116,9 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
     ) -> bytes:
         """Serialize embedding with optional metadata."""
         payload = {
-            "v": embedding,  # vector
-            "d": len(embedding),  # dimensions
-            "t": time.time(),  # timestamp
+            "v": embedding,
+            "d": len(embedding),
+            "t": time.time(),
         }
         if metadata:
             payload["m"] = metadata
@@ -239,23 +146,17 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
         text: str,
         model: str = "text-embedding-3-small",
     ) -> list[float] | None:
-        """Get embedding from cache.
+        """Get embedding from cache."""
+        if redis is None:
+            return None
 
-        Args:
-            text: The text that was embedded
-            model: The embedding model used
-
-        Returns:
-            The cached embedding vector, or None if not found
-        """
         start = time.perf_counter()
         key = self._make_key(text, model)
 
         try:
-            # Get data and compression flag
             pipe = self.client.pipeline()
             pipe.get(key)
-            pipe.get(f"{key}:z")  # Compression flag
+            pipe.get(f"{key}:z")
             results = pipe.execute()
 
             data = results[0]
@@ -265,14 +166,12 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
                 self.metrics.misses += 1
                 return None
 
-            # Decompress and deserialize
             decompressed = self._decompress(data, is_compressed)
             embedding, _ = self._deserialize_embedding(decompressed)
 
             self.metrics.hits += 1
             self._track_latency((time.perf_counter() - start) * 1000)
 
-            # Update access time for LRU
             if self.config.strategy in (CacheStrategy.LRU, CacheStrategy.HYBRID):
                 self.client.touch(key)
 
@@ -283,7 +182,7 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             self.metrics.misses += 1
             return None
 
-    def set(  # pylint: disable=too-many-locals
+    def set(
         self,
         text: str,
         embedding: list[float],
@@ -291,36 +190,25 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
         ttl: int | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> bool:
-        """Cache an embedding.
+        """Cache an embedding."""
+        if redis is None:
+            return False
 
-        Args:
-            text: The original text
-            embedding: The embedding vector
-            model: The model used
-            ttl: Time-to-live in seconds (None uses default)
-            metadata: Additional metadata to store
-
-        Returns:
-            True if cached successfully
-        """
         start = time.perf_counter()
         key = self._make_key(text, model)
         effective_ttl = ttl if ttl is not None else self.config.default_ttl
 
         try:
-            # Serialize and optionally compress
             serialized = self._serialize_embedding(embedding, metadata)
             original_size = len(serialized)
             compressed, is_compressed = self._compress(serialized)
             final_size = len(compressed)
 
-            # Store with pipeline
             pipe = self.client.pipeline()
             pipe.setex(key, effective_ttl, compressed)
             pipe.setex(f"{key}:z", effective_ttl, b"1" if is_compressed else b"0")
             pipe.execute()
 
-            # Track metrics
             self.metrics.sets += 1
             if is_compressed:
                 self.metrics.bytes_saved += original_size - final_size
@@ -333,21 +221,13 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             logger.error("Cache set failed for key %s: %s", key, e)
             return False
 
-    def get_many(  # pylint: disable=too-many-locals
+    def get_many(
         self,
         texts: list[str],
         model: str = "text-embedding-3-small",
     ) -> dict[str, list[float] | None]:
-        """Get multiple embeddings from cache.
-
-        Args:
-            texts: List of texts to look up
-            model: The embedding model
-
-        Returns:
-            Dict mapping text to embedding (None if not cached)
-        """
-        if not texts:
+        """Get multiple embeddings from cache."""
+        if not texts or redis is None:
             return {}
 
         start = time.perf_counter()
@@ -355,14 +235,12 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
         results: dict[str, list[float] | None] = {}
 
         try:
-            # Batch get with pipeline
             pipe = self.client.pipeline()
             for key in keys:
                 pipe.get(key)
                 pipe.get(f"{key}:z")
             responses = pipe.execute()
 
-            # Process results
             for i, text in enumerate(texts):
                 data = responses[i * 2]
                 is_compressed = responses[i * 2 + 1] == b"1"
@@ -387,23 +265,14 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             logger.error("Batch cache get failed: %s", e)
             return {text: None for text in texts}
 
-    def set_many(  # pylint: disable=too-many-locals
+    def set_many(
         self,
         items: list[tuple[str, list[float]]],
         model: str = "text-embedding-3-small",
         ttl: int | None = None,
     ) -> int:
-        """Cache multiple embeddings.
-
-        Args:
-            items: List of (text, embedding) tuples
-            model: The embedding model
-            ttl: Time-to-live in seconds
-
-        Returns:
-            Number of items successfully cached
-        """
-        if not items:
+        """Cache multiple embeddings."""
+        if not items or redis is None:
             return 0
 
         start = time.perf_counter()
@@ -433,15 +302,9 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             return 0
 
     def delete(self, text: str, model: str = "text-embedding-3-small") -> bool:
-        """Delete a cached embedding.
-
-        Args:
-            text: The original text
-            model: The embedding model
-
-        Returns:
-            True if deleted
-        """
+        """Delete a cached embedding."""
+        if redis is None:
+            return False
         key = self._make_key(text, model)
         try:
             deleted = self.client.delete(key, f"{key}:z")
@@ -453,14 +316,9 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             return False
 
     def clear(self, model: str | None = None) -> int:
-        """Clear cached embeddings.
-
-        Args:
-            model: If specified, only clear for this model
-
-        Returns:
-            Number of keys deleted
-        """
+        """Clear cached embeddings."""
+        if redis is None:
+            return 0
         pattern = (
             f"{self.config.key_prefix}:{model}:*"
             if model
@@ -473,7 +331,6 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             while True:
                 cursor, keys = self.client.scan(cursor, match=pattern, count=100)
                 if keys:
-                    # Include compression flag keys
                     all_keys = []
                     for key in keys:
                         all_keys.append(key)
@@ -492,15 +349,9 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             return 0
 
     def exists(self, text: str, model: str = "text-embedding-3-small") -> bool:
-        """Check if embedding is cached.
-
-        Args:
-            text: The original text
-            model: The embedding model
-
-        Returns:
-            True if cached
-        """
+        """Check if embedding is cached."""
+        if redis is None:
+            return False
         key = self._make_key(text, model)
         try:
             return bool(self.client.exists(key))
@@ -508,11 +359,10 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             return False
 
     def get_stats(self) -> dict[str, Any]:
-        """Get cache statistics.
+        """Get cache statistics."""
+        if redis is None:
+            return {"error": "Redis not available", "metrics": self.metrics.to_dict()}
 
-        Returns:
-            Dictionary with cache stats and metrics
-        """
         try:
             info = self.client.info("memory")
             db_info = self.client.info("keyspace").get(f"db{self.config.db}", {})
@@ -539,11 +389,14 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
         self._latencies.clear()
 
     def health_check(self) -> dict[str, Any]:
-        """Check cache health.
+        """Check cache health."""
+        if redis is None:
+            return {
+                "status": "disabled",
+                "error": "Redis package not installed",
+                "connected": False,
+            }
 
-        Returns:
-            Health status dictionary
-        """
         try:
             start = time.perf_counter()
             self.client.ping()
@@ -571,23 +424,6 @@ class EmbeddingCache:  # pylint: disable=too-many-instance-attributes
             logger.info("Embedding cache connection closed")
 
 
-# Convenience function for getting cache instance
 def get_embedding_cache(config: EmbeddingCacheConfig | None = None) -> EmbeddingCache:
-    """Get the embedding cache singleton.
-
-    Args:
-        config: Optional configuration (only used on first call)
-
-    Returns:
-        The embedding cache instance
-    """
+    """Get the embedding cache singleton."""
     return EmbeddingCache(config)
-
-
-__all__ = [
-    "EmbeddingCache",
-    "EmbeddingCacheConfig",
-    "CacheMetrics",
-    "CacheStrategy",
-    "get_embedding_cache",
-]
