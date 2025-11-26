@@ -70,8 +70,12 @@ def check(json_output: bool = False, verbose: bool = False) -> None:
 
     # Check Agents
     for agent_key, agent_config in AGENT_CONFIG.items():
+        # Skip definitions
+        if agent_key.startswith("_"):
+            continue
+
         agent_name = agent_config["name"]
-        requires_cli = agent_config["requires_cli"]
+        requires_cli = agent_config.get("requires_cli", False)
 
         if tracker:
             tracker.add(agent_key, agent_name)
