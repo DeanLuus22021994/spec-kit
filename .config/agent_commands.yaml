@@ -1,14 +1,14 @@
 analyze:
   description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
   scripts:
-    sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
-    ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks
+    sh: scripts/bash/check-implementation-prerequisites.sh --json
+    ps: scripts/powershell/check-implementation-prerequisites.ps1 -Json
 
 checklist:
   description: Generate a custom checklist for the current feature based on user requirements.
   scripts:
-    sh: scripts/bash/check-prerequisites.sh --json
-    ps: scripts/powershell/check-prerequisites.ps1 -Json
+    sh: scripts/bash/check-task-prerequisites.sh --json
+    ps: scripts/powershell/check-task-prerequisites.ps1 -Json
 
 clarify:
   description: Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec.
@@ -17,8 +17,8 @@ clarify:
       agent: speckit.plan
       prompt: Create a plan for the spec. I am building with...
   scripts:
-    sh: scripts/bash/check-prerequisites.sh --json --paths-only
-    ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+    sh: scripts/bash/check-spec-prerequisites.sh --json
+    ps: scripts/powershell/check-spec-prerequisites.ps1 -Json
 
 constitution:
   description: Create or update the project constitution from interactive or provided principle inputs, ensuring all dependent templates stay in sync.
@@ -30,8 +30,8 @@ constitution:
 implement:
   description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
   scripts:
-    sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
-    ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks
+    sh: scripts/bash/check-implementation-prerequisites.sh --json
+    ps: scripts/powershell/check-implementation-prerequisites.ps1 -Json
 
 plan:
   description: Execute the implementation planning workflow using the plan template to generate design artifacts.
@@ -76,12 +76,12 @@ tasks:
       prompt: Start the implementation in phases
       send: true
   scripts:
-    sh: scripts/bash/check-prerequisites.sh --json
-    ps: scripts/powershell/check-prerequisites.ps1 -Json
+    sh: scripts/bash/check-task-prerequisites.sh --json
+    ps: scripts/powershell/check-task-prerequisites.ps1 -Json
 
 taskstoissues:
   description: Convert existing tasks into actionable, dependency-ordered GitHub issues for the feature based on available design artifacts.
   tools: ["github/github-mcp-server/issue_write"]
   scripts:
-    sh: scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks
-    ps: scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks
+    sh: scripts/bash/check-implementation-prerequisites.sh --json
+    ps: scripts/powershell/check-implementation-prerequisites.ps1 -Json
