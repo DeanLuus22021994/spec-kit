@@ -13,7 +13,44 @@
       "pyrightconfig.json": "jsonc"
     },
     "search.useGlobalIgnoreFiles": true,
-    "search.useParentIgnoreFiles": true
+    "search.useParentIgnoreFiles": true,
+    // EXCLUSIONS: Dramatically improve agent performance by hiding artifacts
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/publish": true,
+      "**/bin": true,
+      "**/obj": true,
+      "**/test-results": true,
+      "**/playwright-report": true,
+      "**/.pytest_cache": true,
+      "**/.coverage": true,
+      "**/.venv": true,
+      "**/__pycache__": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/publish": true,
+      "**/bin": true,
+      "**/obj": true,
+      "**/test-results": true,
+      "**/playwright-report": true,
+      "**/.pytest_cache": true,
+      "**/.coverage": true,
+      "**/.venv": true,
+      "**/__pycache__": true,
+      "**/*.min.js": true,
+      "**/*.map": true
+    }
   },
   "extensions": {
     "recommendations": [

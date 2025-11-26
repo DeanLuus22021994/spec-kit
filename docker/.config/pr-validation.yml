@@ -73,3 +73,10 @@ rules:
   require_lint: true
   require_build: true
   coverage_threshold: 80
+  forbidden_artifacts:
+    - "**/node_modules/**"
+    - "**/bin/**"
+    - "**/obj/**"
+    - "**/publish/**"
+    - "**/test-results/**"
+    - "**/playwright-report/**"

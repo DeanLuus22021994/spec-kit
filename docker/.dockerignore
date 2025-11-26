@@ -229,3 +229,6 @@ stress-tests/
 !docs/**
 **/obj/
 **/bin/
+**/publish/
+**/tests/node_modules/
+**/tests/test-results/

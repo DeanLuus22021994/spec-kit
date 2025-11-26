@@ -1,13 +1,25 @@
+debug = true
+
+[worker.oci]
+  enabled = true
+  gc = true
+  gckeepstorage = 20000 # 20GB
+
+  # SSD optimization - larger but fewer layers
+  [worker.oci.layers]
+    max_cache_size = "10GB"
+    compression_level = 5
+
+  # Optimize CPU usage during builds
+  # Commented out to allow full CPU usage as per subagent parallelization recommendation
+  # [worker.oci.cpu]
+  #   cpuset = "0-3"
+
 [registry."docker.io"]
-  mirrors = ["ghcr.io/spec-kit/cache"]
+  mirrors = ["mirror.gcr.io"]
 
 [registry."ghcr.io"]
   headers = ["User-Agent=Docker-Client/20.10.21 (linux)"]
-
-# Cache configuration
-[worker.oci]
-  gc = true
-  gckeepstorage = 20000
 
 [worker.containerd]
   gc = true
@@ -17,12 +29,3 @@
 [worker.containerd.platforms]
   supported = true
   prioritized = ["linux/amd64", "linux/arm64"]
-
-# Optimize CPU usage during builds
-# [worker.oci.cpu]
-#   cpuset = "0-3"
-
-# SSD optimization - larger but fewer layers
-[worker.oci.layers]
-  max_cache_size = "10GB"
-  compression_level = 5

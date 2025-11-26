@@ -16,6 +16,14 @@ variable "DOCKER_BUILDKIT" {
   default = "1"
 }
 
+variable "COMPOSE_DOCKER_CLI_BUILD" {
+  default = "1"
+}
+
+variable "TAG" {
+  default = "latest"
+}
+
 # ============================================================================
 # BASE TARGET - Minimal System Setup
 # ============================================================================
@@ -148,4 +156,68 @@ target "local" {
   cache-to = [
     "type=local,dest=.buildx-cache/local,mode=max"
   ]
+}
+
+# Groups
+group "default" {
+  targets = ["backend", "frontend", "engine", "database", "redis", "embeddings"]
+}
+
+group "core" {
+  targets = ["backend", "database", "redis"]
+}
+
+# Targets
+target "backend" {
+  context = "."
+  dockerfile = "dockerfiles/backend.Dockerfile"
+  tags = ["spec-kit/backend:${TAG}"]
+  platforms = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=local,src=.buildx-cache/backend"]
+  cache-to = ["type=local,dest=.buildx-cache/backend,mode=max"]
+}
+
+target "frontend" {
+  context = "."
+  dockerfile = "dockerfiles/frontend.Dockerfile"
+  tags = ["spec-kit/frontend:${TAG}"]
+  platforms = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=local,src=.buildx-cache/frontend"]
+  cache-to = ["type=local,dest=.buildx-cache/frontend,mode=max"]
+}
+
+target "engine" {
+  context = "."
+  dockerfile = "dockerfiles/engine.Dockerfile"
+  tags = ["spec-kit/engine:${TAG}"]
+  platforms = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=local,src=.buildx-cache/engine"]
+  cache-to = ["type=local,dest=.buildx-cache/engine,mode=max"]
+}
+
+target "database" {
+  context = "."
+  dockerfile = "dockerfiles/database.Dockerfile"
+  tags = ["spec-kit/database:${TAG}"]
+  platforms = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=local,src=.buildx-cache/database"]
+  cache-to = ["type=local,dest=.buildx-cache/database,mode=max"]
+}
+
+target "redis" {
+  context = "."
+  dockerfile = "dockerfiles/redis.Dockerfile"
+  tags = ["spec-kit/redis:${TAG}"]
+  platforms = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=local,src=.buildx-cache/redis"]
+  cache-to = ["type=local,dest=.buildx-cache/redis,mode=max"]
+}
+
+target "embeddings" {
+  context = "."
+  dockerfile = "dockerfiles/embeddings.Dockerfile"
+  tags = ["spec-kit/embeddings:${TAG}"]
+  platforms = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=local,src=.buildx-cache/embeddings"]
+  cache-to = ["type=local,dest=.buildx-cache/embeddings,mode=max"]
 }
