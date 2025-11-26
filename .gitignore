@@ -67,3 +67,8 @@ artifacts/
 
 # Docker Publish
 docker/publish/
+
+# Testing Artifacts
+**/playwright-report/
+**/test-results/
+**/TestResults/
