@@ -3,6 +3,8 @@
 
 # Metadata
 metadata: &metadata
+  name: "pr-validation"
+  description: "Pull Request validation configuration"
   version: "1.0.0"
   updated: "2025-11-26"
   category: config
