@@ -1,6 +1,16 @@
 # Garbage Collection Configuration for Local Registry
 # Run with: docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml
 
+metadata: &metadata
+  name: "registry-gc-config"
+  description: "Garbage Collection Configuration for Local Registry"
+  version: "1.0.0"
+  category: config
+  keywords: [docker, registry, gc, garbage-collection]
+  updated: "2025-11-26"
+
+<<: *metadata
+
 # Scheduling (for external cron/scheduler)
 schedule:
   # Run GC daily at 3 AM

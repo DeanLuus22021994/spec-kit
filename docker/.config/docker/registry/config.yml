@@ -2,6 +2,16 @@
 # Local registry for caching and serving container images
 # Reference: https://docs.docker.com/registry/configuration/
 
+metadata: &metadata
+  name: "registry-config"
+  description: "Docker Registry Configuration"
+  version: "0.1"
+  category: config
+  keywords: [docker, registry, config]
+  updated: "2025-11-26"
+
+<<: *metadata
+
 version: 0.1
 
 log:
