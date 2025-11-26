@@ -16,11 +16,6 @@ variable "DOCKER_BUILDKIT" {
   default = "1"
 }
 
-# Added optimization settings
-variable "CONCURRENT_BUILDS" {
-  default = "4"
-}
-
 # ============================================================================
 # BASE TARGET - Minimal System Setup
 # ============================================================================

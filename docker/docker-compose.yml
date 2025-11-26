@@ -5,6 +5,8 @@
 # =============================================================================
 # Local Registry Services
 # =============================================================================
+version: "3.8"
+
 services:
   registry:
     build:
@@ -37,10 +39,10 @@ services:
           memory: 128M
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/v2/" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     logging:
       driver: "json-file"
       options:
@@ -79,10 +81,10 @@ services:
           memory: 64M
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80" ]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 5s
     logging:
       driver: "json-file"
       options:
@@ -144,10 +146,10 @@ services:
           memory: 128M
     healthcheck:
       test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/health" ]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 10s
     logging:
       driver: "json-file"
       options:
@@ -168,8 +170,6 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      jaeger:
-        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__Database=Host=database;Database=semantic_kernel;Username=user;Password=password
@@ -189,10 +189,10 @@ services:
           memory: 256M
     healthcheck:
       test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health" ]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 10s
     logging:
       driver: "json-file"
       options:
@@ -220,8 +220,6 @@ services:
       vector:
         condition: service_healthy
       embeddings:
-        condition: service_healthy
-      jaeger:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
@@ -260,10 +258,10 @@ services:
               capabilities: [ gpu ]
     healthcheck:
       test: [ "CMD", "dotnet", "--info" ]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 60s
+      start_period: 10s
     logging:
       driver: "json-file"
       options:
@@ -555,8 +553,6 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      jaeger:
-        condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__Database=Host=database;Database=semantic_kernel;Username=user;Password=password
@@ -592,10 +588,10 @@ services:
               capabilities: [ gpu ]
     healthcheck:
       test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8001/health" ]
-      interval: 30s
-      timeout: 10s
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 60s
+      start_period: 10s
     logging:
       driver: "json-file"
       options:

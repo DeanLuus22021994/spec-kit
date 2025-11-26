@@ -19,8 +19,8 @@
   prioritized = ["linux/amd64", "linux/arm64"]
 
 # Optimize CPU usage during builds
-[worker.oci.cpu]
-  cpuset = "0-3"
+# [worker.oci.cpu]
+#   cpuset = "0-3"
 
 # SSD optimization - larger but fewer layers
 [worker.oci.layers]
