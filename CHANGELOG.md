@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Action Required**: Run `specify init --here --force` to update your project structure and migrate existing commands.
 - Updated documentation to reflect the new configuration architecture.
 
+## [0.0.23] - 2025-11-26
+
+### Fixed
+
+- Resolved all ShellCheck linting errors in bash scripts (`SC1091`, `SC1017`, `SC2001`).
+- Refactored `run-migrations.sh` to remove dependencies on `sed` and `tr` for better portability and performance.
+- Configured `.shellcheckrc` to correctly resolve sourced files with `source-path=SCRIPTDIR`.
+
 ## [0.0.22] - 2025-11-07
 
 - Support for VS Code/Copilot agents, and moving away from prompts to proper agents with hand-offs.
