@@ -247,7 +247,7 @@ class RedisUpsertExecutor(TaskExecutor):
 
                 pipe = self.redis.pipeline()
                 pipe.delete(key)  # Clear existing hash
-                pipe.hset(key, mapping=cast(dict[str, str], serialized))
+                pipe.hset(key, mapping=cast(Any, serialized))
                 if effective_ttl:
                     pipe.expire(key, effective_ttl)
                 if self.enable_metadata:
@@ -345,15 +345,15 @@ class RedisUpsertExecutor(TaskExecutor):
             if data_type == RedisDataType.HASH and isinstance(data, dict):
                 serialized = self._serialize_data(data, data_type)
                 pipe.delete(key)
-                pipe.hset(key, mapping=serialized)
+                pipe.hset(key, mapping=cast(Any, serialized))
                 if ttl:
                     pipe.expire(key, ttl)
             else:
                 serialized = self._serialize_data(data, data_type)
                 if ttl:
-                    pipe.setex(key, ttl, serialized)
+                    pipe.setex(key, ttl, cast(str, serialized))
                 else:
-                    pipe.set(key, serialized)
+                    pipe.set(key, cast(str, serialized))
 
             # Queue metadata
             if self.enable_metadata:
