@@ -3,6 +3,8 @@
 # Optimized for RTX 3050 6GB with CUDA 13.0
 
 metadata: &metadata
+  name: "gpu-resources"
+  description: "GPU Resource Partitioning Configuration"
   version: "1.0.0"
   updated: "2025-11-25"
   category: config

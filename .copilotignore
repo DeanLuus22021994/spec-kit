@@ -1,0 +1,35 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Dependencies
+**/node_modules/
+**/bin/
+**/obj/
+**/lib/
+**/lib64/
+
+# Build Artifacts
+build/
+dist/
+artifacts/
+docker/publish/
+*.egg-info/
+__pycache__/
+
+# Generated Reports
+**/playwright-report/
+**/test-results/
+**/TestResults/
+**/coverage/
+
+# Secrets and Environment Variables
+**/.env
+**/.env.*
+**/secrets/
+
+# IDE/Editor
+.vs/
+.idea/
+.vscode/

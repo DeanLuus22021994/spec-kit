@@ -1,5 +1,16 @@
+# yaml-language-server: $schema=../schemas/config.schema.json
 # YAML Templates Reference
 # Standard anchor templates used across .config/ files
+
+metadata: &metadata
+  name: "yaml-templates"
+  description: "Standard anchor templates used across .config/ files"
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: template
+  keywords: [templates, anchors, yaml, patterns]
+
+<<: *metadata
 
 overview: |-
   This file documents standard YAML anchor templates used throughout the .config/ directory.

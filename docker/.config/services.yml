@@ -2,9 +2,24 @@
 # Service Configuration
 
 metadata: &metadata
+  name: "services-config"
+  description: "Service Configuration"
   version: "1.3.0"
   category: config
-  keywords: [services, resources, docker, ports, configuration, microservices, deployment, gpu, cuda, registry, buildkit]
+  keywords:
+    [
+      services,
+      resources,
+      docker,
+      ports,
+      configuration,
+      microservices,
+      deployment,
+      gpu,
+      cuda,
+      registry,
+      buildkit,
+    ]
   updated: "2025-11-25"
 
 <<: *metadata
@@ -451,13 +466,40 @@ profiles:
 
   # AI - Core + AI services
   ai:
-    services: [database, redis, nginx, backend, gateway, frontend, embeddings, engine, vector]
+    services:
+      [
+        database,
+        redis,
+        nginx,
+        backend,
+        gateway,
+        frontend,
+        embeddings,
+        engine,
+        vector,
+      ]
     description: "Full AI-enabled stack"
     gpu_required: true
 
   # Full - All services
   full:
-    services: [database, redis, nginx, backend, gateway, frontend, embeddings, engine, vector, devsite, redisinsight, tools, registry, registry-ui]
+    services:
+      [
+        database,
+        redis,
+        nginx,
+        backend,
+        gateway,
+        frontend,
+        embeddings,
+        engine,
+        vector,
+        devsite,
+        redisinsight,
+        tools,
+        registry,
+        registry-ui,
+      ]
     description: "Complete development stack"
     gpu_required: true
 

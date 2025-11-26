@@ -1,11 +1,24 @@
+# yaml-language-server: $schema=../schemas/config.schema.json
 # Agent Responsibility Contracts & Interface Definitions
 # Defines clear boundaries, contracts, and responsibilities for each agent
 
 metadata: &metadata
+  name: "agent-contracts"
+  description: "Agent Responsibility Contracts & Interface Definitions"
   version: "1.0.0"
   updated: "2025-11-25"
   category: config
-  keywords: [agents, contracts, interfaces, boundaries, responsibilities, soap, wsdl, orchestration]
+  keywords:
+    [
+      agents,
+      contracts,
+      interfaces,
+      boundaries,
+      responsibilities,
+      soap,
+      wsdl,
+      orchestration,
+    ]
 
 <<: *metadata
 
@@ -65,7 +78,8 @@ agents:
           optional: ["priority", "timeout_ms", "callback_url"]
       output:
         task_result:
-          fields: ["task_id", "status", "result", "execution_time_ms", "agent_trace"]
+          fields:
+            ["task_id", "status", "result", "execution_time_ms", "agent_trace"]
 
     boundaries:
       max_concurrent_tasks: 100
@@ -274,7 +288,8 @@ agents:
           optional: ["max_tokens", "temperature", "context", "system_prompt"]
       output:
         generation_result:
-          fields: ["response", "tokens_used", "finish_reason", "grounding_score"]
+          fields:
+            ["response", "tokens_used", "finish_reason", "grounding_score"]
 
     boundaries:
       max_prompt_tokens: 8000

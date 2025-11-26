@@ -3,10 +3,27 @@
 
 # Metadata
 metadata: &metadata
+  name: "infrastructure-config"
+  description: "Infrastructure Configuration"
   version: "1.2.0"
   updated: "2025-11-25"
   category: config
-  keywords: [infrastructure, network, docker, security, monitoring, logging, configuration, gpu, cuda, nvidia, storage, cpu, ram]
+  keywords:
+    [
+      infrastructure,
+      network,
+      docker,
+      security,
+      monitoring,
+      logging,
+      configuration,
+      gpu,
+      cuda,
+      nvidia,
+      storage,
+      cpu,
+      ram,
+    ]
   environment: &environment production
 
 <<: *metadata

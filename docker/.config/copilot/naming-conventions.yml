@@ -1,8 +1,12 @@
+# yaml-language-server: $schema=../schemas/config.schema.json
 # YAML Naming Conventions
 # Standards for naming anchors, categories, and keywords in .config/ files
 
 metadata: &metadata
+  name: "naming-conventions"
+  description: "YAML Naming Conventions"
   version: "1.0.0"
+  updated: "2025-11-25"
   category: standard
   keywords: [naming, conventions, standards, anchors, yaml]
 
