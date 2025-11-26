@@ -29,6 +29,7 @@ RUN echo '# Core Python development tools' > /tmp/dev-requirements.txt && \
     echo 'setuptools==75.6.0' >> /tmp/dev-requirements.txt && \
     echo 'setuptools-scm==8.1.0' >> /tmp/dev-requirements.txt && \
     echo 'pip-tools==7.4.1' >> /tmp/dev-requirements.txt && \
+    echo 'shellcheck-py==0.10.0.1' >> /tmp/dev-requirements.txt && \
     echo 'pre-commit==4.0.1' >> /tmp/dev-requirements.txt
 
 # Install Python tools with cache optimization
