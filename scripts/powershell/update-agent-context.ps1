@@ -7,7 +7,8 @@ param([string]$AgentType)
 Invoke-SpecKitBlock -Name "Update-Agent-Context" -ScriptBlock {
     param($logger)
 
-    $MaxFileSize = 1MB
+    $config = Get-SpecKitConfig
+    $MaxFileSize = $config.MAX_FILE_SIZE
 
     $RegexTimeout = [TimeSpan]::FromSeconds(2)
 
@@ -26,8 +27,8 @@ Invoke-SpecKitBlock -Name "Update-Agent-Context" -ScriptBlock {
         throw "Could not determine current branch."
     }
 
-    $featureDir = Join-Path $repoRoot "specs/$currentBranch"
-    $newPlan = Join-Path $featureDir 'plan.md'
+    $featureDir = Join-Path $repoRoot "$($config.SPECS_DIR_NAME)/$currentBranch"
+    $newPlan = Join-Path $featureDir $config.PLAN_FILE_NAME
 
     if (-not (Test-Path $newPlan)) {
         $logger.Warning("No plan.md found at $newPlan. Skipping context update.")
@@ -36,14 +37,14 @@ Invoke-SpecKitBlock -Name "Update-Agent-Context" -ScriptBlock {
 
     # Define Agent Files
     $agentFiles = @{
-        'claude'   = @{ Path = Join-Path $repoRoot 'CLAUDE.md'; Name = 'Claude Code' }
-        'gemini'   = @{ Path = Join-Path $repoRoot 'GEMINI.md'; Name = 'Gemini CLI' }
-        'copilot'  = @{ Path = Join-Path $repoRoot '.github/copilot-instructions.md'; Name = 'GitHub Copilot' }
-        'cursor'   = @{ Path = Join-Path $repoRoot '.cursor/rules/specify-rules.mdc'; Name = 'Cursor IDE' }
-        'qwen'     = @{ Path = Join-Path $repoRoot 'QWEN.md'; Name = 'Qwen Code' }
-        'opencode' = @{ Path = Join-Path $repoRoot 'AGENTS.md'; Name = 'opencode' }
-        'windsurf' = @{ Path = Join-Path $repoRoot '.windsurf/rules/specify-rules.md'; Name = 'Windsurf' }
-        'codex'    = @{ Path = Join-Path $repoRoot 'AGENTS.md'; Name = 'Codex CLI' }
+        'claude'   = @{ Path = Join-Path $repoRoot $config.CLAUDE_FILE_PATH; Name = 'Claude Code' }
+        'gemini'   = @{ Path = Join-Path $repoRoot $config.GEMINI_FILE_PATH; Name = 'Gemini CLI' }
+        'copilot'  = @{ Path = Join-Path $repoRoot $config.COPILOT_FILE_PATH; Name = 'GitHub Copilot' }
+        'cursor'   = @{ Path = Join-Path $repoRoot $config.CURSOR_FILE_PATH; Name = 'Cursor IDE' }
+        'qwen'     = @{ Path = Join-Path $repoRoot $config.QWEN_FILE_PATH; Name = 'Qwen Code' }
+        'opencode' = @{ Path = Join-Path $repoRoot $config.AGENTS_FILE_PATH; Name = 'opencode' }
+        'windsurf' = @{ Path = Join-Path $repoRoot $config.WINDSURF_FILE_PATH; Name = 'Windsurf' }
+        'codex'    = @{ Path = Join-Path $repoRoot $config.AGENTS_FILE_PATH; Name = 'Codex CLI' }
     }
 
     $logger.Info("=== Updating agent context files for feature $currentBranch ===")
@@ -75,7 +76,7 @@ Invoke-SpecKitBlock -Name "Update-Agent-Context" -ScriptBlock {
         try {
             if (Test-Path $targetFile) { return }
 
-            $template = Join-Path $repoRoot 'templates/agent-file-template.md'
+            $template = Join-Path $repoRoot $config.TEMPLATES_DIR_NAME $config.AGENT_TEMPLATE_NAME
             if (-not (Test-Path $template)) {
                 $logger.Warning("Template not found: $template")
                 return

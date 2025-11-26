@@ -12,18 +12,16 @@ param(
 Invoke-SpecKitBlock -Name "Create-New-Feature" -ScriptBlock {
     param($logger)
 
-    # Access outer scope variables explicitly if needed, or pass them in.
-    # PowerShell scriptblocks inherit scope.
+    $config = Get-SpecKitConfig
 
     if (-not $FeatureDescription -or $FeatureDescription.Count -eq 0) {
-
         $logger.Error("Usage: ./create-new-feature.ps1 [-Json] <feature description>")
         exit 1
     }
     $featureDesc = ($FeatureDescription -join ' ').Trim()
 
     $repoRoot = git rev-parse --show-toplevel
-    $specsDir = Join-Path $repoRoot 'specs'
+    $specsDir = Join-Path $repoRoot $config.SPECS_DIR_NAME
     New-Item -ItemType Directory -Path $specsDir -Force | Out-Null
 
     $highest = 0
@@ -48,7 +46,7 @@ Invoke-SpecKitBlock -Name "Create-New-Feature" -ScriptBlock {
     $featureDir = Join-Path $specsDir $branchName
     New-Item -ItemType Directory -Path $featureDir -Force | Out-Null
 
-    $template = Join-Path $repoRoot 'templates/spec-template.md'
+    $template = Join-Path $repoRoot $config.TEMPLATES_DIR_NAME $config.SPEC_TEMPLATE_NAME
     $specFile = Join-Path $featureDir 'spec.md'
     if (Test-Path $template) {
         Copy-Item $template $specFile -Force
