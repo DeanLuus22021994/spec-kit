@@ -17,13 +17,16 @@ import time
 from pathlib import Path
 from typing import Any
 
-import redis  # type: ignore[import-untyped,import-not-found]
+import redis
 
 # Add orchestrator package to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from orchestrator import SubagentOrchestrator, SubagentTask, TaskType  # noqa: E402
-from orchestrator.executors.file_ops import DownsertExecutor, UpsertExecutor  # noqa: E402
+from orchestrator.executors.file_ops import (  # noqa: E402
+    DownsertExecutor,
+    UpsertExecutor,
+)
 
 # Redis connection configuration
 REDIS_HOST = "localhost"
@@ -181,14 +184,20 @@ async def test_upsert_operations() -> dict[str, Any]:
 
         print("\n📋 Items:")
         for item in result.result.get("items", []):
-            print(f"   - {item['target']}: {item['action']} ({item['size_bytes']} bytes)")
+            print(
+                f"   - {item['target']}: {item['action']} ({item['size_bytes']} bytes)"
+            )
 
     # Verify data in Redis
     print("\n🔍 Verifying data in Redis:")
     for item in test_items:
         key = item["target"]
         value = redis_client.get(key)
-        print(f"   {key}: {value[:50]}..." if len(str(value)) > 50 else f"   {key}: {value}")
+        print(
+            f"   {key}: {value[:50]}..."
+            if len(str(value)) > 50
+            else f"   {key}: {value}"
+        )
 
     return {
         "status": result.status.name,

@@ -308,8 +308,8 @@ services:
 
   gateway:
     build:
-      context: ..
-      dockerfile: docker/dockerfiles/gateway.Dockerfile
+      context: .
+      dockerfile: dockerfiles/gateway.Dockerfile
     ports:
       - "${GATEWAY_PORT:-8080}:80"
     volumes:
@@ -457,8 +457,8 @@ services:
 
   devsite:
     build:
-      context: ..
-      dockerfile: docker/dockerfiles/devsite.Dockerfile
+      context: .
+      dockerfile: dockerfiles/devsite.Dockerfile
     ports:
       - "${DEVSITE_PORT:-8000}:8000"
     volumes:

@@ -236,3 +236,5 @@ stress-tests/
 !SUPPORT.md
 !build.gradle
 !pom.xml
+**/obj/
+**/bin/

@@ -8,11 +8,15 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 WORKDIR /src
 
 # Copy csproj and restore dependencies (cached layer)
+COPY src/engine/engine.csproj ./engine/
+COPY src/business/business.csproj ./business/
 COPY src/gateway/gateway.csproj ./gateway/
 COPY src/Directory.Packages.props ./Directory.Packages.props
 RUN dotnet restore ./gateway/gateway.csproj
 
 # Copy source and build
+COPY src/engine/ ./engine/
+COPY src/business/ ./business/
 COPY src/gateway/ ./gateway/
 WORKDIR /src/gateway
 RUN dotnet publish gateway.csproj -c Release -o /app/publish --no-restore
