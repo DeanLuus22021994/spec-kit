@@ -3,10 +3,22 @@
 # Enterprise-ready solution for investor demo
 
 metadata: &metadata
+  name: "architecture-config"
+  description: "Multi-Tier Architecture Configuration"
   version: "1.0.0"
   updated: "2025-11-25"
   category: config
-  keywords: [architecture, multi-tier, admin-portal, dashboard, orchestration, authentication, investor-demo, enterprise]
+  keywords:
+    [
+      architecture,
+      multi-tier,
+      admin-portal,
+      dashboard,
+      orchestration,
+      authentication,
+      investor-demo,
+      enterprise,
+    ]
 
 <<: *metadata
 
