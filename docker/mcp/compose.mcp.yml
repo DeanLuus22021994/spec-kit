@@ -4,8 +4,8 @@ services:
   github-mcp:
     container_name: spec-kit-mcp-github
     build:
-      context: ../..
-      dockerfile: docker/dockerfiles/github-mcp.Dockerfile
+      context: ..
+      dockerfile: dockerfiles/github-mcp.Dockerfile
     environment:
       - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_TOKEN}
     volumes:
