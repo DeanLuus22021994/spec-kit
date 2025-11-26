@@ -17,14 +17,13 @@ CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
 class CustomYamlLoader(yaml.SafeLoader):
     """Custom YAML loader that supports !include tag."""
 
-    def __init__(self, stream):
-        try:
+    def __init__(self, stream: Any) -> None:
+        self._root = os.getcwd()
+        if hasattr(stream, "name"):
             self._root = os.path.split(stream.name)[0]
-        except AttributeError:
-            self._root = os.getcwd()
         super().__init__(stream)
 
-    def include(self, node):
+    def include(self, node: Any) -> Any:
         """Include a file referenced by the !include tag."""
         filename = os.path.join(self._root, self.construct_scalar(node))
         with open(filename, encoding="utf-8") as f:
