@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from rich.console import Console
 
 from specify_cli.config import AGENT_CONFIG, SETTINGS_YAML
@@ -54,12 +56,11 @@ def check(json_output: bool = False, verbose: bool = False) -> None:
         results[tool_key] = path
 
     if json_output:
-        import json
-
         console.print(json.dumps(results, indent=2))
         return
 
-    console.print(tracker.render())
+    if tracker:
+        console.print(tracker.render())
 
     if verbose:
         console.print("\n[bold]Tool Paths:[/bold]")

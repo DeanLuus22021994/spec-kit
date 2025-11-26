@@ -109,33 +109,6 @@ def create_command_from_yaml(config: dict[str, Any]) -> click.Command:
             #
             # EASIEST FIX: Update the YAML to use flags that match the variable name,
             # OR update the handler to match the flag.
-            #
-            # Handler: def check(json_output: bool = False, ...)
-            # YAML: flags: ["--json"] -> passes 'json'
-            #
-            # If I change YAML to flags: ["--json-output", "--json"], then it might pick json_output?
-            # Or I can just change the handler to accept 'json' and map it?
-            # Or I can change the YAML name to 'json' and handler to 'json'?
-            #
-            # But 'json' is a module name, so 'json_output' is better for the variable.
-            #
-            # Let's try to pass the name to the Option constructor via **attrs?
-            # No, 'name' is set by _parse_decls.
-            #
-            # However, we can pass the name as a declaration that doesn't start with dash?
-            # No, that's for Arguments.
-            #
-            # Wait, we can use `callback` to rename? No.
-            #
-            # Let's look at `click.Option` source code or behavior.
-            # It takes the name from the first long option.
-            #
-            # If we want the internal name to be `json_output`, we can't easily do it with just `["--json"]`.
-            #
-            # We can manually set the `name` attribute on the instance after creation?
-            # opt = click.Option(flags, **kwargs)
-            # opt.name = opt_config["name"]
-            # params.append(opt)
             pass
 
         opt = click.Option(flags, **kwargs)
