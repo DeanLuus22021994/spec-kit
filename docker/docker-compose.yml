@@ -120,8 +120,8 @@ services:
         max-file: "3"
   frontend:
     build:
-      context: .
-      dockerfile: dockerfiles/frontend.Dockerfile
+      context: ..
+      dockerfile: docker/dockerfiles/frontend.Dockerfile
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
@@ -156,8 +156,8 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: dockerfiles/backend.Dockerfile
+      context: ..
+      dockerfile: docker/dockerfiles/backend.Dockerfile
     ports:
       - "${BACKEND_PORT:-5200}:80"
     volumes:
@@ -201,8 +201,8 @@ services:
 
   engine:
     build:
-      context: .
-      dockerfile: dockerfiles/engine.Dockerfile
+      context: ..
+      dockerfile: docker/dockerfiles/engine.Dockerfile
       cache_from:
         - localhost:5000/semantic-kernel/engine:cache
     image: localhost:5000/semantic-kernel/engine:latest
@@ -272,8 +272,8 @@ services:
 
   business:
     build:
-      context: .
-      dockerfile: dockerfiles/business.Dockerfile
+      context: ..
+      dockerfile: docker/dockerfiles/business.Dockerfile
     volumes:
       - business-logs:/app/logs
       - business-cache:/app/cache
@@ -308,8 +308,8 @@ services:
 
   gateway:
     build:
-      context: .
-      dockerfile: dockerfiles/gateway.Dockerfile
+      context: ..
+      dockerfile: docker/dockerfiles/gateway.Dockerfile
     ports:
       - "${GATEWAY_PORT:-8080}:80"
     volumes:
@@ -457,8 +457,8 @@ services:
 
   devsite:
     build:
-      context: .
-      dockerfile: dockerfiles/devsite.Dockerfile
+      context: ..
+      dockerfile: docker/dockerfiles/devsite.Dockerfile
     ports:
       - "${DEVSITE_PORT:-8000}:8000"
     volumes:
@@ -489,8 +489,8 @@ services:
 
   vector:
     build:
-      context: .
-      dockerfile: dockerfiles/vector.Dockerfile
+      context: ..
+      dockerfile: docker/dockerfiles/vector.Dockerfile
       cache_from:
         - localhost:5000/semantic-kernel/vector:cache
     image: localhost:5000/semantic-kernel/vector:latest
@@ -538,8 +538,8 @@ services:
 
   embeddings:
     build:
-      context: .
-      dockerfile: dockerfiles/embeddings.Dockerfile
+      context: ..
+      dockerfile: docker/dockerfiles/embeddings.Dockerfile
       cache_from:
         - localhost:5000/semantic-kernel/embeddings:cache
     image: localhost:5000/semantic-kernel/embeddings:latest
