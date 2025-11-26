@@ -16,6 +16,11 @@ app = typer.Typer(
 )
 
 
+@app.callback()
+def callback() -> None:
+    """Specify CLI - Spec-Driven Development Toolkit"""
+
+
 def main() -> None:
     """Execute the CLI application."""
     # Convert Typer app to Click Group

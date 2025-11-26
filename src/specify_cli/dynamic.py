@@ -10,6 +10,8 @@ from typing import Any, cast
 import click
 import yaml
 
+from specify_cli.config import CustomYamlLoader
+
 
 def load_handler(handler_path: str) -> Callable:
     """Load a function from a string path like 'module.path:function_name'."""
@@ -76,7 +78,7 @@ def load_commands() -> list[click.Command]:
         return []
 
     with open(config_path, encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+        data = yaml.load(f, Loader=CustomYamlLoader)
 
     commands = []
     for cmd_config in data.get("commands", []):
