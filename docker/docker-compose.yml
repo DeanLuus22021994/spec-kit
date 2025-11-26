@@ -1,82 +1,12 @@
 # yaml-language-server: $schema=./.config/schemas/docker-compose.schema.json
-# Docker Compose Configuration for Semantic Kernel Application
-# All enhancements retained. Metadata blocks removed for YAML compliance.
+# Docker Compose Configuration for Semantic Kernel Application (Virtual)
+# Contains application logic and development services
 
-# =============================================================================
-# Local Registry Services
-# =============================================================================
 version: "3.8"
 
 services:
-  registry:
-    image: registry:2
-    ports:
-      - "5000:5000"
-    environment:
-      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
-    volumes:
-      - registry_data:/var/lib/registry
-    networks:
-      - spec-kit-net
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/v2/"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - spec-kit-net
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  database:
-    build:
-      context: .
-      dockerfile: dockerfiles/database.Dockerfile
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: speckit
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - spec-kit-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d speckit"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   backend:
+    container_name: spec-kit-backend
     image: localhost:5000/spec-kit/backend:latest
     build:
       context: .
@@ -85,16 +15,10 @@ services:
       - "8080:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=speckit;Username=user;Password=password
-      - Redis__ConnectionString=redis:6379
-    depends_on:
-      database:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      # Jaeger dependency removed to allow parallel startup
+      - ConnectionStrings__DefaultConnection=Host=spec-kit-database;Port=5432;Database=speckit;Username=user;Password=password
+      - Redis__ConnectionString=spec-kit-redis:6379
     networks:
-      - spec-kit-net
+      - spec-kit-infra
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
       interval: 10s
@@ -109,21 +33,16 @@ services:
         max-file: "3"
 
   engine:
+    container_name: spec-kit-engine
     image: localhost:5000/spec-kit/engine:latest
     build:
       context: .
       dockerfile: dockerfiles/engine.Dockerfile
     environment:
-      - REDIS_HOST=redis
-      - POSTGRES_HOST=database
-    depends_on:
-      database:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      # Jaeger dependency removed to allow parallel startup
+      - REDIS_HOST=spec-kit-redis
+      - POSTGRES_HOST=spec-kit-database
     networks:
-      - spec-kit-net
+      - spec-kit-infra
     healthcheck:
       test: ["CMD", "dotnet", "--info"]
       interval: 30s
@@ -136,39 +55,8 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  embeddings:
-    image: localhost:5000/spec-kit/embeddings:latest
-    build:
-      context: .
-      dockerfile: dockerfiles/embeddings.Dockerfile
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    environment:
-      - MODEL_NAME=all-MiniLM-L6-v2
-    depends_on:
-      database:
-        condition: service_healthy
-      # Jaeger dependency removed to allow parallel startup
-    networks:
-      - spec-kit-net
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   frontend:
+    container_name: spec-kit-frontend
     image: localhost:5000/spec-kit/frontend:latest
     build:
       context: .
@@ -179,7 +67,7 @@ services:
       backend:
         condition: service_healthy
     networks:
-      - spec-kit-net
+      - spec-kit-infra
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
@@ -192,86 +80,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  face-matcher:
-    image: localhost:5000/spec-kit/face-matcher:latest
-    build:
-      context: .
-      dockerfile: dockerfiles/face-matcher.Dockerfile
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    ports:
-      - "8081:8080"
-    networks:
-      - spec-kit-net
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  vector:
-    image: localhost:5000/spec-kit/vector:latest
-    build:
-      context: .
-      dockerfile: dockerfiles/vector.Dockerfile
-    ports:
-      - "6333:6333"
-      - "6334:6334"
-    volumes:
-      - vector_data:/qdrant/storage
-    networks:
-      - spec-kit-net
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6333/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    ports:
-      - "16686:16686" # UI
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
-    networks:
-      - spec-kit-net
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:14269/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-volumes:
-  postgres_data: {}
-  redis_data: {}
-  registry_data: {}
-  vector_data: {}
-
 networks:
-  spec-kit-net:
-    driver: bridge
+  spec-kit-infra:
+    external: true
+    name: spec-kit-infra

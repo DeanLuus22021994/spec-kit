@@ -191,9 +191,17 @@ services:
       WORKSPACE_TYPE: "primary"
       # SSH Auth Socket (preserve from host if available)
       SSH_AUTH_SOCK: "${SSH_AUTH_SOCK:-}"
+      # Infrastructure Connection
+      POSTGRES_HOST: spec-kit-database
+      REDIS_HOST: spec-kit-redis
+      VECTOR_HOST: spec-kit-vector
+      EMBEDDINGS_HOST: spec-kit-embeddings
+      FACE_MATCHER_HOST: spec-kit-face-matcher
+      JAEGER_HOST: spec-kit-jaeger
     volumes: *common-volumes
     networks:
       - spec-kit-network
+      - spec-kit-infra
     # Optimized for SSD performance and development workflow
     shm_size: "2gb"
     tmpfs:
@@ -274,3 +282,6 @@ networks:
       config:
         - subnet: 172.20.0.0/16
           gateway: 172.20.0.1
+  spec-kit-infra:
+    external: true
+    name: spec-kit-infra
