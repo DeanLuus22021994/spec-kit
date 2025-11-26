@@ -722,8 +722,9 @@ services:
       dockerfile: docker/dockerfiles/playwright.Dockerfile
     working_dir: /app
     volumes:
-      - ./tests:/app
-      - /app/node_modules
+      # Code and dependencies are baked into the image
+      # - ./tests:/app
+      # - /app/node_modules
       - playwright-report:/app/playwright-report
       - test-results:/app/test-results
     networks:

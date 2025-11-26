@@ -5,7 +5,7 @@
 FROM node:20-alpine AS build
 
 # Standard Build Arguments
-ARG VERSION=latest
+ARG IMAGE_VERSION=latest
 ARG BUILD_DATE
 ARG BUILDKIT_INLINE_CACHE=1
 ARG DOCKER_BUILDKIT=1
@@ -14,7 +14,7 @@ ARG DOCKER_BUILDKIT=1
 LABEL org.opencontainers.image.title="spec-kit-frontend"
 LABEL org.opencontainers.image.description="Frontend React App for Semantic Kernel Application"
 LABEL org.opencontainers.image.source="https://github.com/github/spec-kit"
-LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}"
 LABEL org.opencontainers.image.vendor="GitHub"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
