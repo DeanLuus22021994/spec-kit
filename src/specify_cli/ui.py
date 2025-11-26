@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import click
 import readchar
 from rich.align import Align
@@ -33,9 +35,9 @@ class StepTracker:
             "error": 3,
             "skipped": 4,
         }
-        self._refresh_cb = None
+        self._refresh_cb: Callable[[], None] | None = None
 
-    def attach_refresh(self, cb: object) -> None:
+    def attach_refresh(self, cb: Callable[[], None]) -> None:
         """Attach a callback to be called when the tracker updates."""
         self._refresh_cb = cb
 
@@ -81,8 +83,8 @@ class StepTracker:
     def _maybe_refresh(self) -> None:
         if self._refresh_cb:
             try:
-                self._refresh_cb()  # type: ignore
-            except Exception:
+                self._refresh_cb()
+            except Exception:  # pylint: disable=broad-except
                 pass
 
     def render(self) -> Tree:

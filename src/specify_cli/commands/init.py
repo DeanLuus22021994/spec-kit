@@ -237,7 +237,7 @@ def init(
 
     tracker = StepTracker("Initialize Specify Project")
 
-    sys._specify_tracker_active = True  # type: ignore
+    sys._specify_tracker_active = True  # type: ignore # pylint: disable=protected-access
 
     tracker.add("precheck", "Check required tools")
     tracker.complete("precheck", "ok")

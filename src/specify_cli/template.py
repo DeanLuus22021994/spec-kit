@@ -59,7 +59,7 @@ def download_and_extract_template(
             )
             tracker.add("download", "Download template")
             tracker.complete("download", meta["filename"])
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         if tracker:
             tracker.error("fetch", str(e))
         else:
@@ -188,7 +188,7 @@ def download_and_extract_template(
                             "[cyan]Flattened nested directory structure[/cyan]"
                         )
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         if tracker:
             tracker.error("extract", str(e))
         else:
@@ -238,7 +238,7 @@ def ensure_executable_scripts(
                 with script.open("rb") as f:
                     if f.read(2) != b"#!":
                         continue
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 continue
             st = script.stat()
             mode = st.st_mode
@@ -255,7 +255,7 @@ def ensure_executable_scripts(
                 new_mode |= 0o100
             os.chmod(script, new_mode)
             updated += 1
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             failures.append(f"{script.relative_to(scripts_root)}: {e}")
     if tracker:
         detail = f"{updated} updated" + (

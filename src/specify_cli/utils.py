@@ -155,6 +155,6 @@ def handle_vscode_settings(
             shutil.copy2(sub_item, dest_file)
             log("Copied (no existing settings.json):", "blue")
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         log(f"Warning: Could not merge, copying instead: {e}", "yellow")
         shutil.copy2(sub_item, dest_file)
