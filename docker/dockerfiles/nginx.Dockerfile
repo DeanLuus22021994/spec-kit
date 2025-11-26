@@ -1,6 +1,23 @@
 # Production-optimized nginx with security hardening
 FROM nginx:1.27-alpine
 
+# Standard Build Arguments
+ARG VERSION=latest
+ARG BUILD_DATE
+ARG BUILDKIT_INLINE_CACHE=1
+ARG DOCKER_BUILDKIT=1
+
+# OCI Labels
+LABEL org.opencontainers.image.title="spec-kit-nginx"
+LABEL org.opencontainers.image.description="Nginx Reverse Proxy"
+LABEL org.opencontainers.image.source="https://github.com/github/spec-kit"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.vendor="GitHub"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL cache.version="1.0"
+LABEL performance.optimized="true"
+
 # Create non-root user for security
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 --ingroup appgroup appuser
