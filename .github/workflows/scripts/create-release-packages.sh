@@ -114,7 +114,7 @@ generate_copilot_prompts() {
     local basename=$(basename "$agent_file" .agent.md)
     local prompt_file="$prompts_dir/${basename}.prompt.md"
 
-    # Create prompt file with agent frontmatter
+    # Create prompt file with agent association metadata (required for Copilot extension)
     cat > "$prompt_file" <<EOF
 ---
 agent: ${basename}
