@@ -3,7 +3,7 @@
 # PRECOMPILED: All dependencies baked in
 
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-jammy AS build
 
 # Standard Build Arguments
 ARG IMAGE_VERSION=latest
@@ -35,16 +35,16 @@ WORKDIR /src/engine
 RUN dotnet publish engine.csproj -c Release -o /app/publish --no-restore
 
 # Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-jammy AS runtime
 
 WORKDIR /app
 
 # Install ICU libraries for globalization support
-RUN apk add --no-cache icu-libs icu-data-full
+RUN apt-get update && apt-get install -y --no-install-recommends libicu-dev && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S appuser && \
-    adduser -S appuser -u 1001 -G appuser
+RUN groupadd -r -g 1001 appuser && \
+    useradd -r -u 1001 -g appuser appuser
 
 # Create directories for persistent volumes and config
 RUN mkdir -p /app/plugins /app/skills /app/cache /app/logs /.config && \

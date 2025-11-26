@@ -1,5 +1,5 @@
 # Lightweight Qdrant vector database for semantic search
-FROM qdrant/qdrant:v1.7.4-unprivileged
+FROM qdrant/qdrant:v1.7.4
 
 # Standard Build Arguments
 ARG VERSION=latest
