@@ -1,0 +1,30 @@
+# Docker build context ignores
+.git
+.gitignore
+.dockerignore
+.copilotignore
+.buildx-cache
+local.code-workspace
+build.sh
+docker-bake.hcl
+docker-compose.local.yml
+README.md
+
+# Python artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Infrastructure data (if mapped locally)
+registry_data/
+redis_data/
+postgres_data/
+vector_data/

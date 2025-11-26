@@ -1,0 +1,9 @@
+# Copilot context ignores
+.buildx-cache/
+registry_data/
+redis_data/
+postgres_data/
+vector_data/
+*.log
+*.lock
+__pycache__/

@@ -1,0 +1,197 @@
+version: "3.8"
+
+services:
+  registry:
+    container_name: spec-kit-registry
+    image: registry:2
+    ports:
+      - "5000:5000"
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+    volumes:
+      - registry_data:/var/lib/registry
+    networks:
+      - spec-kit-infra
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5000/v2/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    container_name: spec-kit-redis
+    image: localhost:5000/spec-kit/redis:latest
+    build:
+      context: services/redis
+      dockerfile: Dockerfile
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - spec-kit-infra
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  database:
+    container_name: spec-kit-database
+    image: localhost:5000/spec-kit/database:latest
+    build:
+      context: services/database
+      dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: speckit
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - spec-kit-infra
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d speckit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  embeddings:
+    container_name: spec-kit-embeddings
+    image: localhost:5000/spec-kit/embeddings:latest
+    build:
+      context: services/embeddings
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - MODEL_NAME=all-MiniLM-L6-v2
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - spec-kit-infra
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  face-matcher:
+    container_name: spec-kit-face-matcher
+    image: localhost:5000/spec-kit/face-matcher:latest
+    build:
+      context: services/face-matcher
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8081:8080"
+    networks:
+      - spec-kit-infra
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  vector:
+    container_name: spec-kit-vector
+    image: localhost:5000/spec-kit/vector:latest
+    build:
+      context: services/vector
+      dockerfile: Dockerfile
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - vector_data:/qdrant/storage
+    networks:
+      - spec-kit-infra
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6333/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  jaeger:
+    container_name: spec-kit-jaeger
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686" # UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - spec-kit-infra
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:14269/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data: {}
+  redis_data: {}
+  registry_data: {}
+  vector_data: {}
+
+networks:
+  spec-kit-infra:
+    external: true
+    name: spec-kit-infra
