@@ -11,6 +11,7 @@ cli:
 optional_tools:
   code: "Visual Studio Code"
   code-insiders: "Visual Studio Code Insiders"
+  shellcheck: "ShellCheck"
 
 repository:
   owner: "github"
