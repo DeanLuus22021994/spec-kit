@@ -75,9 +75,15 @@ MIGRATIONS_SKIPPED=0
 for migration_file in $MIGRATION_FILES; do
     # Extract version from filename (V001__description.sql -> 001)
     filename=$(basename "$migration_file")
-    version=$(echo "$filename" | sed 's/V\([0-9]*\)__.*/\1/')
-    # shellcheck disable=SC2001
-    description=$(echo "$filename" | sed 's/V[0-9]*__\(.*\)\.sql/\1/' | tr '_' ' ')
+
+    # Extract version (V001__... -> 001)
+    version="${filename%%__*}"
+    version="${version#V}"
+
+    # Extract description (V001__desc.sql -> desc -> "desc")
+    description="${filename#*__}"
+    description="${description%.sql}"
+    description="${description//_/ }"
 
     # Check if migration is already applied
     if echo "$APPLIED_MIGRATIONS" | grep -q "^[[:space:]]*${version}[[:space:]]*$"; then
