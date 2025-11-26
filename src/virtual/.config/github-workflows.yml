@@ -60,9 +60,9 @@ build:
   solution: "semantic-kernel-app.sln"
   configuration: "Release"
   verbosity: "normal"
-  frontend_dir: "src/frontend"
+  frontend_dir: "src/virtual/src/frontend"
   cache_paths:
-    npm: "src/frontend/package-lock.json"
+    npm: "src/virtual/src/frontend/package-lock.json"
     tests_npm: "tests/package-lock.json"
 
 # Test configuration
@@ -167,7 +167,7 @@ dependencies:
 
   frontend:
     command: "npm ci"
-    working_dir: "src/frontend"
+    working_dir: "src/virtual/src/frontend"
 
   tests:
     command: "npm ci"
