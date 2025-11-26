@@ -34,9 +34,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create non-root user
 RUN groupadd -r toolsuser && useradd -r -g toolsuser -u 1001 toolsuser
 
-# Copy Kantra CLI binary from extraction stage
+# Copy Kantra CLI binary and dependencies from extraction stage
 COPY --from=kantra-binary /usr/local/bin/kantra /usr/local/bin/kantra
-RUN chmod +x /usr/local/bin/kantra
+COPY --from=kantra-binary /usr/local/bin/konveyor-analyzer /usr/local/bin/konveyor-analyzer
+COPY --from=kantra-binary /usr/local/bin/konveyor-analyzer-dep /usr/local/bin/konveyor-analyzer-dep
+COPY --from=kantra-binary /usr/local/bin/generic-external-provider /usr/local/bin/generic-external-provider
+COPY --from=kantra-binary /usr/local/bin/java-external-provider /usr/local/bin/java-external-provider
+COPY --from=kantra-binary /usr/local/bin/yq-external-provider /usr/local/bin/yq-external-provider
+COPY --from=kantra-binary /usr/local/bin/golang-dependency-provider /usr/local/bin/golang-dependency-provider
+
+RUN chmod +x /usr/local/bin/kantra \
+    /usr/local/bin/konveyor-analyzer \
+    /usr/local/bin/konveyor-analyzer-dep \
+    /usr/local/bin/generic-external-provider \
+    /usr/local/bin/java-external-provider \
+    /usr/local/bin/yq-external-provider \
+    /usr/local/bin/golang-dependency-provider
 
 # Create and activate virtual environment
 RUN python -m venv $VIRTUAL_ENV && \
