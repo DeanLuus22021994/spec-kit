@@ -1,6 +1,9 @@
 #!/usr/bin/env pwsh
 # Common PowerShell functions analogous to common.sh (moved to powershell/)
 
+# Load Logger Class
+. "$PSScriptRoot/Logger.ps1"
+
 function Get-RepoRoot {
     git rev-parse --show-toplevel
 }
@@ -10,10 +13,17 @@ function Get-CurrentBranch {
 }
 
 function Test-FeatureBranch {
-    param([string]$Branch)
+    param(
+        [string]$Branch,
+        [SpecKitLogger]$Logger
+    )
     if ($Branch -notmatch '^[0-9]{3}-') {
-        Write-Output "ERROR: Not on a feature branch. Current branch: $Branch"
-        Write-Output "Feature branches should be named like: 001-feature-name"
+        if ($Logger) {
+            $Logger.Error("Not on a feature branch. Current branch: $Branch")
+            $Logger.Error("Feature branches should be named like: 001-feature-name")
+        } else {
+            Write-Error "Not on a feature branch. Current branch: $Branch"
+        }
         return $false
     }
     return $true
@@ -43,23 +53,32 @@ function Get-FeaturePathsEnv {
 }
 
 function Test-FileExists {
-    param([string]$Path, [string]$Description)
+    param(
+        [string]$Path,
+        [string]$Description,
+        [SpecKitLogger]$Logger
+    )
     if (Test-Path -Path $Path -PathType Leaf) {
-        Write-Output "  ✓ $Description"
+        if ($Logger) { $Logger.Success("$Description found") }
         return $true
     } else {
-        Write-Output "  ✗ $Description"
+        if ($Logger) { $Logger.Warning("$Description not found") }
         return $false
     }
 }
 
 function Test-DirHasFiles {
-    param([string]$Path, [string]$Description)
+    param(
+        [string]$Path,
+        [string]$Description,
+        [SpecKitLogger]$Logger
+    )
     if ((Test-Path -Path $Path -PathType Container) -and (Get-ChildItem -Path $Path -ErrorAction SilentlyContinue | Where-Object { -not $_.PSIsContainer } | Select-Object -First 1)) {
-        Write-Output "  ✓ $Description"
+        if ($Logger) { $Logger.Success("$Description found (with files)") }
         return $true
     } else {
-        Write-Output "  ✗ $Description"
+        if ($Logger) { $Logger.Warning("$Description not found or empty") }
         return $false
     }
 }
+

@@ -6,15 +6,13 @@ param([string]$AgentType)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Load Logger
+. "$PSScriptRoot/Logger.ps1"
+$logger = [SpecKitLogger]::new("Update-Agent-Context")
+
 # Constants
 $MaxFileSize = 1MB
 $RegexTimeout = [TimeSpan]::FromSeconds(2)
-
-function Write-Log {
-    param([string]$Message, [string]$Level = 'Info')
-    $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-    Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor ($Level -eq 'Error' ? 'Red' : ($Level -eq 'Warning' ? 'Yellow' : 'Cyan'))
-}
 
 try {
     # Validate Git Environment
@@ -36,7 +34,7 @@ try {
     $newPlan = Join-Path $featureDir 'plan.md'
 
     if (-not (Test-Path $newPlan)) {
-        Write-Log "No plan.md found at $newPlan. Skipping context update." 'Warning'
+        $logger.Warning("No plan.md found at $newPlan. Skipping context update.")
         exit 0
     }
 
@@ -52,7 +50,7 @@ try {
         'codex'    = @{ Path = Join-Path $repoRoot 'AGENTS.md'; Name = 'Codex CLI' }
     }
 
-    Write-Log "=== Updating agent context files for feature $currentBranch ==="
+    $logger.Info("=== Updating agent context files for feature $currentBranch ===")
 
     function Get-PlanValue {
         param([string]$pattern)
@@ -66,7 +64,7 @@ try {
             }
         }
         catch {
-            Write-Log "Error reading plan value for '$pattern': $_" 'Warning'
+            $logger.Warning("Error reading plan value for '$pattern': $_")
         }
         return ''
     }
@@ -83,7 +81,7 @@ try {
 
             $template = Join-Path $repoRoot 'templates/agent-file-template.md'
             if (-not (Test-Path $template)) {
-                Write-Log "Template not found: $template" 'Warning'
+                $logger.Warning("Template not found: $template")
                 return
             }
 
@@ -103,8 +101,8 @@ try {
             else { $commands = "# Add commands for $newLang" }
 
             $content = $content.Replace('[ONLY COMMANDS FOR ACTIVE TECHNOLOGIES]', $commands)
-            $content = $content.Replace('[LANGUAGE-SPECIFIC, ONLY FOR LANGUAGES IN USE]', "$($newLang): Follow standard conventions")
-            $content = $content.Replace('[LAST 3 FEATURES AND WHAT THEY ADDED]', "- $($currentBranch): Added $($newLang) + $($newFramework)")
+            $content = $content.Replace('[LANGUAGE-SPECIFIC, ONLY FOR LANGUAGES IN USE]', "${newLang}: Follow standard conventions")
+            $content = $content.Replace('[LAST 3 FEATURES AND WHAT THEY ADDED]', "- ${currentBranch}: Added ${newLang} + ${newFramework}")
 
             # Ensure directory exists
             $parentDir = Split-Path $targetFile
@@ -113,10 +111,10 @@ try {
             }
 
             $content | Set-Content $targetFile -Encoding UTF8 -ErrorAction Stop
-            Write-Log "Initialized $agentName context file."
+            $logger.Info("Initialized $agentName context file.")
         }
         catch {
-            Write-Log "Failed to initialize ${agentName}: $_" 'Error'
+            $logger.Error("Failed to initialize ${agentName}: $_")
         }
     }
 
@@ -131,7 +129,7 @@ try {
             # Check file size
             $fileItem = Get-Item $targetFile
             if ($fileItem.Length -gt $MaxFileSize) {
-                Write-Log "File $targetFile is too large ($($fileItem.Length) bytes). Skipping to prevent memory issues." 'Warning'
+                $logger.Warning("File $targetFile is too large ($($fileItem.Length) bytes). Skipping to prevent memory issues.")
                 return
             }
 
@@ -154,7 +152,7 @@ try {
                 if ($match.Success) {
                     $changesBlock = $match.Groups[1].Value.Trim().Split("`n")
                     # Prepend new change
-                    $newChange = "- $($currentBranch): Added $($newLang) + $($newFramework)"
+                    $newChange = "- ${currentBranch}: Added ${newLang} + ${newFramework}"
                     $changesBlock = ,$newChange + $changesBlock
                     # Keep only top 3 unique non-empty lines
                     $changesBlock = $changesBlock | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique | Select-Object -First 3
@@ -165,17 +163,17 @@ try {
                 }
             }
             catch [System.Text.RegularExpressions.RegexMatchTimeoutException] {
-                Write-Log "Regex timed out while processing Recent Changes in $targetFile. Skipping this section." 'Warning'
+                $logger.Warning("Regex timed out while processing Recent Changes in $targetFile. Skipping this section.")
             }
 
             # Update Date
             $content = [regex]::Replace($content, 'Last updated: \d{4}-\d{2}-\d{2}', "Last updated: $(Get-Date -Format 'yyyy-MM-dd')")
 
             $content | Set-Content $targetFile -Encoding UTF8 -ErrorAction Stop
-            Write-Log "✓ $agentName context file updated successfully"
+            $logger.Success("✓ $agentName context file updated successfully")
         }
         catch {
-            Write-Log "Failed to update ${agentName}: $_" 'Error'
+            $logger.Error("Failed to update ${agentName}: $_")
         }
     }
 
@@ -205,20 +203,20 @@ try {
         }
 
         if (-not $anyExists) {
-            Write-Log 'No agent context files found. Creating Claude Code context file by default.'
+            $logger.Info('No agent context files found. Creating Claude Code context file by default.')
             Update-AgentFile $agentFiles['claude'].Path $agentFiles['claude'].Name
         }
     }
 
-    Write-Log ''
-    Write-Log 'Summary of changes:'
-    if ($newLang) { Write-Log "- Added language: $newLang" }
-    if ($newFramework) { Write-Log "- Added framework: $newFramework" }
-    if ($newDb -and $newDb -ne 'N/A') { Write-Log "- Added database: $newDb" }
+    $logger.Info('')
+    $logger.Info('Summary of changes:')
+    if ($newLang) { $logger.Info("- Added language: $newLang") }
+    if ($newFramework) { $logger.Info("- Added framework: $newFramework") }
+    if ($newDb -and $newDb -ne 'N/A') { $logger.Info("- Added database: $newDb") }
 
 }
 catch {
-    Write-Log "Critical Error: $_" 'Error'
+    $logger.Error("Critical Error: $_")
     exit 1
 }
 
