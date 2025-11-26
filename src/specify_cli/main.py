@@ -20,6 +20,7 @@ app.command()(version)
 
 
 def main() -> None:
+    """Execute the CLI application."""
     app()
 
 

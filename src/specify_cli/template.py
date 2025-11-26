@@ -201,7 +201,7 @@ def download_and_extract_template(
 
         if not is_current_dir and project_path.exists():
             shutil.rmtree(project_path)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from e
     else:
         if tracker:
             tracker.complete("extract")

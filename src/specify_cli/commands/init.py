@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shlex
+import shutil
 import ssl
 import sys
 from pathlib import Path
@@ -142,6 +143,9 @@ def init(
                     console.print("[yellow]Operation cancelled[/yellow]")
                     raise typer.Exit(0)
     else:
+        if project_name is None:
+            # Should be unreachable due to earlier checks
+            raise typer.Exit(1)
         project_path = Path(project_name).resolve()
         if project_path.exists():
             error_panel = Panel(
@@ -233,7 +237,7 @@ def init(
 
     tracker = StepTracker("Initialize Specify Project")
 
-    sys._specify_tracker_active = True
+    sys._specify_tracker_active = True  # type: ignore
 
     tracker.add("precheck", "Check required tools")
     tracker.complete("precheck", "ok")
@@ -324,7 +328,7 @@ def init(
                 )
             if not here and project_path.exists():
                 shutil.rmtree(project_path)
-            raise typer.Exit(1)
+            raise typer.Exit(1) from e
         finally:
             pass
 

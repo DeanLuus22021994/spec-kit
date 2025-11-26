@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import click
 import readchar
 from rich.align import Align
 from rich.console import Console
@@ -34,7 +35,7 @@ class StepTracker:
         }
         self._refresh_cb = None
 
-    def attach_refresh(self, cb) -> None:
+    def attach_refresh(self, cb: object) -> None:
         """Attach a callback to be called when the tracker updates."""
         self._refresh_cb = cb
 
@@ -80,7 +81,7 @@ class StepTracker:
     def _maybe_refresh(self) -> None:
         if self._refresh_cb:
             try:
-                self._refresh_cb()
+                self._refresh_cb()  # type: ignore
             except Exception:
                 pass
 
@@ -171,7 +172,7 @@ def select_with_arrows(
 
     selected_key = None
 
-    def create_selection_panel():
+    def create_selection_panel() -> Panel:
         """Create the selection panel with current selection highlighted."""
         table = Table.grid(padding=(0, 2))
         table.add_column(style="cyan", justify="left", width=3)
@@ -198,7 +199,7 @@ def select_with_arrows(
 
     console.print()
 
-    def run_selection_loop():
+    def run_selection_loop() -> None:
         nonlocal selected_key, selected_index
         with Live(
             create_selection_panel(),

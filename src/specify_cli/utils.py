@@ -127,11 +127,15 @@ def merge_json_files(
 
 
 def handle_vscode_settings(
-    sub_item, dest_file, rel_path, verbose=False, tracker=None
+    sub_item: Path,
+    dest_file: Path,
+    rel_path: Path,
+    verbose: bool = False,
+    tracker: StepTracker | None = None,
 ) -> None:
     """Handle merging or copying of .vscode/settings.json files."""
 
-    def log(message, color="green"):
+    def log(message: str, color: str = "green") -> None:
         if verbose and not tracker:
             console.print(f"[{color}]{message}[/] {rel_path}")
 
