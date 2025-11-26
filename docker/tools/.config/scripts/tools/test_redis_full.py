@@ -30,7 +30,12 @@ import redis  # type: ignore[import-untyped,import-not-found]
 sys.path.insert(0, str(Path(__file__).parent))
 
 from orchestrator import SubagentOrchestrator, SubagentTask, TaskType
-from orchestrator.executors.redis_ops import RedisClientPool, RedisConfig, RedisDownsertExecutor, RedisUpsertExecutor
+from orchestrator.executors.redis_ops import (
+    RedisClientPool,
+    RedisConfig,
+    RedisDownsertExecutor,
+    RedisUpsertExecutor,
+)
 
 # Test configuration
 REDIS_CONFIG = RedisConfig(
@@ -40,7 +45,7 @@ REDIS_CONFIG = RedisConfig(
 )
 
 
-def get_redis_client() -> "redis.Redis[str]":
+def get_redis_client() -> redis.Redis[str]:
     """Get Redis client for verification."""
     return RedisClientPool.get_client(REDIS_CONFIG)
 

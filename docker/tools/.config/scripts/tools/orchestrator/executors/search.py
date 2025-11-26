@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import concurrent.futures
 import time
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from ..config import SubagentConfig, SubagentTask, TaskResult, TaskStatus
 from .base import TaskExecutor

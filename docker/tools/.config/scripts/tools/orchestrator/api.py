@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from .config import GPU_CONFIG, PRECOMPILED_IMAGES, SubagentTask, TaskType
 from .executors.docker import DockerExecutor, GPUInferenceExecutor, RegistrySyncExecutor

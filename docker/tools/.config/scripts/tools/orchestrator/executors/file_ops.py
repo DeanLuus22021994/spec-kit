@@ -6,8 +6,9 @@ import concurrent.futures
 import json
 import shutil
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from ..config import SubagentConfig, SubagentTask, TaskResult, TaskStatus
 from .base import TaskExecutor

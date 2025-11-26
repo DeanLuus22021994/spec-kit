@@ -230,7 +230,7 @@ class RuleScaffolder:
         ruleset_path = package_dir / "ruleset.yaml"
 
         if ruleset_path.exists():
-            with open(ruleset_path, "r", encoding="utf-8") as f:
+            with open(ruleset_path, encoding="utf-8") as f:
                 ruleset = yaml.safe_load(f) or {}
         else:
             ruleset = {"name": package_dir.name, "rules": []}

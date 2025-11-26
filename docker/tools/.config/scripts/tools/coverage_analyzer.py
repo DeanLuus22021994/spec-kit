@@ -37,7 +37,7 @@ class CoverageAnalyzer:
             logger.warning("Best practices file not found: %s", self.best_practices_file)
             return []
 
-        with open(self.best_practices_file, "r", encoding="utf-8") as f:
+        with open(self.best_practices_file, encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
 
         return list(data.get("rules", []))
@@ -59,7 +59,7 @@ class CoverageAnalyzer:
 
             for rule_file in rules_dir.glob("*.yaml"):
                 try:
-                    with open(rule_file, "r", encoding="utf-8") as f:
+                    with open(rule_file, encoding="utf-8") as f:
                         rule = yaml.safe_load(f) or {}
 
                     rule["_package"] = package_dir.name

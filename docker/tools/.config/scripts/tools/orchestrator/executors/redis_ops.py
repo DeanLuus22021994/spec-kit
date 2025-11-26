@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any
 
-import redis  # type: ignore  # noqa: E501  # pylint: disable=import-error
+import redis  # noqa: E501  # pylint: disable=import-error
 
 from ..config import SubagentConfig, SubagentTask, TaskResult, TaskStatus
 from .base import TaskExecutor
@@ -62,7 +62,7 @@ class RedisConfig:
     connection_pool_size: int = 10
 
     @classmethod
-    def from_env(cls) -> "RedisConfig":
+    def from_env(cls) -> RedisConfig:
         """Load configuration from environment or defaults."""
         return cls(
             host=os.getenv("REDIS_HOST", "localhost"),
@@ -75,17 +75,17 @@ class RedisConfig:
 class RedisClientPool:
     """Singleton Redis client pool."""
 
-    _instance: "RedisClientPool | None" = None
-    _client: "redis.Redis[str] | None" = None
+    _instance: RedisClientPool | None = None
+    _client: redis.Redis[str] | None = None
     _config: RedisConfig | None = None
 
-    def __new__(cls) -> "RedisClientPool":
+    def __new__(cls) -> RedisClientPool:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
     @classmethod
-    def get_client(cls, config: RedisConfig | None = None) -> "redis.Redis[str]":
+    def get_client(cls, config: RedisConfig | None = None) -> redis.Redis[str]:
         """Get or create Redis client."""
         if cls._client is None or (config and config != cls._config):
             cfg = config or RedisConfig.from_env()
@@ -242,7 +242,7 @@ class RedisUpsertExecutor(TaskExecutor):
 
                 pipe = self.redis.pipeline()
                 pipe.delete(key)  # Clear existing hash
-                pipe.hset(key, mapping=serialized)  # type: ignore[arg-type]
+                pipe.hset(key, mapping=serialized)
                 if effective_ttl:
                     pipe.expire(key, effective_ttl)
                 if self.enable_metadata:
@@ -338,7 +338,7 @@ class RedisUpsertExecutor(TaskExecutor):
             if data_type == RedisDataType.HASH and isinstance(data, dict):
                 serialized = self._serialize_data(data, data_type)
                 pipe.delete(key)
-                pipe.hset(key, mapping=serialized)  # type: ignore[arg-type]
+                pipe.hset(key, mapping=serialized)
                 if ttl:
                     pipe.expire(key, ttl)
             else:
@@ -533,7 +533,7 @@ class RedisDownsertExecutor(TaskExecutor):
                     pipe.delete(f"{key}:version")
                 pipe.execute()
 
-                for key, size in zip(keys, sizes):
+                for key, size in zip(keys, sizes, strict=False):
                     results.append(
                         {
                             "target": key,

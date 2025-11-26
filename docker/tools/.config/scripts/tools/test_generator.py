@@ -39,7 +39,7 @@ class TestGenerator:
             Test definition
         """
         # Load rule
-        with open(rule_path, "r", encoding="utf-8") as f:
+        with open(rule_path, encoding="utf-8") as f:
             rule = yaml.safe_load(f) or {}
 
         rule_id = rule.get("ruleID")

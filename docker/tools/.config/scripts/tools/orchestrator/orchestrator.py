@@ -110,7 +110,7 @@ class SubagentOrchestrator:
             return await asyncio.wait_for(
                 executor.execute(task), timeout=task.timeout_seconds
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return TaskResult(
                 task_id=task.task_id,
                 task_type=task.task_type,

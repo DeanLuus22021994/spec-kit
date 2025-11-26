@@ -41,7 +41,7 @@ class RuleMigrator:
             Path to new rule file
         """
         # Load old rule
-        with open(old_rule_path, "r", encoding="utf-8") as f:
+        with open(old_rule_path, encoding="utf-8") as f:
             old_rule = yaml.safe_load(f) or {}
 
         # Transform to new format
