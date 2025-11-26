@@ -120,8 +120,8 @@ services:
         max-file: "3"
   frontend:
     build:
-      context: ..
-      dockerfile: docker/dockerfiles/frontend.Dockerfile
+      context: .
+      dockerfile: dockerfiles/frontend.Dockerfile
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     volumes:
@@ -156,8 +156,8 @@ services:
 
   backend:
     build:
-      context: ..
-      dockerfile: docker/dockerfiles/backend.Dockerfile
+      context: .
+      dockerfile: dockerfiles/backend.Dockerfile
     ports:
       - "${BACKEND_PORT:-5200}:80"
     volumes:
