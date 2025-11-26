@@ -1,3 +1,5 @@
+"""Main entry point for Specify CLI."""
+
 from __future__ import annotations
 
 import typer
@@ -17,7 +19,7 @@ app.command()(check)
 app.command()(version)
 
 
-def main():
+def main() -> None:
     app()
 
 

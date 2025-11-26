@@ -1,3 +1,5 @@
+"""Configuration constants and settings for Specify CLI."""
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -1,3 +1,5 @@
+"""User interface components for Specify CLI."""
+
 from __future__ import annotations
 
 import readchar
@@ -33,9 +35,11 @@ class StepTracker:
         self._refresh_cb = None
 
     def attach_refresh(self, cb) -> None:
+        """Attach a callback to be called when the tracker updates."""
         self._refresh_cb = cb
 
     def add(self, key: str, label: str) -> None:
+        """Add a new step to the tracker."""
         if key not in [s["key"] for s in self.steps]:
             self.steps.append(
                 {"key": key, "label": label, "status": "pending", "detail": ""}
@@ -43,18 +47,23 @@ class StepTracker:
             self._maybe_refresh()
 
     def start(self, key: str, detail: str = "") -> None:
+        """Mark a step as running."""
         self._update(key, status="running", detail=detail)
 
     def complete(self, key: str, detail: str = "") -> None:
+        """Mark a step as completed."""
         self._update(key, status="done", detail=detail)
 
     def error(self, key: str, detail: str = "") -> None:
+        """Mark a step as failed."""
         self._update(key, status="error", detail=detail)
 
     def skip(self, key: str, detail: str = "") -> None:
+        """Mark a step as skipped."""
         self._update(key, status="skipped", detail=detail)
 
     def _update(self, key: str, status: str, detail: str) -> None:
+        """Update the status of a step."""
         for s in self.steps:
             if s["key"] == key:
                 s["status"] = status
@@ -251,7 +260,7 @@ def show_banner() -> None:
 class BannerGroup(TyperGroup):
     """Custom group that shows banner before help."""
 
-    def format_help(self, ctx: object, formatter: object) -> None:
+    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:  # type: ignore
         # Show banner before help
         show_banner()
         super().format_help(ctx, formatter)

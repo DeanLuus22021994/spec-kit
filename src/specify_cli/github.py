@@ -1,3 +1,5 @@
+"""GitHub API interactions for Specify CLI."""
+
 from __future__ import annotations
 
 import os
@@ -141,7 +143,7 @@ def download_template_from_github(
         except ValueError as je:
             raise RuntimeError(
                 f"Failed to parse release JSON: {je}\nRaw (truncated 400): {response.text[:400]}"
-            )
+            ) from je
     except Exception as e:
         console.print("[red]Error fetching release information[/red]")
         console.print(Panel(str(e), title="Fetch Error", border_style="red"))

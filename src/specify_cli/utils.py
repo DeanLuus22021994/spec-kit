@@ -1,3 +1,5 @@
+"""Utility functions for Specify CLI."""
+
 from __future__ import annotations
 
 import json
@@ -42,7 +44,7 @@ def run_command(
         return None
 
 
-def check_tool(tool: str, tracker: StepTracker = None) -> bool:
+def check_tool(tool: str, tracker: StepTracker | None = None) -> bool:
     """Check if a tool is installed. Optionally update tracker.
 
     Args:

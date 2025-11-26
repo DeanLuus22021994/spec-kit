@@ -1,3 +1,5 @@
+"""Version command for Specify CLI."""
+
 from __future__ import annotations
 
 import importlib.metadata
@@ -9,7 +11,7 @@ from specify_cli.ui import show_banner
 console = Console()
 
 
-def version():
+def version() -> None:
     """Show version information."""
     show_banner()
     try:

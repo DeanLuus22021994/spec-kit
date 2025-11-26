@@ -1,3 +1,5 @@
+"""Git operations for Specify CLI."""
+
 from __future__ import annotations
 
 import os

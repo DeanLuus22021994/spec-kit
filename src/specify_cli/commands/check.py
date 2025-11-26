@@ -1,3 +1,5 @@
+"""Check command for Specify CLI."""
+
 from __future__ import annotations
 
 from rich.console import Console

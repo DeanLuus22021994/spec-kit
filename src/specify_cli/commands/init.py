@@ -1,3 +1,5 @@
+"""Init command for Specify CLI."""
+
 from __future__ import annotations
 
 import os
@@ -28,14 +30,17 @@ ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
 
 def init(
-    project_name: str = typer.Argument(
+    project_name: str | None = typer.Argument(
         None,
         help="Name for your new project directory (optional if using --here, or use '.' for current directory)",
     ),
     ai_assistant: str = typer.Option(
         None,
         "--ai",
-        help="AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, or q",
+        help=(
+            "AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, "
+            "opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, or q"
+        ),
     ),
     script_type: str = typer.Option(
         None, "--script", help="Script type to use: sh or ps"
@@ -71,7 +76,7 @@ def init(
         "--github-token",
         help="GitHub token to use for API requests (or set GH_TOKEN or GITHUB_TOKEN environment variable)",
     ),
-):
+) -> None:
     """
     Initialize a new Specify project from the latest template.
 
@@ -318,8 +323,6 @@ def init(
                     )
                 )
             if not here and project_path.exists():
-                import shutil
-
                 shutil.rmtree(project_path)
             raise typer.Exit(1)
         finally:
@@ -404,9 +407,18 @@ def init(
     enhancement_lines = [
         "Optional commands that you can use for your specs [bright_black](improve quality & confidence)[/bright_black]",
         "",
-        "○ [cyan]/speckit.clarify[/] [bright_black](optional)[/bright_black] - Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/speckit.plan[/] if used)",
-        "○ [cyan]/speckit.analyze[/] [bright_black](optional)[/bright_black] - Cross-artifact consistency & alignment report (after [cyan]/speckit.tasks[/], before [cyan]/speckit.implement[/])",
-        "○ [cyan]/speckit.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/speckit.plan[/])",
+        (
+            "○ [cyan]/speckit.clarify[/] [bright_black](optional)[/bright_black] - "
+            "Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/speckit.plan[/] if used)"
+        ),
+        (
+            "○ [cyan]/speckit.analyze[/] [bright_black](optional)[/bright_black] - "
+            "Cross-artifact consistency & alignment report (after [cyan]/speckit.tasks[/], before [cyan]/speckit.implement[/])"
+        ),
+        (
+            "○ [cyan]/speckit.checklist[/] [bright_black](optional)[/bright_black] - "
+            "Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/speckit.plan[/])"
+        ),
     ]
     enhancements_panel = Panel(
         "\n".join(enhancement_lines),

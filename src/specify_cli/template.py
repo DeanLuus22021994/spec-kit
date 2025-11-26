@@ -1,3 +1,5 @@
+"""Template management for Specify CLI."""
+
 from __future__ import annotations
 
 import os
@@ -249,7 +251,7 @@ def ensure_executable_scripts(
                 new_mode |= 0o010
             if mode & 0o004:
                 new_mode |= 0o001
-            if not (new_mode & 0o100):
+            if not new_mode & 0o100:
                 new_mode |= 0o100
             os.chmod(script, new_mode)
             updated += 1
