@@ -14,9 +14,22 @@ FROM quay.io/konveyor/kantra:latest AS kantra-source
 # Using Python 3.13-slim for C extension compatibility (asyncpg, pydantic-core)
 FROM python:3.13-slim AS builder
 
-LABEL maintainer="semantic-kernel-app"
-LABEL description="YAML validation service with Kantra CLI and MTA rules"
-LABEL version="1.0.0"
+# Standard Build Arguments
+ARG VERSION=latest
+ARG BUILD_DATE
+ARG BUILDKIT_INLINE_CACHE=1
+ARG DOCKER_BUILDKIT=1
+
+# OCI Labels
+LABEL org.opencontainers.image.title="spec-kit-validation"
+LABEL org.opencontainers.image.description="YAML validation service with Kantra CLI and MTA rules"
+LABEL org.opencontainers.image.source="https://github.com/github/spec-kit"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.vendor="GitHub"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL cache.version="1.0"
+LABEL performance.optimized="true"
 
 # Set working directory
 WORKDIR /workspace
