@@ -7,11 +7,11 @@ set -euo pipefail
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Load Modules
-# shellcheck source=scripts/bash/lib/logger.sh
+# shellcheck source=logger.sh
 source "$LIB_DIR/logger.sh"
-# shellcheck source=scripts/bash/lib/common.sh
+# shellcheck source=common.sh
 source "$LIB_DIR/common.sh"
-# shellcheck source=scripts/bash/lib/config.sh
+# shellcheck source=config.sh
 source "$LIB_DIR/config.sh"
 
 invoke_speckit_block() {

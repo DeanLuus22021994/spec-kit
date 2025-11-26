@@ -4,12 +4,6 @@ param([string]$AgentType)
 
 . "$PSScriptRoot/common.ps1"
 
-#!/usr/bin/env pwsh
-[CmdletBinding()]
-param([string]$AgentType)
-
-. "$PSScriptRoot/common.ps1"
-
 Invoke-SpecKitBlock -Name "Update-Agent-Context" -ScriptBlock {
     param($logger)
 

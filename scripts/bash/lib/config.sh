@@ -21,6 +21,7 @@ export AGENTS_FILE_PATH="AGENTS.md"
 export WINDSURF_FILE_PATH=".windsurf/rules/specify-rules.md"
 
 # Agent Definitions
+# shellcheck disable=SC2034 # Used by other scripts
 declare -Ax SPECKIT_AGENTS_FILES
 SPECKIT_AGENTS_FILES["claude"]="$CLAUDE_FILE_PATH"
 SPECKIT_AGENTS_FILES["gemini"]="$GEMINI_FILE_PATH"
@@ -31,6 +32,7 @@ SPECKIT_AGENTS_FILES["opencode"]="$AGENTS_FILE_PATH"
 SPECKIT_AGENTS_FILES["codex"]="$AGENTS_FILE_PATH"
 SPECKIT_AGENTS_FILES["windsurf"]="$WINDSURF_FILE_PATH"
 
+# shellcheck disable=SC2034 # Used by other scripts
 declare -Ax SPECKIT_AGENTS_NAMES
 SPECKIT_AGENTS_NAMES["claude"]="Claude Code"
 SPECKIT_AGENTS_NAMES["gemini"]="Gemini CLI"
