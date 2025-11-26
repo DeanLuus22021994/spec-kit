@@ -13,17 +13,32 @@ readonly BLUE='\033[0;34m'
 readonly NC='\033[0m' # No Color
 
 # Paths
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 
 # Detect if running in container (script in /usr/local/bin)
 if [[ "${SCRIPT_DIR}" == "/usr/local/bin" ]]; then
     readonly WORKSPACE_ROOT="/workspace"
-    readonly RULES_DIR="${WORKSPACE_ROOT}/.config/validation/rules"
-    readonly REPORTS_DIR="${WORKSPACE_ROOT}/.config/validation/reports/latest"
-    readonly PROFILES_DIR="${WORKSPACE_ROOT}/.config/validation/profiles"
+
+    # Check for configuration location (handles both baked image and bind mount)
+    if [ -d "${WORKSPACE_ROOT}/.config/validation/profiles" ]; then
+        CONFIG_ROOT="${WORKSPACE_ROOT}/.config/validation"
+        readonly CONFIG_ROOT
+    elif [ -d "${WORKSPACE_ROOT}/tools/.config/validation/profiles" ]; then
+        CONFIG_ROOT="${WORKSPACE_ROOT}/tools/.config/validation"
+        readonly CONFIG_ROOT
+    else
+        echo -e "\033[0;31m[ERROR]\033[0m Validation configuration not found in /workspace"
+        exit 1
+    fi
+
+    readonly RULES_DIR="${CONFIG_ROOT}/rules"
+    readonly REPORTS_DIR="${CONFIG_ROOT}/reports/latest"
+    readonly PROFILES_DIR="${CONFIG_ROOT}/profiles"
     readonly INPUT_DIR="${WORKSPACE_ROOT}"
 else
-    readonly WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+    WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+    readonly WORKSPACE_ROOT
     readonly RULES_DIR="${WORKSPACE_ROOT}/tools/.config/validation/rules"
     readonly REPORTS_DIR="${WORKSPACE_ROOT}/tools/.config/validation/reports/latest"
     readonly PROFILES_DIR="${WORKSPACE_ROOT}/tools/.config/validation/profiles"

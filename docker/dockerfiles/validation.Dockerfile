@@ -94,9 +94,9 @@ RUN mkdir -p \
     /workspace/.config/validation/reports \
     /workspace/.config/validation/test-data \
     /workspace/reports \
-    /workspace/.local/share/containers \
-    /workspace/.cache/kantra \
-    && chown -R toolsuser:toolsuser /workspace
+    /home/toolsuser/.local/share/containers \
+    /home/toolsuser/.cache/kantra \
+    && chown -R toolsuser:toolsuser /workspace /home/toolsuser
 
 # Switch to non-root user
 USER toolsuser
@@ -105,7 +105,7 @@ USER toolsuser
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV HOME=/home/toolsuser
-ENV XDG_RUNTIME_DIR=/workspace/.local/share/containers
+ENV XDG_RUNTIME_DIR=/home/toolsuser/.local/share/containers
 
 # Configure default validation mode
 # Options: local (containerless, fastest), hybrid (uses analyzer-lsp containers)
