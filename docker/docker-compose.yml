@@ -201,8 +201,8 @@ services:
 
   engine:
     build:
-      context: ..
-      dockerfile: docker/dockerfiles/engine.Dockerfile
+      context: .
+      dockerfile: dockerfiles/engine.Dockerfile
       cache_from:
         - localhost:5000/semantic-kernel/engine:cache
     image: localhost:5000/semantic-kernel/engine:latest
@@ -272,8 +272,8 @@ services:
 
   business:
     build:
-      context: ..
-      dockerfile: docker/dockerfiles/business.Dockerfile
+      context: .
+      dockerfile: dockerfiles/business.Dockerfile
     volumes:
       - business-logs:/app/logs
       - business-cache:/app/cache
