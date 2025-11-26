@@ -231,19 +231,11 @@ services:
 volumes:
   devcontainer-features:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DEVCONTAINER_FEATURES_CACHE:-${HOME}/.devcontainer-features}
     name: spec-kit-devcontainer-features
 
   # Performance-optimized package caches
   node-modules-cache:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${NPM_CACHE_DIR:-${HOME}/.cache/spec-kit-npm}
     name: spec-kit-npm-cache
 
   yarn-cache:
