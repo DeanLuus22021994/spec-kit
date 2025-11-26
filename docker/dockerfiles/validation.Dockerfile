@@ -99,18 +99,17 @@ RUN mkdir -p \
     /workspace/.config/validation/reports \
     /workspace/.config/validation/test-data \
     /workspace/reports \
-    /home/toolsuser/.local/share/containers \
-    /home/toolsuser/.cache/kantra \
-    && chown -R toolsuser:toolsuser /workspace /home/toolsuser
+    /root/.local/share/containers \
+    /root/.cache/kantra
 
-# Switch to non-root user
-USER toolsuser
+# Switch to root user for Podman-in-Docker compatibility
+USER root
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-ENV HOME=/home/toolsuser
-ENV XDG_RUNTIME_DIR=/home/toolsuser/.local/share/containers
+ENV HOME=/root
+ENV XDG_RUNTIME_DIR=/root/.local/share/containers
 
 # Configure default validation mode
 # Options: local (containerless, fastest), hybrid (uses analyzer-lsp containers)
