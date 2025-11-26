@@ -8,6 +8,7 @@ import click
 import typer
 
 from specify_cli.dynamic import load_commands
+from specify_cli.utils import telemetry
 
 app = typer.Typer(
     name="specify",
@@ -23,6 +24,8 @@ def callback() -> None:
 
 def main() -> None:
     """Execute the CLI application."""
+    telemetry.track_event("cli_start")
+
     # Convert Typer app to Click Group
     cli = cast(click.Group, typer.main.get_command(app))
 

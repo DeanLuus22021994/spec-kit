@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, Literal
 
 import readchar
 from rich.align import Align
@@ -18,13 +21,28 @@ from specify_cli.config import BANNER, TAGLINE
 console = Console()
 
 
+@dataclass
+class StructuredReport:
+    """Structured JSON report for subagent consumption."""
+
+    status: Literal["success", "failure"]
+    message: str
+    data: dict[str, Any] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+
+    def render(self) -> None:
+        """Render the report as JSON to stdout."""
+        console.print(json.dumps(self.__dict__, indent=2))
+
+
 class StepTracker:
     """Track and render hierarchical steps without emojis, similar to Claude Code tree output.
     Supports live auto-refresh via an attached refresh callback.
     """
 
-    def __init__(self, title: str) -> None:
+    def __init__(self, title: str, compact: bool = False) -> None:
         self.title = title
+        self.compact = compact
         self.steps: list[dict[str, str]] = []
         self.status_order = {
             "pending": 0,

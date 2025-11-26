@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import ssl
+import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -116,6 +117,7 @@ def download_template_from_github(
     http_client: httpx.Client | None = None,
     debug: bool = False,
     github_token: str | None = None,
+    dry_run: bool = False,
 ) -> tuple[Path, dict]:
     """
     Download the latest template release from GitHub.
@@ -129,10 +131,28 @@ def download_template_from_github(
         http_client: Optional pre-configured HTTP client.
         debug: Whether to print debug information on failure.
         github_token: Optional GitHub token for authentication.
+        dry_run: If True, simulate download without network access.
 
     Returns:
         A tuple containing the path to the downloaded zip file and metadata dict.
     """
+    if dry_run:
+        if verbose:
+            console.print("[yellow]Dry run: Skipping download[/yellow]")
+
+        # Create a dummy zip file for dry run
+        dummy_zip = download_dir / "dry-run-template.zip"
+        if not dummy_zip.exists():
+            with zipfile.ZipFile(dummy_zip, "w") as zf:
+                zf.writestr("README.md", "# Dry Run Template")
+
+        return dummy_zip, {
+            "filename": "dry-run-template.zip",
+            "size": 1234,
+            "release": "v0.0.0-dry-run",
+            "asset_url": "http://localhost/dry-run.zip",
+        }
+
     repo_owner = SETTINGS_YAML.get("repository", {}).get("owner", "github")
     repo_name = SETTINGS_YAML.get("repository", {}).get("name", "spec-kit")
     if http_client is None:

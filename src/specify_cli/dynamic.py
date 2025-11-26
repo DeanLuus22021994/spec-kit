@@ -141,7 +141,27 @@ def load_commands() -> list[click.Command]:
         data = yaml.load(f, Loader=CustomYamlLoader)
 
     commands = []
+    command_map = {}
+
+    # Load base commands
     for cmd_config in data.get("commands", []):
-        commands.append(create_command_from_yaml(cmd_config))
+        cmd = create_command_from_yaml(cmd_config)
+        commands.append(cmd)
+        command_map[cmd.name] = cmd
+
+    # Process aliases
+    aliases = data.get("aliases", {})
+    for alias, target_name in aliases.items():
+        if target_name in command_map:
+            original_cmd = command_map[target_name]
+            # Create a copy of the command with the alias name
+            alias_cmd = click.Command(
+                name=alias,
+                callback=original_cmd.callback,
+                params=original_cmd.params,
+                help=f"Alias for {target_name}",
+                short_help=f"Alias for {target_name}",
+            )
+            commands.append(alias_cmd)
 
     return commands

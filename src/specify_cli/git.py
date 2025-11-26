@@ -71,3 +71,25 @@ def init_git_repo(project_path: Path, quiet: bool = False) -> tuple[bool, str | 
         return False, error_msg
     finally:
         os.chdir(original_cwd)
+
+
+def ensure_clean_state(path: Path | None = None) -> bool:
+    """Ensure the git repository is in a clean state."""
+    if path is None:
+        path = Path.cwd()
+
+    if not is_git_repo(path):
+        return True  # Not a repo, so technically "clean" or irrelevant
+
+    try:
+        # Check for uncommitted changes
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=path,
+        )
+        return len(result.stdout.strip()) == 0
+    except subprocess.CalledProcessError:
+        return False

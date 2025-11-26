@@ -60,6 +60,12 @@ COMMANDS_CHECK_YAML = load_config("commands/check.yaml")
 COMMANDS_VERSION_YAML = load_config("commands/version.yaml")
 AGENT_COMMANDS_YAML = load_config("agent_commands.yaml")
 
+# Feature Flags & System Configuration
+FEATURES = SETTINGS_YAML.get("features", {})
+TELEMETRY_CONFIG = SETTINGS_YAML.get("telemetry", {})
+PERFORMANCE_CONFIG = SETTINGS_YAML.get("performance", {})
+SECURITY_CONFIG = SETTINGS_YAML.get("security", {})
+
 # Agent configuration with name, folder, install URL, and CLI tool requirement
 AGENT_CONFIG = AGENTS_YAML or {}
 

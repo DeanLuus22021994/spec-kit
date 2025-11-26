@@ -34,6 +34,7 @@ def download_and_extract_template(
     http_client: httpx.Client | None = None,
     debug: bool = False,
     github_token: str | None = None,
+    dry_run: bool = False,
 ) -> Path:
     """Download the latest release and extract it to create a new project.
     Returns project_path. Uses tracker if provided (with keys: fetch, download, extract, cleanup)
@@ -82,6 +83,7 @@ def download_and_extract_template(
             http_client=http_client,
             debug=debug,
             github_token=github_token,
+            dry_run=dry_run,
         )
         if tracker:
             tracker.complete(

@@ -10,12 +10,38 @@ from typing import TYPE_CHECKING
 
 from rich.console import Console
 
-from specify_cli.config import CLAUDE_LOCAL_PATH
+from specify_cli.config import CLAUDE_LOCAL_PATH, TELEMETRY_CONFIG
 
 if TYPE_CHECKING:
     from specify_cli.ui import StepTracker
 
 console = Console()
+
+
+class TelemetryClient:
+    """Client for sending telemetry data."""
+
+    def __init__(self) -> None:
+        self.enabled = TELEMETRY_CONFIG.get("enabled", False)
+        self.service_name = TELEMETRY_CONFIG.get("service_name", "specify-cli")
+        self.endpoint = TELEMETRY_CONFIG.get("endpoint")
+
+    def track_event(self, event_name: str, properties: dict | None = None) -> None:
+        """Track a usage event."""
+        if not self.enabled:
+            return
+        # Placeholder for actual OTel implementation
+        # In a real scenario, this would send data to the collector
+        pass
+
+    def track_exception(self, exception: Exception) -> None:
+        """Track an exception."""
+        if not self.enabled:
+            return
+        pass
+
+
+telemetry = TelemetryClient()
 
 
 def run_command(
