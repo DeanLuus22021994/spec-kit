@@ -3,7 +3,7 @@
 # PRECOMPILED: All dependencies baked in
 
 # Stage 1: Base with dependencies
-FROM nvidia/cuda:13.0-cudnn-runtime-ubuntu24.04 AS base
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS base
 
 # Standard Build Arguments
 ARG VERSION=latest
@@ -50,7 +50,7 @@ RUN pip install --no-cache-dir \
     pyyaml==6.0.2
 
 # Stage 2: Runtime
-FROM nvidia/cuda:13.0-cudnn-runtime-ubuntu24.04 AS runtime
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS runtime
 
 WORKDIR /app
 

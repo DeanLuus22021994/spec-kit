@@ -2,7 +2,7 @@
 # ArcFace-based facial biometrics with CUDA/ONNX Runtime GPU support
 # Optimized for NVIDIA RTX 3050 (6GB VRAM)
 
-FROM nvidia/cuda:13.0-cudnn-runtime-ubuntu24.04
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 # Standard Build Arguments
 ARG VERSION=latest
