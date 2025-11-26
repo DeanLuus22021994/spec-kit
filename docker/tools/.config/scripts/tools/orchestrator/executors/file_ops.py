@@ -2,32 +2,25 @@
 
 from __future__ import annotations
 
-import concurrent.futures
 import json
 import shutil
-import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
-from ..config import SubagentConfig, SubagentTask, TaskResult, TaskStatus
-from .base import TaskExecutor
-
-ThreadPoolExecutor = concurrent.futures.ThreadPoolExecutor
-as_completed = concurrent.futures.as_completed
+from ..config import SubagentTask
+from .parallel import ParallelExecutor
 
 
-class UpsertExecutor(TaskExecutor):
+class UpsertExecutor(ParallelExecutor[dict[str, Any], dict[str, Any]]):
     """Executor for upsert (create-or-update) operations."""
 
     def __init__(
         self, upsert_func: Callable[[str, Any], dict[str, Any]] | None = None
     ) -> None:
         """Initialize with optional custom upsert function."""
+        super().__init__()
         self.upsert_func = upsert_func
-        self.config = SubagentConfig.load()
-        perf = self.config.get("performance_targets", {})
-        self.max_workers: int = perf.get("max_parallel_agents", 8) if perf else 8
 
     def _default_upsert(self, target: str, data: Any) -> dict[str, Any]:
         """Default upsert: write file or create resource."""
@@ -50,49 +43,27 @@ class UpsertExecutor(TaskExecutor):
             "size_bytes": len(content),
         }
 
-    async def execute(self, task: SubagentTask) -> TaskResult:
-        """Execute batch upsert operations."""
-        start_time = time.perf_counter()
+    def get_items(self, task: SubagentTask) -> list[dict[str, Any]]:
+        """Get items to upsert from task."""
         payload = cast(dict[str, Any], task.payload)
-        items: list[dict[str, Any]] = payload.get("items", [])
-        results: list[dict[str, Any]] = []
-        errors: list[str] = []
+        return cast(list[dict[str, Any]], payload.get("items", []))
 
+    def process_item(self, item: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        """Upsert a single item."""
         upsert_fn = self.upsert_func or self._default_upsert
+        return upsert_fn(item["target"], item["data"])
 
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = {
-                executor.submit(upsert_fn, item["target"], item["data"]): item
-                for item in items
-            }
-
-            for future in as_completed(futures, timeout=task.timeout_seconds):
-                item = futures[future]
-                try:
-                    result = future.result()
-                    results.append(result)
-                except (OSError, ValueError, RuntimeError) as e:
-                    errors.append(f"Upsert '{item['target']}' failed: {e}")
-
-        execution_time = (time.perf_counter() - start_time) * 1000
-
-        return TaskResult(
-            task_id=task.task_id,
-            task_type=task.task_type,
-            status=TaskStatus.COMPLETED if not errors else TaskStatus.FAILED,
-            result={
-                "items": results,
-                "summary": {
-                    "total": len(items),
-                    "succeeded": len(results),
-                    "created": sum(1 for r in results if r.get("action") == "created"),
-                    "updated": sum(1 for r in results if r.get("action") == "updated"),
-                },
+    def aggregate_results(self, results: list[dict[str, Any]]) -> dict[str, Any]:
+        """Aggregate upsert results."""
+        return {
+            "items": results,
+            "summary": {
+                "total": len(results),
+                "succeeded": len(results),
+                "created": sum(1 for r in results if r.get("action") == "created"),
+                "updated": sum(1 for r in results if r.get("action") == "updated"),
             },
-            error="; ".join(errors) if errors else None,
-            execution_time_ms=execution_time,
-            parallel_calls=len(items),
-        )
+        }
 
     def validate_task(self, task: SubagentTask) -> bool:
         """Validate upsert task."""
@@ -106,17 +77,15 @@ class UpsertExecutor(TaskExecutor):
         )
 
 
-class DownsertExecutor(TaskExecutor):
+class DownsertExecutor(ParallelExecutor[str, dict[str, Any]]):
     """Executor for downsert (delete-if-exists) operations."""
 
     def __init__(
         self, downsert_func: Callable[[str], dict[str, Any]] | None = None
     ) -> None:
         """Initialize with optional custom downsert function."""
+        super().__init__()
         self.downsert_func = downsert_func
-        self.config = SubagentConfig.load()
-        perf = self.config.get("performance_targets", {})
-        self.max_workers: int = perf.get("max_parallel_agents", 8) if perf else 8
 
     def _default_downsert(self, target: str) -> dict[str, Any]:
         """Default downsert: remove file or resource if exists."""
@@ -135,48 +104,27 @@ class DownsertExecutor(TaskExecutor):
             "existed": existed,
         }
 
-    async def execute(self, task: SubagentTask) -> TaskResult:
-        """Execute batch downsert operations."""
-        start_time = time.perf_counter()
+    def get_items(self, task: SubagentTask) -> list[str]:
+        """Get targets to downsert from task."""
         payload = cast(dict[str, Any], task.payload)
-        targets: list[str] = payload.get("targets", [])
-        results: list[dict[str, Any]] = []
-        errors: list[str] = []
+        return cast(list[str], payload.get("targets", []))
 
+    def process_item(self, item: str, **kwargs: Any) -> dict[str, Any]:
+        """Downsert a single target."""
         downsert_fn = self.downsert_func or self._default_downsert
+        return downsert_fn(item)
 
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = {
-                executor.submit(downsert_fn, target): target for target in targets
-            }
-
-            for future in as_completed(futures, timeout=task.timeout_seconds):
-                target = futures[future]
-                try:
-                    result = future.result()
-                    results.append(result)
-                except (OSError, ValueError, RuntimeError) as e:
-                    errors.append(f"Downsert '{target}' failed: {e}")
-
-        execution_time = (time.perf_counter() - start_time) * 1000
-
-        return TaskResult(
-            task_id=task.task_id,
-            task_type=task.task_type,
-            status=TaskStatus.COMPLETED if not errors else TaskStatus.FAILED,
-            result={
-                "items": results,
-                "summary": {
-                    "total": len(targets),
-                    "succeeded": len(results),
-                    "deleted": sum(1 for r in results if r.get("action") == "deleted"),
-                    "skipped": sum(1 for r in results if r.get("action") == "skipped"),
-                },
+    def aggregate_results(self, results: list[dict[str, Any]]) -> dict[str, Any]:
+        """Aggregate downsert results."""
+        return {
+            "items": results,
+            "summary": {
+                "total": len(results),
+                "succeeded": len(results),
+                "deleted": sum(1 for r in results if r.get("action") == "deleted"),
+                "skipped": sum(1 for r in results if r.get("action") == "skipped"),
             },
-            error="; ".join(errors) if errors else None,
-            execution_time_ms=execution_time,
-            parallel_calls=len(targets),
-        )
+        }
 
     def validate_task(self, task: SubagentTask) -> bool:
         """Validate downsert task."""

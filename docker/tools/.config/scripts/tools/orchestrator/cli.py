@@ -71,7 +71,7 @@ def main() -> None:
             print(json.dumps(results[0], default=lambda o: o.__dict__, indent=2))
         except json.JSONDecodeError:
             print("Error: --task-config must be a valid JSON string")
-        except Exception as e:  # noqa
+        except Exception as e:  # pylint: disable=broad-exception-caught
             print(f"Error executing task: {e}")
         return
 

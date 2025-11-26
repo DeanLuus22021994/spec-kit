@@ -53,7 +53,7 @@ class SubagentOrchestrator:
 
         # Execute independent tasks in parallel batches
         for i in range(0, len(independent_tasks), max_parallel):
-            batch = independent_tasks[i : i + max_parallel]
+            batch = independent_tasks[i:i + max_parallel]
             batch_results = await asyncio.gather(
                 *[self._execute_task(task) for task in batch],
                 return_exceptions=True,

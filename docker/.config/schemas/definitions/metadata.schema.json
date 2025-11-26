@@ -5,6 +5,15 @@
   "type": "object",
   "description": "Standard file metadata block",
   "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Configuration name (kebab-case)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the configuration"
+    },
     "version": {
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
@@ -30,6 +39,13 @@
       "minItems": 1,
       "description": "Keywords for searchability"
     },
+    "source_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Related source files or patterns"
+    },
     "updated": {
       "type": "string",
       "format": "date",
@@ -37,6 +53,6 @@
       "description": "Last update date (YYYY-MM-DD)"
     }
   },
-  "required": ["version", "category", "keywords", "updated"],
+  "required": ["name", "description", "version", "category", "keywords", "updated"],
   "additionalProperties": false
 }

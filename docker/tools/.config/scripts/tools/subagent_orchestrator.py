@@ -27,6 +27,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+# pylint: disable=wrong-import-position
 from orchestrator import (  # noqa: E402
     GPU_CONFIG,
     PRECOMPILED_IMAGES,
