@@ -2,309 +2,57 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://semantic-kernel-app/.config/schemas/config.schema.json",
   "title": "Configuration Schema",
-  "description": "Schema for YAML configuration files in semantic-kernel-app with GPU/CUDA support",
+  "description": "Master schema for YAML configuration files",
   "type": "object",
   "properties": {
     "metadata": {
-      "$ref": "#/definitions/metadata"
+      "$ref": "definitions/metadata.schema.json"
     },
-    "version": {
-      "type": "string",
-      "description": "Configuration version"
-    },
-    "category": {
-      "type": "string",
-      "description": "Configuration category"
-    },
-    "keywords": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Keywords for searchability"
-    },
-    "updated": {
-      "type": "string",
-      "format": "date",
-      "description": "Last update date (YYYY-MM-DD)"
-    },
-    "cross_references": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Related files and documentation"
-    },
-    "related_documentation": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Links to related documentation"
-    },
+    "version": { "type": "string" },
+    "category": { "type": "string" },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "updated": { "type": "string" },
+    "cross_references": { "type": "array", "items": { "type": "string" } },
+    "related_documentation": { "type": "array", "items": { "type": "string" } },
+
     "gpu": {
-      "$ref": "#/definitions/gpu_config"
-    }
-  },
-  "definitions": {
-    "metadata": {
-      "type": "object",
-      "description": "File metadata block",
-      "properties": {
-        "version": {
-          "type": "string",
-          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-          "description": "Semantic version number"
-        },
-        "category": {
-          "type": "string",
-          "enum": [
-            "config",
-            "workflow",
-            "pattern",
-            "standard",
-            "reference",
-            "template"
-          ],
-          "description": "Configuration category"
-        },
-        "keywords": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1,
-          "description": "Keywords for searchability"
-        },
-        "updated": {
-          "type": "string",
-          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
-          "description": "Last update date (YYYY-MM-DD)"
-        }
-      },
-      "required": ["version", "category", "keywords", "updated"]
+      "description": "GPU Configuration or Report Data",
+      "oneOf": [
+        { "$ref": "definitions/gpu.schema.json#/definitions/gpu_config" },
+        { "$ref": "definitions/gpu.schema.json#/definitions/gpu_report" }
+      ]
     },
+
+    "system": { "type": "object", "additionalProperties": true },
+    "wsl2": { "type": "object", "additionalProperties": true },
+    "storage": { "type": "object", "additionalProperties": true },
+    "docker": { "type": "object", "additionalProperties": true },
+    "images": { "type": "object", "additionalProperties": true },
+    "processes": { "type": "object", "additionalProperties": true },
+    "critical_issues": { "type": "array" },
+    "recommendations": { "type": "object" },
+    "validation_commands": { "type": "object" },
+    "next_steps": { "type": "object" },
+
     "resources": {
-      "type": "object",
-      "description": "Resource allocation specification",
-      "properties": {
-        "cpus": {
-          "oneOf": [
-            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
-            { "type": "number" }
-          ],
-          "description": "CPU allocation"
-        },
-        "memory": {
-          "type": "string",
-          "pattern": "^[0-9]+[KMG]?$",
-          "description": "Memory allocation"
-        },
-        "gpu": {
-          "$ref": "#/definitions/gpu_resources"
-        }
-      }
-    },
-    "gpu_resources": {
-      "type": "object",
-      "description": "GPU resource allocation",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Whether GPU is enabled for this service"
-        },
-        "count": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 8,
-          "default": 1,
-          "description": "Number of GPUs to allocate"
-        },
-        "memory": {
-          "type": "string",
-          "pattern": "^[0-9]+[GM]$",
-          "description": "GPU memory limit (e.g., '6G')"
-        },
-        "device_ids": {
-          "type": "array",
-          "items": { "type": "integer" },
-          "description": "Specific GPU device IDs to use"
-        }
-      }
-    },
-    "gpu_config": {
-      "type": "object",
-      "description": "GPU/CUDA configuration",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Whether GPU acceleration is enabled"
-        },
-        "device": {
-          "type": "string",
-          "pattern": "^(nvidia|cuda:[0-9]+)$",
-          "default": "cuda:0",
-          "description": "GPU device identifier (nvidia or cuda:N)"
-        },
-        "cuda_version": {
-          "type": "string",
-          "pattern": "^[0-9]+\\.[0-9]+$",
-          "description": "CUDA toolkit version (e.g., '13.0')"
-        },
-        "compute_capability": {
-          "type": "string",
-          "pattern": "^[0-9]+\\.[0-9]+$",
-          "description": "GPU compute capability (e.g., '8.6')"
-        },
-        "memory_limit": {
-          "type": "string",
-          "pattern": "^[0-9]+[GM]$",
-          "description": "GPU memory limit"
-        },
-        "mixed_precision": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable FP16/BF16 mixed precision"
-        },
-        "environment": {
-          "type": "object",
-          "description": "GPU-related environment variables",
-          "properties": {
-            "CUDA_VISIBLE_DEVICES": { "type": "string" },
-            "TORCH_CUDA_ARCH_LIST": { "type": "string" },
-            "PYTORCH_CUDA_ALLOC_CONF": { "type": "string" },
-            "NVIDIA_VISIBLE_DEVICES": { "type": "string" },
-            "NVIDIA_DRIVER_CAPABILITIES": { "type": "string" }
-          }
-        }
-      }
+      "$ref": "definitions/resources.schema.json"
     },
     "service": {
       "type": "object",
-      "description": "Service configuration",
       "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Whether the service is enabled"
-        },
-        "port": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 65535,
-          "description": "Service port number"
-        },
-        "resources": {
-          "$ref": "#/definitions/resources"
-        },
-        "gpu_enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Whether GPU acceleration is enabled for this service"
-        }
+        "enabled": { "type": "boolean" },
+        "port": { "type": "integer" },
+        "resources": { "$ref": "definitions/resources.schema.json" },
+        "gpu_enabled": { "type": "boolean" }
       }
     },
     "semantic_kernel": {
       "type": "object",
-      "description": "Semantic Kernel configuration",
-      "properties": {
-        "version": {
-          "type": "string",
-          "description": "Semantic Kernel version"
-        },
-        "plugins_directory": {
-          "type": "string",
-          "description": "Path to plugins directory"
-        },
-        "skills_directory": {
-          "type": "string",
-          "description": "Path to skills directory"
-        },
-        "planners": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["SequentialPlanner", "ActionPlanner", "StepwisePlanner"]
-          },
-          "description": "Available planners"
-        },
-        "memory_store": {
-          "type": "string",
-          "description": "Memory store backend"
-        },
-        "vector_dimensions": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "Vector embedding dimensions"
-        },
-        "embedding_model": {
-          "type": "string",
-          "description": "Embedding model name"
-        },
-        "gpu_acceleration": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable GPU acceleration for inference"
-        },
-        "cuda": {
-          "$ref": "#/definitions/gpu_config"
-        }
-      }
-    },
-    "self_hosted_runner": {
-      "type": "object",
-      "description": "Self-hosted runner configuration",
-      "properties": {
-        "label": {
-          "type": "string",
-          "description": "Runner label (e.g., 'self-hosted-gpu')"
-        },
-        "token_required": {
-          "type": "boolean",
-          "default": false,
-          "description": "Whether a token is required"
-        },
-        "already_registered": {
-          "type": "boolean",
-          "default": true,
-          "description": "Whether runner is already registered"
-        },
-        "gpu": {
-          "type": "string",
-          "description": "GPU model (e.g., 'RTX 3050 6GB')"
-        },
-        "cuda": {
-          "type": "string",
-          "description": "CUDA version"
-        },
-        "pytorch": {
-          "type": "string",
-          "description": "PyTorch version with CUDA suffix"
-        }
-      }
+      "additionalProperties": true
     },
     "python_environment": {
       "type": "object",
-      "description": "Python environment configuration",
-      "properties": {
-        "version": {
-          "type": "string",
-          "pattern": "^3\\.[0-9]+$",
-          "default": "3.14",
-          "description": "Python version"
-        },
-        "cuda_support": {
-          "type": "boolean",
-          "default": true,
-          "description": "Whether CUDA support is enabled"
-        },
-        "pytorch": {
-          "type": "string",
-          "description": "PyTorch version (e.g., '2.9.1+cu130')"
-        }
-      }
+      "additionalProperties": true
     }
   }
 }

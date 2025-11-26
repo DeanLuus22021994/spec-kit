@@ -4,10 +4,12 @@
 # Metadata
 metadata: &metadata
   version: "1.0.0"
-  updated: "2025-11-25"
+  updated: "2025-11-26"
   category: config
   keywords:
-    [pr-validation, testing, build, lint, docker, configuration, quality]
+    - pr
+    - validation
+    - ci
 
 <<: *metadata
 
@@ -65,3 +67,9 @@ related_documentation:
   - ".config/copilot/standards/ci-cd-standards.yml: CI/CD standards and best practices"
   - ".github/workflows/pr-validation.yml: Actual PR validation workflow"
   - ".config/copilot/standards/code-quality.yml: Code quality standards"
+
+rules:
+  require_tests: true
+  require_lint: true
+  require_build: true
+  coverage_threshold: 80

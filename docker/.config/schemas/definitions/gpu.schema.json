@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gpu.schema.json",
+  "title": "GPU Configuration Definitions",
+  "definitions": {
+    "gpu_config": {
+      "type": "object",
+      "description": "GPU/CUDA configuration for services",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "device": {
+          "type": "string",
+          "pattern": "^(nvidia|cuda:[0-9]+)$",
+          "default": "cuda:0"
+        },
+        "cuda_version": {
+          "type": "string"
+        },
+        "compute_capability": {
+          "type": "string"
+        },
+        "memory_limit": {
+          "type": "string"
+        },
+        "mixed_precision": {
+          "type": "boolean",
+          "default": true
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "gpu_report": {
+      "type": "object",
+      "description": "GPU hardware report structure",
+      "properties": {
+        "device": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "index": { "type": "string" },
+            "architecture": { "type": "string" },
+            "compute_capability": { "type": "string" }
+          }
+        },
+        "memory": {
+          "type": "object",
+          "properties": {
+            "total_mib": { "type": "integer" },
+            "used_mib": { "type": "integer" },
+            "free_mib": { "type": "integer" },
+            "utilization_percent": { "type": "number" },
+            "status": { "type": "string" }
+          }
+        },
+        "driver": {
+          "type": "object",
+          "properties": {
+            "version": { "type": "string" },
+            "status": { "type": "string" }
+          }
+        },
+        "cuda": {
+          "type": "object",
+          "properties": {
+            "toolkit_version": { "type": "string" },
+            "release": { "type": "string" },
+            "build": { "type": "string" },
+            "status": { "type": "string" }
+          }
+        },
+        "docker_gpu_support": {
+          "type": "object"
+        }
+      }
+    },
+    "gpu_resources": {
+      "type": "object",
+      "description": "GPU resource allocation",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "count": { "type": "integer" },
+        "memory": { "type": "string" },
+        "device_ids": {
+          "type": "array",
+          "items": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
