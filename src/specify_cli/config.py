@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,26 @@ from rich.console import Console
 console = Console()
 
 CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
+
+
+class CustomYamlLoader(yaml.SafeLoader):
+    """Custom YAML loader that supports !include tag."""
+
+    def __init__(self, stream):
+        try:
+            self._root = os.path.split(stream.name)[0]
+        except AttributeError:
+            self._root = os.getcwd()
+        super().__init__(stream)
+
+    def include(self, node):
+        """Include a file referenced by the !include tag."""
+        filename = os.path.join(self._root, self.construct_scalar(node))
+        with open(filename, encoding="utf-8") as f:
+            return yaml.load(f, Loader=CustomYamlLoader)
+
+
+CustomYamlLoader.add_constructor("!include", CustomYamlLoader.include)
 
 
 def load_config(config_name: str) -> dict[str, Any]:
@@ -23,7 +44,7 @@ def load_config(config_name: str) -> dict[str, Any]:
     if config_path.exists():
         try:
             with open(config_path, encoding="utf-8") as f:
-                return yaml.safe_load(f) or {}
+                return yaml.load(f, Loader=CustomYamlLoader) or {}
         except Exception as e:  # pylint: disable=broad-exception-caught
             console.print(
                 f"[yellow]Warning: Failed to load {config_name}: {e}[/yellow]"
@@ -33,6 +54,9 @@ def load_config(config_name: str) -> dict[str, Any]:
 
 # Load configurations
 AGENTS_YAML = load_config("agents.yaml")
+if AGENTS_YAML:
+    AGENTS_YAML = {k: v for k, v in AGENTS_YAML.items() if not k.startswith("_")}
+
 SETTINGS_YAML = load_config("settings.yaml")
 VERSIONS_YAML = load_config("versions.yaml")
 

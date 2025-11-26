@@ -1,0 +1,3 @@
+name: version
+handler: specify_cli.handlers:version
+help: "Show version information."

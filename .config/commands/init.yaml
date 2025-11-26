@@ -1,0 +1,65 @@
+name: init
+handler: specify_cli.handlers:init
+help: "Initialize a new Specify project from the latest template."
+description: |
+  This command will:
+  1. Check that required tools are installed (git is optional)
+  2. Let you choose your AI assistant
+  3. Download the appropriate template from GitHub
+  4. Extract the template to a new project directory or current directory
+  5. Initialize a fresh git repository (if not --no-git and no existing repo)
+  6. Optionally set up AI assistant commands
+
+  Examples:
+      specify init my-project
+      specify init my-project --ai claude
+      specify init my-project --ai copilot --no-git
+      specify init --ignore-agent-tools my-project
+      specify init . --ai claude         # Initialize in current directory
+      specify init .                     # Initialize in current directory (interactive AI selection)
+      specify init --here --ai claude    # Alternative syntax for current directory
+      specify init --here --ai codex
+      specify init --here --ai codebuddy
+      specify init --here
+      specify init --here --force  # Skip confirmation when current directory not empty
+arguments:
+  - name: project_name
+    required: false
+    help: "Name for your new project directory (optional if using --here, or use '.' for current directory)"
+options:
+  - name: ai_assistant
+    flags: ["--ai"]
+    type: string
+    help: "AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, or q"
+  - name: script_type
+    flags: ["--script"]
+    type: string
+    help: "Script type to use: sh or ps"
+  - name: ignore_agent_tools
+    flags: ["--ignore-agent-tools"]
+    type: boolean
+    help: "Skip checks for AI agent tools like Claude Code"
+  - name: no_git
+    flags: ["--no-git"]
+    type: boolean
+    help: "Skip git repository initialization"
+  - name: here
+    flags: ["--here"]
+    type: boolean
+    help: "Initialize project in the current directory instead of creating a new one"
+  - name: force
+    flags: ["--force"]
+    type: boolean
+    help: "Force merge/overwrite when using --here (skip confirmation)"
+  - name: skip_tls
+    flags: ["--skip-tls"]
+    type: boolean
+    help: "Skip SSL/TLS verification (not recommended)"
+  - name: debug
+    flags: ["--debug"]
+    type: boolean
+    help: "Show verbose diagnostic output for network and extraction failures"
+  - name: github_token
+    flags: ["--github-token"]
+    type: string
+    help: "GitHub token to use for API requests (or set GH_TOKEN or GITHUB_TOKEN environment variable)"
