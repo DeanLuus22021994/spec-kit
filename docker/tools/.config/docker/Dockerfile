@@ -10,6 +10,12 @@ FROM python:3.11-slim
 LABEL maintainer="semantic-kernel-app"
 LABEL description="Python tools container for CLI, documentation, and code quality"
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    VIRTUAL_ENV=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
+
 # Set working directory
 WORKDIR /app/tools
 
@@ -30,11 +36,16 @@ RUN groupadd -r toolsuser && useradd -r -g toolsuser -u 1001 toolsuser
 COPY --from=kantra-binary /usr/local/bin/kantra /usr/local/bin/kantra
 RUN chmod +x /usr/local/bin/kantra
 
-# Install Python dependencies
+# Create and activate virtual environment
+RUN python -m venv $VIRTUAL_ENV && \
+    chown -R toolsuser:toolsuser $VIRTUAL_ENV
+
+# Install Python dependencies into the virtual environment
 # Core CLI dependencies
 # Dev/Test dependencies
 # Documentation dependencies
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
     # Core
     typer \
     rich \
@@ -92,11 +103,6 @@ VOLUME /app/tools/.config/validation/test-data
 
 # Switch to non-root user
 USER toolsuser
-
-# Set Python to run in unbuffered mode
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PATH="/home/toolsuser/.local/bin:${PATH}"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
