@@ -45,6 +45,7 @@ services:
     networks:
       - tools-network
     restart: "no"
+    privileged: true
     stdin_open: true
     tty: true
     deploy:
