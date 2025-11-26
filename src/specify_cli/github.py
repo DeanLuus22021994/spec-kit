@@ -14,6 +14,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from specify_cli.config import SETTINGS_YAML
+
 console = Console()
 
 ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -131,8 +133,8 @@ def download_template_from_github(
     Returns:
         A tuple containing the path to the downloaded zip file and metadata dict.
     """
-    repo_owner = "github"
-    repo_name = "spec-kit"
+    repo_owner = SETTINGS_YAML.get("repository", {}).get("owner", "github")
+    repo_name = SETTINGS_YAML.get("repository", {}).get("name", "spec-kit")
     if http_client is None:
         http_client = httpx.Client(verify=ssl_context)
 

@@ -11,8 +11,6 @@ from rich.console import Console
 
 console = Console()
 
-CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
-
 
 class CustomYamlLoader(yaml.SafeLoader):
     """Custom YAML loader that supports !include tag."""
@@ -73,3 +71,8 @@ BANNER = SETTINGS_YAML.get("cli", {}).get(
 )
 
 TAGLINE = SETTINGS_YAML.get("cli", {}).get("tagline", "Spec-Driven Development Toolkit")
+
+_claude_rel_path = SETTINGS_YAML.get("paths", {}).get(
+    "claude_local", ".claude/local/claude"
+)
+CLAUDE_LOCAL_PATH = Path.home() / Path(_claude_rel_path)
