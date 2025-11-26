@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
 # Host Analysis Report - Generated from actual system inspection
 # Note: This file uses custom structure for host analysis data
 # Date: 2025-11-25
@@ -120,7 +121,7 @@ storage:
 gpu:
   device:
     name: "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
-    index: "0"
+    index: 0
     architecture: "Ampere"
     compute_capability: "8.6"
 
@@ -378,9 +379,9 @@ next_steps:
     - "Test service tier profiles"
 
 # =============================================================================
-# Related Files
+# Related Documentation
 # =============================================================================
-related_files:
+related_documentation:
   - ".config/gpu-resources.yml: GPU VRAM partitioning"
   - ".config/services.yml: Service tier definitions"
   - ".config/optimization-toggles.yml: Real-time toggles"

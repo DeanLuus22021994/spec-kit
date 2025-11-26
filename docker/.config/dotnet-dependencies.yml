@@ -1,17 +1,23 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
 # .NET Dependencies Configuration
 # Auto-provisioning specification for .NET packages with Docker and GPU acceleration
 # Category: config | Version: 1.0.0 | Updated: 2025-11-25
 
-metadata:
+metadata: &metadata
   name: dotnet-dependencies
   description: Auto-provisioning configuration for .NET packages with Semantic Kernel optimizations
   version: "1.0.0"
   updated: "2025-11-25"
+  category: config
+  keywords:
+    [dotnet, dependencies, nuget, packages, configuration, gpu, semantic-kernel]
   source_files:
     - global.json
     - "**/*.csproj"
     - Directory.Build.props
     - Directory.Packages.props
+
+<<: *metadata
 
 # =============================================================================
 # Runtime Configuration

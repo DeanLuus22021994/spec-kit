@@ -1,12 +1,17 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
 # Environment Variables Configuration
 # Centralized environment variable definitions for development and deployment
 # Category: config | Version: 1.0.0 | Updated: 2025-11-25
 
-metadata:
+metadata: &metadata
   name: environment-variables
   description: Centralized environment variable configuration
   version: "1.0.0"
   updated: "2025-11-25"
+  category: config
+  keywords: [environment, variables, config, settings, docker, gpu, cuda]
+
+<<: *metadata
 
 # =============================================================================
 # CUDA / GPU Configuration

@@ -1,8 +1,10 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
 # Pull Request Validation Configuration
 
 # Metadata
 metadata: &metadata
   version: "1.0.0"
+  updated: "2025-11-25"
   category: config
   keywords:
     [pr-validation, testing, build, lint, docker, configuration, quality]

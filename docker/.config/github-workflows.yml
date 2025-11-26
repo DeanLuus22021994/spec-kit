@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
 # GitHub Workflows Configuration
 # Centralized configuration for GitHub Actions workflows
 # Referenced by workflows in .github/workflows/ for consistency
@@ -6,7 +7,19 @@ metadata: &metadata
   version: "1.0.0"
   updated: "2025-11-24"
   category: config
-  keywords: [github-actions, workflows, ci-cd, pipeline, testing, build, deployment, runners, versions, configuration]
+  keywords:
+    [
+      github-actions,
+      workflows,
+      ci-cd,
+      pipeline,
+      testing,
+      build,
+      deployment,
+      runners,
+      versions,
+      configuration,
+    ]
 
 <<: *metadata
 
