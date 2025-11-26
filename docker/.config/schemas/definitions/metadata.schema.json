@@ -27,7 +27,8 @@
         "pattern",
         "standard",
         "reference",
-        "template"
+        "template",
+        "report"
       ],
       "description": "Configuration category"
     },

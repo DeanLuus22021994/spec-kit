@@ -5,19 +5,16 @@
 
 metadata: &metadata
   name: "host-analysis-report"
-  description: "Report on host system resources and capabilities"
+  description: "Host analysis report configuration"
   version: "1.0.0"
   updated: "2025-11-25"
-  category: reference
+  category: report
   keywords:
     - host
     - analysis
-    - baseline
-    - optimization
-    - docker
-    - wsl2
-    - gpu
-    - resources
+    - report
+    - system
+    - hardware
 
 <<: *metadata
 
