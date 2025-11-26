@@ -29,7 +29,6 @@
   // Python Configuration (Ruff optimized for Copilot)
   "python.defaultInterpreterPath": ".venv/bin/python",
   "python.terminal.activateEnvironment": true,
-  "python.analysis.extraPaths": ["${workspaceFolder}/src"],
   "python.linting.enabled": false, // Using Ruff extension instead
   "python.linting.flake8Args": ["--max-line-length=150"],
   "flake8.args": ["--max-line-length=150"],

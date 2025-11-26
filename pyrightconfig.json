@@ -1,6 +1,6 @@
 {
   "pythonVersion": "3.12",
   "pythonPlatform": "Linux",
-  "extraPaths": ["/opt/pyenv/lib/python3.12/site-packages"],
+  "extraPaths": ["/opt/pyenv/lib/python3.12/site-packages", "src"],
   "typeCheckingMode": "basic"
 }
