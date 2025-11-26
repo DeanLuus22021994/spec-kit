@@ -1,0 +1,91 @@
+_definitions:
+  cli_agent: &cli_agent
+    requires_cli: true
+  ide_agent: &ide_agent
+    requires_cli: false
+    install_url: null
+
+copilot:
+  <<: *ide_agent
+  name: "GitHub Copilot"
+  folder: ".github/"
+
+claude:
+  <<: *cli_agent
+  name: "Claude Code"
+  folder: ".claude/"
+  install_url: "https://docs.anthropic.com/en/docs/claude-code/setup"
+
+gemini:
+  <<: *cli_agent
+  name: "Gemini CLI"
+  folder: ".gemini/"
+  install_url: "https://github.com/google-gemini/gemini-cli"
+
+cursor-agent:
+  <<: *ide_agent
+  name: "Cursor"
+  folder: ".cursor/"
+
+qwen:
+  <<: *cli_agent
+  name: "Qwen Code"
+  folder: ".qwen/"
+  install_url: "https://github.com/QwenLM/qwen-code"
+
+opencode:
+  <<: *cli_agent
+  name: "opencode"
+  folder: ".opencode/"
+  install_url: "https://opencode.ai"
+
+codex:
+  <<: *cli_agent
+  name: "Codex CLI"
+  folder: ".codex/"
+  install_url: "https://github.com/openai/codex"
+
+windsurf:
+  <<: *ide_agent
+  name: "Windsurf"
+  folder: ".windsurf/"
+
+kilocode:
+  <<: *ide_agent
+  name: "Kilo Code"
+  folder: ".kilocode/"
+
+auggie:
+  <<: *cli_agent
+  name: "Auggie CLI"
+  folder: ".augment/"
+  install_url: "https://docs.augmentcode.com/cli/setup-auggie/install-auggie-cli"
+
+codebuddy:
+  <<: *cli_agent
+  name: "CodeBuddy"
+  folder: ".codebuddy/"
+  install_url: "https://www.codebuddy.ai/cli"
+
+roo:
+  <<: *ide_agent
+  name: "Roo Code"
+  folder: ".roo/"
+
+q:
+  <<: *cli_agent
+  name: "Amazon Q Developer CLI"
+  folder: ".amazonq/"
+  install_url: "https://aws.amazon.com/developer/learning/q-developer-cli/"
+
+amp:
+  <<: *cli_agent
+  name: "Amp"
+  folder: ".agents/"
+  install_url: "https://ampcode.com/manual#install"
+
+shai:
+  <<: *cli_agent
+  name: "SHAI"
+  folder: ".shai/"
+  install_url: "https://github.com/ovh/shai"

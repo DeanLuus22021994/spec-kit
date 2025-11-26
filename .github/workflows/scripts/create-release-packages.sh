@@ -42,7 +42,7 @@ generate_commands() {
   mkdir -p "$output_dir"
 
   # Read the config file
-  local config_file=".config/agent_commands.yaml"
+  local config_file="src/specify_cli/config/agent_commands.yaml"
 
   for template in .specify/templates/commands/*.md; do
     [[ -f "$template" ]] || continue

@@ -316,23 +316,25 @@ The produced specification should contain a set of user stories and functional r
 At this stage, your project folder contents should resemble the following:
 
 ```text
-├── memory
-│	 ├── constitution.md
-│	 └── constitution_update_checklist.md
-├── scripts
-│	 ├── check-task-prerequisites.sh
-│	 ├── common.sh
-│	 ├── create-new-feature.sh
-│	 ├── get-feature-paths.sh
-│	 ├── setup-plan.sh
-│	 └── update-claude-md.sh
+├── .specify
+│    ├── memory
+│    │    ├── constitution.md
+│    │    └── constitution_update_checklist.md
+│    ├── scripts
+│    │    └── bash (or powershell)
+│    │         ├── check-task-prerequisites.sh
+│    │         ├── common.sh
+│    │         ├── create-new-feature.sh
+│    │         ├── get-feature-paths.sh
+│    │         ├── setup-plan.sh
+│    │         └── update-agent-context.sh
+│    └── templates
+│         ├── plan-template.md
+│         ├── spec-template.md
+│         └── tasks-template.md
 ├── specs
 │	 └── 001-create-taskify
 │	     └── spec.md
-└── templates
-    ├── plan-template.md
-    ├── spec-template.md
-    └── tasks-template.md
 ```
 
 ### **STEP 3:** Functional specification clarification
@@ -368,16 +370,17 @@ The output of this step will include a number of implementation detail documents
 ```text
 .
 ├── CLAUDE.md
-├── memory
-│	 ├── constitution.md
-│	 └── constitution_update_checklist.md
-├── scripts
-│	 ├── check-task-prerequisites.sh
-│	 ├── common.sh
-│	 ├── create-new-feature.sh
-│	 ├── get-feature-paths.sh
-│	 ├── setup-plan.sh
-│	 └── update-claude-md.sh
+├── .specify
+│    ├── memory
+│    │    ├── constitution.md
+│    │    └── constitution_update_checklist.md
+│    ├── scripts
+│    │    └── ...
+│    └── templates
+│         ├── CLAUDE-template.md
+│         ├── plan-template.md
+│         ├── spec-template.md
+│         └── tasks-template.md
 ├── specs
 │	 └── 001-create-taskify
 │	     ├── contracts
@@ -388,11 +391,6 @@ The output of this step will include a number of implementation detail documents
 │	     ├── quickstart.md
 │	     ├── research.md
 │	     └── spec.md
-└── templates
-    ├── CLAUDE-template.md
-    ├── plan-template.md
-    ├── spec-template.md
-    └── tasks-template.md
 ```
 
 Check the `research.md` document to ensure that the right tech stack is used, based on your instructions. You can ask Claude Code to refine it if any of the components stand out, or even have it check the locally-installed version of the platform/framework you want to use (e.g., .NET).

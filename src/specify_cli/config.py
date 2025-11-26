@@ -32,11 +32,10 @@ CustomYamlLoader.add_constructor("!include", CustomYamlLoader.include)
 
 
 def load_config(config_name: str) -> dict[str, Any]:
-    """Load configuration from .config directory."""
-    # Try to find .config in the project root (relative to this file)
-    # src/specify_cli/config.py -> src/specify_cli -> src -> root
-    base_path = Path(__file__).parent.parent.parent
-    config_path = base_path / ".config" / config_name
+    """Load configuration from config directory."""
+    # Config is now inside the package: src/specify_cli/config/
+    base_path = Path(__file__).parent / "config"
+    config_path = base_path / config_name
 
     if config_path.exists():
         try:

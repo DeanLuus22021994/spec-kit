@@ -51,22 +51,18 @@ Specify supports multiple AI agents by generating agent-specific command files a
 
 Follow these steps to add a new agent (using a hypothetical new agent as an example):
 
-#### 1. Add to AGENT_CONFIG
+#### 1. Add to AGENTS.YAML
 
 **IMPORTANT**: Use the actual CLI tool name as the key, not a shortened version.
 
-Add the new agent to the `AGENT_CONFIG` dictionary in `src/specify_cli/config.py`. This is the **single source of truth** for all agent metadata:
+Add the new agent to `src/specify_cli/config/agents.yaml`. This is the **single source of truth** for all agent metadata:
 
-```python
-AGENT_CONFIG = {
-    # ... existing agents ...
-    "new-agent-cli": {  # Use the ACTUAL CLI tool name (what users type in terminal)
-        "name": "New Agent Display Name",
-        "folder": ".newagent/",  # Directory for agent files
-        "install_url": "https://example.com/install",  # URL for installation docs (or None if IDE-based)
-        "requires_cli": True,  # True if CLI tool required, False for IDE-based agents
-    },
-}
+```yaml
+new-agent-cli:  # Use the ACTUAL CLI tool name (what users type in terminal)
+  name: "New Agent Display Name"
+  folder: ".newagent/"  # Directory for agent files
+  install_url: "https://example.com/install"  # URL for installation docs (or None if IDE-based)
+  requires_cli: true  # true if CLI tool required, false for IDE-based agents
 ```
 
 **Key Design Principle**: The dictionary key should match the actual executable name that users install. For example:
@@ -85,7 +81,7 @@ This eliminates the need for special-case mappings throughout the codebase.
 
 #### 2. Update Command Configuration
 
-If adding a new command or modifying an existing one, update `.config/agent_commands.yaml`.
+If adding a new command or modifying an existing one, update `src/specify_cli/config/agent_commands.yaml`.
 
 **Example:**
 
@@ -215,13 +211,13 @@ elif selected_ai == "windsurf":
         agent_tool_missing = True
 ```
 
-**Note**: CLI tool checks are now handled automatically based on the `requires_cli` field in AGENT_CONFIG. No additional code changes needed in the `check()` or `init()` commands - they automatically loop through AGENT_CONFIG and check tools as needed.
+**Note**: CLI tool checks are now handled automatically based on the `requires_cli` field in `src/specify_cli/config/agents.yaml`. No additional code changes needed in the `check()` or `init()` commands - they automatically loop through the configuration and check tools as needed.
 
 ## Important Design Decisions
 
 ### Using Actual CLI Tool Names as Keys
 
-**CRITICAL**: When adding a new agent to AGENT_CONFIG, always use the **actual executable name** as the dictionary key, not a shortened or convenient version.
+**CRITICAL**: When adding a new agent to `src/specify_cli/config/agents.yaml`, always use the **actual executable name** as the key, not a shortened or convenient version.
 
 **Why this matters:**
 
@@ -233,29 +229,25 @@ elif selected_ai == "windsurf":
 
 ❌ **Wrong approach** (requires special-case mapping):
 
-```python
-AGENT_CONFIG = {
-    "cursor": {  # Shorthand that doesn't match the actual tool
-        "name": "Cursor",
-        # ...
-    }
-}
+```yaml
+cursor:  # Shorthand that doesn't match the actual tool
+  name: "Cursor"
+  # ...
+```
 
 # Then you need special cases everywhere:
-cli_tool = agent_key
-if agent_key == "cursor":
-    cli_tool = "cursor-agent"  # Map to the real tool name
+# cli_tool = agent_key
+# if agent_key == "cursor":
+#     cli_tool = "cursor-agent"  # Map to the real tool name
 ```
 
 ✅ **Correct approach** (no mapping needed):
 
-```python
-AGENT_CONFIG = {
-    "cursor-agent": {  # Matches the actual executable name
-        "name": "Cursor",
-        # ...
-    }
-}
+```yaml
+cursor-agent:  # Matches the actual executable name
+  name: "Cursor"
+  # ...
+```
 
 # No special cases needed - just use agent_key directly!
 ```
@@ -341,10 +333,10 @@ Work within integrated development environments:
 
 Spec Kit uses a split architecture for agent commands:
 
-1.  **Configuration**: Metadata (description, scripts, handoffs) is stored in `.config/agent_commands.yaml`.
-2.  **Content**: The prompt template itself is stored in `templates/commands/*.md` as pure Markdown (no frontmatter).
+1.  **Configuration**: Metadata (description, scripts, handoffs) is stored in `src/specify_cli/config/agent_commands.yaml`.
+2.  **Content**: The prompt template itself is stored in `.specify/templates/commands/*.md` as pure Markdown (no frontmatter).
 
-### Configuration Format (`.config/agent_commands.yaml`)
+### Configuration Format (`src/specify_cli/config/agent_commands.yaml`)
 
 ```yaml
 command_name:
@@ -358,7 +350,7 @@ command_name:
       prompt: Prompt for the next agent...
 ```
 
-### Template Format (`templates/commands/*.md`)
+### Template Format (`.specify/templates/commands/*.md`)
 
 ```markdown
 ## Command Title
@@ -421,8 +413,8 @@ Different agents use different argument placeholders:
 
 ## Common Pitfalls
 
-1.  **Forgetting to update `.config/agent_commands.yaml`**: The command templates are now pure Markdown. All metadata (scripts, descriptions) must be in the config file.
-2.  **Using shorthand keys instead of actual CLI tool names**: Always use the actual executable name as the AGENT_CONFIG key (e.g., `"cursor-agent"` not `"cursor"`). This prevents the need for special-case mappings throughout the codebase.
+1.  **Forgetting to update `src/specify_cli/config/agent_commands.yaml`**: The command templates are now pure Markdown. All metadata (scripts, descriptions) must be in the config file.
+2.  **Using shorthand keys instead of actual CLI tool names**: Always use the actual executable name as the key in `src/specify_cli/config/agents.yaml` (e.g., `"cursor-agent"` not `"cursor"`). This prevents the need for special-case mappings throughout the codebase.
 3.  **Forgetting update scripts**: Both bash and PowerShell scripts must be updated when adding new agents.
 4.  **Incorrect `requires_cli` value**: Set to `True` only for agents that actually have CLI tools to check; set to `False` for IDE-based agents.
 5.  **Wrong argument format**: Use correct placeholder format for each agent type (`$ARGUMENTS` for Markdown, `{{args}}` for TOML).
@@ -437,7 +429,7 @@ When adding new agents:
 - Ensure compatibility with the Spec-Driven Development process
 - Document any special requirements or limitations
 - Update this guide with lessons learned
-- Verify the actual CLI tool name before adding to AGENT_CONFIG
+- Verify the actual CLI tool name before adding to `src/specify_cli/config/agents.yaml`
 
 ---
 

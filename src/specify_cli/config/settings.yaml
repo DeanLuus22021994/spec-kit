@@ -1,0 +1,55 @@
+cli:
+  banner_text: |
+    ███████╗██████╗ ███████╗ ██████╗██╗███████╗██╗   ██╗
+    ██╔════╝██╔══██╗██╔════╝██╔════╝██║██╔════╝╚██╗ ██╔╝
+    ███████╗██████╔╝█████╗  ██║     ██║█████╗   ╚████╔╝
+    ╚════██║██╔═══╝ ██╔══╝  ██║     ██║██╔══╝    ╚██╔╝
+    ███████║██║     ███████╗╚██████╗██║██║        ██║
+    ╚══════╝╚═╝     ╚══════╝ ╚═════╝╚═╝╚═╝        ╚═╝
+  tagline: "GitHub Spec Kit - Spec-Driven Development Toolkit"
+
+optional_tools:
+  code: "Visual Studio Code"
+  code-insiders: "Visual Studio Code Insiders"
+
+repository:
+  owner: "github"
+  name: "spec-kit"
+
+git:
+  user:
+    name: "DeanLuus22021994"
+    email: "dean.luus22021994@gmail.com"
+  settings:
+    defaultBranch: "main"
+    pullRebase: false
+    autocrlf: "input"
+    safecrlf: true
+    editor: "code --wait"
+    merge_tool: "vscode"
+    diff_tool: "vscode"
+
+devcontainer:
+  performance:
+    build:
+      parallel_downloads: 10
+      concurrent_builds: 4
+      cache_compression: "gzip"
+      max_parallelism: 4
+    network:
+      timeout: 30
+      retries: 3
+      keep_alive: true
+      http2_enabled: true
+    storage:
+      storage_driver: "overlay2"
+      mount_options: ["noatime", "relatime"]
+      tmp_size: "1G"
+      shm_size: "2G"
+
+script_types:
+  sh: "POSIX Shell (bash/zsh)"
+  ps: "PowerShell"
+
+paths:
+  claude_local: ".claude/local/claude"

@@ -58,12 +58,12 @@ Here are a few things you can do that will increase the likelihood of your pull 
 When working on spec-kit:
 
 1. Test changes with the `specify` CLI commands (`/speckit.specify`, `/speckit.plan`, `/speckit.tasks`) in your coding agent of choice
-2. Verify templates are working correctly in `templates/` directory
+2. Verify templates are working correctly in `.specify/templates/` directory
 3. Test script functionality in the `scripts/` directory
 4. Ensure memory files (`memory/constitution.md`) are updated if major process changes are made
 
 > [!NOTE]
-> Command templates are located in `templates/commands/` and their configuration (description, scripts, handoffs) is centralized in `.config/agent_commands.yaml`.
+> Command templates are located in `.specify/templates/commands/` and their configuration (description, scripts, handoffs) is centralized in `src/specify_cli/config/agent_commands.yaml`.
 > See [AGENTS.md](AGENTS.md) for detailed instructions on adding or modifying agents and commands.
 
 ### Testing template and command changes locally
