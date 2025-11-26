@@ -1,0 +1,414 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semantic-kernel-app/.config/schemas/docker-compose.schema.json",
+  "title": "Docker Compose Configuration",
+  "description": "Schema for Docker Compose configuration files with NVIDIA GPU support",
+  "type": "object",
+  "required": ["services"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Docker Compose file version (deprecated in Compose v2)",
+      "enum": ["3.8", "3.9", "3"]
+    },
+    "services": {
+      "type": "object",
+      "description": "Service definitions",
+      "additionalProperties": {
+        "$ref": "#/definitions/service"
+      }
+    },
+    "networks": {
+      "type": "object",
+      "description": "Network definitions",
+      "additionalProperties": {
+        "$ref": "#/definitions/network"
+      }
+    },
+    "volumes": {
+      "type": "object",
+      "description": "Volume definitions",
+      "additionalProperties": {
+        "$ref": "#/definitions/volume"
+      }
+    }
+  },
+  "definitions": {
+    "service": {
+      "type": "object",
+      "properties": {
+        "build": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/definitions/buildConfig" }
+          ]
+        },
+        "image": {
+          "type": "string",
+          "description": "Docker image to use"
+        },
+        "container_name": {
+          "type": "string",
+          "description": "Custom container name"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "oneOf": [{ "type": "string" }, { "type": "number" }]
+          }
+        },
+        "volumes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "environment": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            }
+          ]
+        },
+        "networks": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "depends_on": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "service_started",
+                      "service_healthy",
+                      "service_completed_successfully"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "restart": {
+          "type": "string",
+          "enum": ["no", "always", "on-failure", "unless-stopped"]
+        },
+        "runtime": {
+          "type": "string",
+          "description": "Runtime to use (e.g., 'nvidia' for GPU support)",
+          "enum": ["runc", "nvidia", "sysbox-runc"]
+        },
+        "deploy": {
+          "$ref": "#/definitions/deployConfig"
+        },
+        "healthcheck": {
+          "$ref": "#/definitions/healthcheck"
+        },
+        "logging": {
+          "$ref": "#/definitions/logging"
+        }
+      }
+    },
+    "buildConfig": {
+      "type": "object",
+      "properties": {
+        "context": {
+          "type": "string",
+          "description": "Build context path"
+        },
+        "dockerfile": {
+          "type": "string",
+          "description": "Dockerfile path"
+        },
+        "args": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            {
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            }
+          ]
+        },
+        "target": {
+          "type": "string",
+          "description": "Build target stage"
+        }
+      }
+    },
+    "deployConfig": {
+      "type": "object",
+      "properties": {
+        "resources": {
+          "type": "object",
+          "properties": {
+            "limits": {
+              "$ref": "#/definitions/resourceSpec"
+            },
+            "reservations": {
+              "$ref": "#/definitions/resourceSpec"
+            }
+          }
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["replicated", "global"]
+        }
+      }
+    },
+    "resourceSpec": {
+      "type": "object",
+      "properties": {
+        "cpus": {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]+)?$"
+        },
+        "memory": {
+          "type": "string",
+          "pattern": "^[0-9]+[KMG]?$"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/deviceSpec"
+          },
+          "description": "Device reservations (GPU, TPU, etc.)"
+        }
+      }
+    },
+    "deviceSpec": {
+      "type": "object",
+      "description": "Device specification for GPU/accelerator access",
+      "properties": {
+        "driver": {
+          "type": "string",
+          "description": "Device driver (e.g., 'nvidia')",
+          "enum": ["nvidia", "amd"]
+        },
+        "count": {
+          "oneOf": [
+            { "type": "integer", "minimum": -1 },
+            { "type": "string", "enum": ["all"] }
+          ],
+          "description": "Number of devices (-1 or 'all' for all available)"
+        },
+        "device_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Specific device IDs (e.g., ['0', '1'])"
+        },
+        "capabilities": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "gpu",
+                  "compute",
+                  "utility",
+                  "graphics",
+                  "video",
+                  "display"
+                ]
+              },
+              "description": "Required device capabilities (simple format)"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "gpu",
+                    "compute",
+                    "utility",
+                    "graphics",
+                    "video",
+                    "display"
+                  ]
+                }
+              },
+              "description": "Required device capabilities (nested format)"
+            }
+          ],
+          "description": "Required device capabilities"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Driver-specific options"
+        }
+      }
+    },
+    "gpuConfig": {
+      "type": "object",
+      "description": "Simplified GPU configuration",
+      "properties": {
+        "runtime": {
+          "type": "string",
+          "const": "nvidia",
+          "description": "NVIDIA container runtime"
+        },
+        "environment": {
+          "type": "object",
+          "properties": {
+            "NVIDIA_VISIBLE_DEVICES": {
+              "type": "string",
+              "description": "GPU devices to expose (e.g., 'all', '0', '0,1')"
+            },
+            "NVIDIA_DRIVER_CAPABILITIES": {
+              "type": "string",
+              "description": "Driver capabilities (e.g., 'compute,utility')"
+            },
+            "CUDA_VISIBLE_DEVICES": {
+              "type": "string",
+              "description": "CUDA device visibility"
+            }
+          }
+        },
+        "deploy": {
+          "type": "object",
+          "properties": {
+            "resources": {
+              "type": "object",
+              "properties": {
+                "reservations": {
+                  "type": "object",
+                  "properties": {
+                    "devices": {
+                      "type": "array",
+                      "items": { "$ref": "#/definitions/deviceSpec" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "healthcheck": {
+      "type": "object",
+      "properties": {
+        "test": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          ]
+        },
+        "interval": {
+          "type": "string",
+          "pattern": "^[0-9]+(s|m|h)$"
+        },
+        "timeout": {
+          "type": "string",
+          "pattern": "^[0-9]+(s|m|h)$"
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "start_period": {
+          "type": "string",
+          "pattern": "^[0-9]+(s|m|h)$"
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "properties": {
+        "driver": {
+          "type": "string",
+          "enum": [
+            "json-file",
+            "syslog",
+            "journald",
+            "gelf",
+            "fluentd",
+            "awslogs",
+            "splunk",
+            "none"
+          ]
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "properties": {
+        "driver": {
+          "type": "string",
+          "enum": ["bridge", "host", "overlay", "macvlan", "none"]
+        },
+        "internal": {
+          "type": "boolean"
+        },
+        "external": {
+          "type": "boolean"
+        },
+        "ipam": {
+          "type": "object",
+          "properties": {
+            "driver": { "type": "string" },
+            "config": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "subnet": { "type": "string" },
+                  "gateway": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "volume": {
+      "type": "object",
+      "properties": {
+        "driver": {
+          "type": "string"
+        },
+        "driver_opts": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "external": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

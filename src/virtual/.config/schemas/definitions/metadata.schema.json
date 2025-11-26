@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "metadata.schema.json",
+  "title": "Metadata Definition",
+  "type": "object",
+  "description": "Standard file metadata block",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Configuration name (kebab-case)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the configuration"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version number"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "config",
+        "workflow",
+        "pattern",
+        "standard",
+        "reference",
+        "template",
+        "report"
+      ],
+      "description": "Configuration category"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "Keywords for searchability"
+    },
+    "source_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Related source files or patterns"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Last update date (YYYY-MM-DD)"
+    },
+    "environment": {
+      "type": "string",
+      "description": "Target environment (e.g. production, development)"
+    }
+  },
+  "required": ["name", "description", "version", "category", "keywords", "updated"],
+  "additionalProperties": false
+}

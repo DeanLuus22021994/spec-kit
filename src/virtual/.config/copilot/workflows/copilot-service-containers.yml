@@ -1,0 +1,271 @@
+# Copilot Agent Service Containers
+# Optional service containers for Copilot Coding Agent testing environment
+
+metadata: &metadata
+  version: "1.0.0"
+  category: workflow
+  keywords: [copilot, agent, services, containers, postgres, qdrant, redis, testing]
+
+<<: *metadata
+
+service_containers:
+  status: "DISABLED by default (commented out in workflow)"
+  toggle_method: "Uncomment 'services:' section in .github/workflows/copilot-setup-steps.yml"
+  limitation: "All services start together - no individual control in GitHub Actions"
+
+  purpose:
+    - "Provide database/vector/cache infrastructure for integration testing"
+    - "Enable Copilot agent to test code requiring backend services"
+    - "Simulate production environment in ephemeral GitHub Actions runner"
+
+  important_note: |-
+    GitHub Actions service containers do NOT support conditional execution.
+    All services defined in the 'services:' section will start, or none will.
+    To enable/disable services, you must manually edit the workflow YAML file.
+
+available_services:
+  postgres:
+    image: postgres:16-alpine
+    purpose: "Database for Semantic Kernel memory store and application data"
+
+    ports:
+      container: 5432
+      host: 5432
+      note: "Maps to localhost:5432 on runner"
+
+    environment:
+      POSTGRES_DB: semantic_kernel
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+
+    health_check:
+      command: pg_isready
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      description: "Ensures PostgreSQL is ready before running tests"
+
+    connection_string: "Host=localhost;Port=5432;Database=semantic_kernel;Username=user;Password=password"
+
+    verification:
+      command: "PGPASSWORD=password psql -h localhost -U user -c 'SELECT version();'"
+      expected: "PostgreSQL 16.x on x86_64-pc-linux-musl"
+
+    yaml_config: |-
+      postgres:
+        image: postgres:16-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: semantic_kernel
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    purpose: "Vector database for embeddings and semantic search"
+
+    ports:
+      http: 6333
+      grpc: 6334
+      note: "HTTP API on 6333, gRPC on 6334"
+
+    api_endpoints:
+      health: "http://localhost:6333/"
+      collections: "http://localhost:6333/collections"
+      dashboard: "http://localhost:6333/dashboard"
+
+    health_check:
+      command: "wget --no-verbose --tries=1 --spider http://localhost:6333/ || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      description: "Verifies Qdrant HTTP API is responsive"
+
+    verification:
+      command: "curl -sf http://localhost:6333/"
+      expected: '{"title":"qdrant - vector search engine","version":"1.7.4"}'
+
+    yaml_config: |-
+      qdrant:
+        image: qdrant/qdrant:v1.7.4
+        ports:
+          - 6333:6333
+          - 6334:6334
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:6333/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+  redis:
+    image: redis:7.2-alpine
+    purpose: "In-memory cache layer for session storage and rate limiting"
+
+    ports:
+      container: 6379
+      host: 6379
+      note: "Redis protocol on localhost:6379"
+
+    health_check:
+      command: "redis-cli ping"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      description: "Ensures Redis is accepting commands"
+
+    verification:
+      command: "redis-cli -h localhost ping"
+      expected: "PONG"
+
+    yaml_config: |-
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+enabling_services:
+  instructions: |-
+    1. Open .github/workflows/copilot-setup-steps.yml
+    2. Locate commented 'services:' section (approximately lines 44-85)
+    3. Uncomment the entire section:
+
+       services:
+         postgres:
+           image: postgres:16-alpine
+           ports:
+             - 5432:5432
+           env:
+             POSTGRES_DB: semantic_kernel
+             POSTGRES_USER: user
+             POSTGRES_PASSWORD: password
+           options: >-
+             --health-cmd pg_isready
+             --health-interval 10s
+             --health-timeout 5s
+             --health-retries 5
+
+         qdrant:
+           image: qdrant/qdrant:v1.7.4
+           ports:
+             - 6333:6333
+             - 6334:6334
+           options: >-
+             --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:6333/ || exit 1"
+             --health-interval 10s
+             --health-timeout 5s
+             --health-retries 5
+
+         redis:
+           image: redis:7.2-alpine
+           ports:
+             - 6379:6379
+           options: >-
+             --health-cmd "redis-cli ping"
+             --health-interval 10s
+             --health-timeout 5s
+             --health-retries 5
+
+    4. Commit and push changes
+    5. All three services will start on next workflow run
+
+  partial_enablement: |-
+    To enable only specific services (e.g., PostgreSQL only):
+    1. Uncomment the 'services:' key
+    2. Uncomment only the desired service block(s)
+    3. Leave other services commented out
+
+    Example (PostgreSQL only):
+    services:
+      postgres:
+        image: postgres:16-alpine
+        # ... full config
+      # qdrant: (leave commented)
+      # redis: (leave commented)
+
+verification_after_enabling:
+  service_health_checks:
+    postgres:
+      command: "PGPASSWORD=password psql -h localhost -U user -c 'SELECT version();'"
+      success_indicator: "PostgreSQL 16"
+
+    qdrant:
+      command: "curl -sf http://localhost:6333/"
+      success_indicator: '{"title":"qdrant - vector search engine"'
+
+    redis:
+      command: "redis-cli -h localhost ping"
+      success_indicator: "PONG"
+
+  combined_health_check: |-
+    # Run all health checks in one step
+    - name: Verify service containers
+      run: |
+        echo "Checking PostgreSQL..."
+        PGPASSWORD=password psql -h localhost -U user -c 'SELECT version();'
+
+        echo "Checking Qdrant..."
+        curl -sf http://localhost:6333/
+
+        echo "Checking Redis..."
+        redis-cli -h localhost ping
+
+limitations:
+  conditional_services:
+    issue: "GitHub Actions 'services:' does not support 'if' conditions"
+    impact: "Cannot enable services based on workflow inputs or file changes"
+    workaround: "Manually edit workflow YAML and commit changes"
+
+  all_or_nothing:
+    issue: "All defined services start together"
+    impact: "Cannot selectively run PostgreSQL without Redis"
+    workaround: "Comment out unwanted services in YAML"
+
+  resource_consumption:
+    issue: "Each service consumes runner memory and CPU"
+    impact: "May slow down workflow, especially on ubuntu-latest (2-core)"
+    solution: "Use ubuntu-4-core or self-hosted-gpu runner when services enabled"
+
+  gpu_acceleration:
+    note: "GPU-accelerated services (engine, embeddings) require self-hosted runner"
+    self_hosted_runner:
+      label: "self-hosted-gpu"
+      token_required: false
+      already_configured: true
+      cuda: "13.0"
+      gpu: "RTX 3050 6GB"
+    environment_config: ".config/environment.yml"
+
+use_cases:
+  integration_testing:
+    description: "Test backend API with real PostgreSQL database"
+    required_services: ["postgres"]
+
+  semantic_search_testing:
+    description: "Test vector embeddings and similarity search"
+    required_services: ["qdrant"]
+
+  full_stack_testing:
+    description: "End-to-end tests with database, cache, and vectors"
+    required_services: ["postgres", "redis", "qdrant"]
+
+  cache_testing:
+    description: "Test Redis caching layer and session management"
+    required_services: ["redis"]
+
+related_documentation:
+  - ".config/copilot/workflows/copilot-agent-setup.yml: Core dependency installation"
+  - ".github/workflows/copilot-setup-steps.yml: Actual workflow file"
+  - ".config/services.yml: Service configuration reference"
+  - ".config/infrastructure.yml: Infrastructure specifications"
+  - ".config/environment.yml: CUDA, GPU, Python environment variables"

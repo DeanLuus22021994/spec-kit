@@ -1,0 +1,249 @@
+# Copilot Agent Environment Setup
+# GitHub Copilot Coding Agent dependency installation and caching strategy
+
+metadata: &metadata
+  version: "1.0.0"
+  category: workflow
+  keywords: [copilot, agent, setup, dependencies, caching, dotnet, python, nodejs]
+
+<<: *metadata
+
+copilot_agent_setup:
+  description: "GitHub Copilot Coding Agent environment setup workflow"
+  file: ".github/workflows/copilot-setup-steps.yml"
+
+  purpose:
+    - "Configure ephemeral development environment for Copilot Coding Agent"
+    - "Pre-install all dependencies (.NET 10, Python 3.14, Node.js 20)"
+    - "Expose .config/ directory for semantic kernel configuration"
+    - "Enable caching for faster subsequent runs"
+
+  workflow_triggers:
+    - "workflow_dispatch: Manual trigger for testing"
+    - "push: On changes to workflow file or dependency manifests"
+    - "pull_request: On PR changes to workflow configuration"
+
+  runner_configuration:
+    default: "ubuntu-latest"
+    recommended: "ubuntu-4-core (faster builds, ~1min vs ~3min)"
+    self_hosted_gpu:
+      label: "self-hosted-gpu"
+      description: "Pre-configured self-hosted runner with NVIDIA GPU"
+      features:
+        - "CUDA 13.0 Toolkit pre-installed"
+        - "PyTorch 2.9.1+cu130 available"
+        - "RTX 3050 GPU (6GB, compute capability 8.6)"
+        - "No token required (already registered)"
+      usage: "runs-on: self-hosted-gpu"
+    permissions: "contents: read (minimal for security)"
+
+dependency_installation:
+  dotnet:
+    version:
+      description: ".NET SDK version"
+      type: string
+      default: "10.0.x"
+      source: global.json
+    auto_provisioning:
+      config_file: ".config/dotnet-dependencies.yml"
+      package_groups:
+        - semantic_kernel: "Microsoft.SemanticKernel, Connectors.OpenAI, Connectors.Postgres, Planners.Handlebars"
+        - aspnet_core: "Authentication.JwtBearer, Swashbuckle.AspNetCore"
+        - entity_framework: "EntityFrameworkCore, Npgsql, Pgvector"
+        - caching: "StackExchangeRedis, StackExchange.Redis"
+        - validation: "FluentValidation, MediatR, AutoMapper"
+        - testing: "xUnit, Moq, FluentAssertions"
+      gpu_services:
+        - engine
+        - embeddings
+    steps:
+      - name: "Setup .NET SDK"
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: "Restore .NET tools"
+        run: dotnet tool restore
+        shell: pwsh
+      - name: "Cache NuGet packages"
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', '**/*.csproj') }}
+      - name: "Restore solution dependencies"
+        run: dotnet restore
+        shell: pwsh
+      - name: "Verify .NET packages"
+        run: dotnet list package --include-transitive | Select-String -Pattern "SemanticKernel|EntityFramework"
+        shell: pwsh
+
+  python:
+    version:
+      description: "Python version"
+      type: string
+      default: "3.14"
+      source: tools/requirements.txt
+    auto_provisioning:
+      config_file: ".config/python-dependencies.yml"
+      requirements_file: "tools/requirements.txt"
+      package_groups:
+        - core: "pyyaml, jsonschema, click"
+        - testing: "pytest, pytest-cov"
+        - code_quality: "black, ruff, mypy, types-jsonschema, pylint, isort"
+        - utilities: "rich, tabulate, jinja2, watchdog"
+        - documentation: "mkdocs, mkdocs-material"
+        - gpu_acceleration: "torch, torchvision, torchaudio (CUDA 13.0)"
+    steps:
+      - name: "Setup Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: tools/requirements.txt
+      - name: "Install Python packages"
+        run: pip install -r tools/requirements.txt
+        shell: pwsh
+      - name: "Verify Python packages"
+        run: python -c "import yaml, jsonschema, click, pytest, black, ruff, mypy, rich; print('Core packages verified')"
+        shell: pwsh
+
+  nodejs:
+    version:
+      description: "Node.js version"
+      type: string
+      default: "20"
+    cache_paths:
+      - src/frontend/package-lock.json
+      - tests/package-lock.json
+    steps:
+      - name: "Setup Node.js"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            src/frontend/package-lock.json
+            tests/package-lock.json
+      - name: "Install frontend dependencies"
+        run: npm ci
+        shell: pwsh
+        working-directory: src/frontend
+      - name: "Install test dependencies"
+        run: npm ci
+        shell: pwsh
+        working-directory: tests
+      - name: "Install Playwright browsers"
+        run: npx playwright install chromium
+        shell: pwsh
+        working-directory: tests
+
+caching_strategy:
+  nuget:
+    path: "~/.nuget/packages"
+    key: "runner.os-nuget-hashFiles(global.json, **/*.csproj)"
+    restore_keys: "runner.os-nuget-"
+    estimated_size: "~500MB"
+    savings: "~2-3 minutes per run"
+
+  pip:
+    enabled: true
+    dependency_path: "tools/requirements.txt"
+    managed_by: "actions/setup-python@v5"
+    estimated_size: "~100MB"
+    savings: "~30-60 seconds per run"
+
+  npm:
+    enabled: true
+    dependency_paths:
+      - "src/frontend/package-lock.json"
+      - "tests/package-lock.json"
+    managed_by: "actions/setup-node@v4"
+    estimated_size: "~200MB"
+    savings: "~1-2 minutes per run"
+
+  snapshot_feature:
+    availability: "Only available on ubuntu-4-core or larger runners"
+    benefit: "Sub-30s setup on subsequent runs (vs ~1-3min full setup)"
+    note: "GitHub Actions Snapshot feature caches entire environment"
+
+config_directory_access:
+  path: ".config/"
+  availability: "Automatically available via checkout action"
+  key_files:
+    - ".config/semantic-kernel.yml"
+    - ".config/services.yml"
+    - ".config/infrastructure.yml"
+    - ".config/copilot/index.yml"
+  usage: "Agent can read configuration for context-aware code generation"
+
+verification_steps:
+  config_structure:
+    - "List .config/ directory contents"
+    - "List .config/copilot/ context files"
+    - "List service configuration YAML files"
+
+  environment_summary:
+    - "Display .NET SDK version"
+    - "Display Python version"
+    - "Display Node.js and npm versions"
+    - "List installed .NET tools"
+    - "List key Python packages (PyYAML, pylint, black, etc.)"
+
+  example_commands: |-
+    # Verify .NET installation
+    dotnet --version
+    dotnet tool list
+
+    # Verify Python installation
+    python --version
+    pip list | grep -E "PyYAML|pylint|black"
+
+    # Verify Node.js installation
+    node --version
+    npm --version
+    npx playwright --version
+
+usage_examples:
+  manual_trigger: |-
+    # Trigger workflow manually
+    gh workflow run copilot-setup-steps.yml
+
+  test_locally: |-
+    # Simulate agent environment locally
+    docker run -it --rm \
+      -v $(pwd):/workspace \
+      -w /workspace \
+      ubuntu:latest \
+      bash -c "
+        apt-get update && apt-get install -y curl wget
+        # Install .NET, Python, Node.js
+        # Run steps from workflow
+      "
+
+limitations:
+  gpu_support:
+    github_hosted: "No NVIDIA GPU on GitHub-hosted runners"
+    solution: "Use self-hosted runner with label 'self-hosted-gpu'"
+    self_hosted_runner:
+      already_configured: true
+      token_required: false
+      gpu: "RTX 3050 6GB"
+      cuda: "13.0"
+      pytorch: "2.9.1+cu130"
+      compute_capability: "8.6"
+    environment_config: ".config/environment.yml"
+
+  service_containers:
+    note: "For service container configuration, see copilot-service-containers.yml"
+    reason: "Services are optional and managed separately from core setup"
+
+related_documentation:
+  - ".config/copilot/workflows/copilot-service-containers.yml: Optional service containers"
+  - ".github/copilot-instructions.md: Copilot workspace configuration"
+  - ".config/copilot/index.yml: Semantic search index"
+  - ".config/environment.yml: CUDA, GPU, Python environment variables"
+  - ".config/python-dependencies.yml: Python package auto-provisioning configuration"
+  - "global.json: .NET SDK version specification"
+  - "tools/requirements.txt: Python dependencies"
+  - "pyproject.toml: Python tool configurations"
+  - "src/frontend/package.json: Frontend dependencies"
+  - "tests/package.json: Test dependencies"

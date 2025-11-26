@@ -1,0 +1,526 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Service Configuration
+
+metadata: &metadata
+  name: "services-config"
+  description: "Service Configuration"
+  version: "1.3.0"
+  category: config
+  keywords:
+    [
+      services,
+      resources,
+      docker,
+      ports,
+      configuration,
+      microservices,
+      deployment,
+      gpu,
+      cuda,
+      registry,
+      buildkit,
+    ]
+  updated: "2025-11-25"
+
+<<: *metadata
+
+# =============================================================================
+# Host Environment (Verified 2025-11-25)
+# =============================================================================
+host_environment:
+  verified: true
+  verification_date: "2025-11-25"
+
+  system:
+    os: "Windows 11 Home"
+    build: 26200
+    architecture: "x64"
+    total_ram_gb: 16
+
+  # CPU Configuration - 10% safety overhead
+  cpu:
+    total_cores: 16
+    docker_cores: 12 # 75% to Docker
+    host_reserved: 4 # 25% for Windows
+    safety_overhead_percent: 10 # 10% headroom for spikes
+    effective_cores: 10.8 # 12 * 0.90 = 10.8 effective
+    target_utilization_percent: 90
+
+  docker:
+    version: "28.5.2"
+    backend: "WSL2"
+    kernel: "6.6.87.2-microsoft-standard-WSL2"
+    storage_driver: "overlayfs"
+    # Memory available to Docker (after .wslconfig optimization)
+    memory_gb: 10 # Was 7.6GB before .wslconfig
+    cpus: 12 # 12 of 16 allocated to WSL2
+
+  wsl2:
+    distribution: "docker-desktop"
+    version: 2
+    wslconfig_path: "$env:USERPROFILE\\.wslconfig"
+    settings:
+      memory: "10GB"
+      processors: 12
+      swap: "4GB"
+      autoMemoryReclaim: "gradual"
+
+  # Storage - 200GB NVMe SSD provisioning
+  storage:
+    primary_drive: "C:"
+    type: "NVMe SSD"
+    total_gb: 930
+    free_gb: 666
+    # Docker provisioning
+    docker_provisioned_gb: 200 # Total allocated for Docker
+    docker_root: "/var/lib/docker"
+    docker_usage_gb: 55 # Current: images + volumes + cache
+    # Provisioning breakdown
+    provisioning:
+      images_gb: 60 # Container images
+      volumes_gb: 80 # Named volumes
+      buildkit_cache_gb: 30 # BuildKit cache
+      overlay_gb: 20 # Container filesystem
+      buffer_gb: 10 # Safety buffer
+
+# =============================================================================
+# Real-Time Optimization Toggles
+# =============================================================================
+optimization_toggles:
+  # These can be changed at runtime via environment variables
+  gpu:
+    enabled: true
+    env_var: "GPU_ENABLED"
+    hot_reload: true
+
+  mixed_precision:
+    enabled: true
+    env_var: "CUDA_MIXED_PRECISION"
+    hot_reload: true
+
+  flash_attention:
+    enabled: true
+    env_var: "ENABLE_FLASH_ATTENTION"
+    hot_reload: true
+
+  tf32:
+    enabled: true
+    env_var: "CUDA_TF32_ENABLED"
+    hot_reload: true
+
+  dynamic_batching:
+    enabled: true
+    env_var: "ENABLE_DYNAMIC_BATCHING"
+    hot_reload: true
+
+  aggressive_gc:
+    enabled: true
+    env_var: "CUDA_AGGRESSIVE_GC"
+    hot_reload: true
+
+# =============================================================================
+# Local Registry Configuration
+# =============================================================================
+registry:
+  enabled: true
+  url: "localhost:5000"
+  namespace: "semantic-kernel"
+
+  # Image naming convention
+  images:
+    frontend: "localhost:5000/semantic-kernel/frontend"
+    backend: "localhost:5000/semantic-kernel/backend"
+    engine: "localhost:5000/semantic-kernel/engine"
+    business: "localhost:5000/semantic-kernel/business"
+    gateway: "localhost:5000/semantic-kernel/gateway"
+    embeddings: "localhost:5000/semantic-kernel/embeddings"
+    vector: "localhost:5000/semantic-kernel/vector"
+    database: "localhost:5000/semantic-kernel/database"
+
+  # BuildKit cache configuration
+  buildkit:
+    enabled: true
+    cache_from: "type=registry,ref=localhost:5000/semantic-kernel/cache"
+    cache_to: "type=registry,ref=localhost:5000/semantic-kernel/cache,mode=max"
+
+  # Garbage collection
+  gc:
+    enabled: true
+    schedule: "0 3 * * *" # Daily at 3 AM
+    keep_last_tags: 5
+    keep_younger_than_days: 7
+
+# =============================================================================
+# GPU Configuration
+# =============================================================================
+# Target: 80% utilization, 5% safety overhead = 75% effective
+gpu:
+  enabled: true
+  device: "nvidia"
+  cuda_version: "13.0"
+  compute_capability: "8.6" # RTX 3050
+  memory_total: "6G"
+  visible_devices: "0"
+
+  # Utilization targets
+  utilization:
+    target_percent: 80
+    safety_overhead_percent: 5
+    effective_percent: 75
+    effective_mb: 4608 # 75% of 6144 MB
+
+  # VRAM partitioning (see .config/gpu-resources.yml for details)
+  vram_allocation:
+    embeddings: "2458M" # 40% fraction, 53% of effective
+    engine: "1382M" # 22.5% fraction, 30% of effective
+    vector: "768M" # 12.5% fraction, 17% of effective
+    system_reserved: "1536M" # 25% reserved (system + safety)
+
+# =============================================================================
+# Service Tiers
+# =============================================================================
+service_tiers:
+  # Tier 1: Critical - Always running, minimal resources
+  critical:
+    services: [database, redis, nginx]
+    restart_policy: "always"
+    priority: 1
+
+  # Tier 2: Core - Main application services
+  core:
+    services: [backend, gateway, frontend]
+    restart_policy: "unless-stopped"
+    priority: 2
+    depends_on: ["critical"]
+
+  # Tier 3: AI - GPU-accelerated services
+  ai:
+    services: [embeddings, engine, vector]
+    restart_policy: "unless-stopped"
+    priority: 3
+    depends_on: ["critical"]
+    gpu_required: true
+
+  # Tier 4: Development - Optional services
+  development:
+    services: [devsite, redisinsight, tools, runner, registry, registry-ui]
+    restart_policy: "unless-stopped"
+    priority: 4
+    optional: true
+
+# =============================================================================
+# Resource Templates
+# =============================================================================
+# Optimized for: High speed, low total RAM usage
+# CPU: 10% safety overhead (90% effective utilization)
+# RAM: Aggressive limits to maximize available memory
+resources:
+  # Minimal footprint services
+  tiny:
+    cpus: 0.25
+    memory: 64M
+    memory_reservation: 32M
+    gpu: false
+    description: "Minimal footprint for lightweight services"
+
+  small:
+    cpus: 0.25
+    memory: 128M
+    memory_reservation: 64M
+    gpu: false
+    description: "Small services (nginx, static content)"
+
+  medium: &resources_medium
+    cpus: 0.5
+    memory: 256M
+    memory_reservation: 128M
+    gpu: false
+    description: "Medium services (gateway, business logic)"
+
+  large: &resources_large
+    cpus: 1.0
+    memory: 512M
+    memory_reservation: 256M
+    gpu: false
+    description: "Large services (database, backend)"
+
+  xlarge: &resources_xlarge
+    cpus: 2.0
+    memory: 1G
+    memory_reservation: 512M
+    gpu: false
+    description: "Extra large for heavy workloads"
+
+  # GPU-enabled templates (high speed, controlled RAM)
+  gpu_small: &resources_gpu_small
+    cpus: 1.0
+    memory: 768M # Reduced from 1G
+    memory_reservation: 512M
+    gpu: true
+    gpu_memory: "768M"
+    gpu_fraction: 0.125
+    description: "Small GPU service (vector search)"
+
+  gpu_medium: &resources_gpu_medium
+    cpus: 1.5 # Reduced from 2.0 (10% overhead)
+    memory: 1G # Controlled RAM
+    memory_reservation: 768M
+    gpu: true
+    gpu_memory: "1382M"
+    gpu_fraction: 0.225
+    description: "Medium GPU service (inference)"
+
+  gpu_large: &resources_gpu_large
+    cpus: 1.8 # 2.0 - 10% = 1.8
+    memory: 1536M # Reduced from 2G
+    memory_reservation: 1G
+    gpu: true
+    gpu_memory: "2458M"
+    gpu_fraction: 0.40
+    description: "Large GPU service (embeddings)"
+
+# =============================================================================
+# Service Template
+# =============================================================================
+service_template: &service_template
+  enabled: true
+  resources: null
+  tier: null
+  registry_image: null
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  # Registry Services (Tier 4)
+  registry:
+    <<: *service_template
+    port: 5000
+    tier: development
+    resources:
+      cpus: 0.5
+      memory: 256M
+    registry_image: null # Uses base registry:2 image
+
+  registry-ui:
+    <<: *service_template
+    port: 5080
+    tier: development
+    resources:
+      cpus: 0.25
+      memory: 128M
+
+  # Core Services
+  frontend:
+    <<: *service_template
+    port: 3000
+    tier: core
+    resources: *resources_medium
+    registry_image: "localhost:5000/semantic-kernel/frontend"
+
+  backend:
+    <<: *service_template
+    port: 5000
+    tier: core
+    resources: *resources_large
+    registry_image: "localhost:5000/semantic-kernel/backend"
+
+  engine:
+    <<: *service_template
+    port: 5001
+    tier: ai
+    resources: *resources_gpu_medium
+    gpu_enabled: true
+    cuda_visible_devices: "0"
+    registry_image: "localhost:5000/semantic-kernel/engine"
+    environment:
+      - "CUDA_MEMORY_FRACTION=0.225"
+      - "PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:256,expandable_segments:True"
+
+  business:
+    <<: *service_template
+    port: 5002
+    tier: core
+    resources: *resources_large
+    registry_image: "localhost:5000/semantic-kernel/business"
+
+  gateway:
+    <<: *service_template
+    port: 8080
+    tier: core
+    resources: *resources_medium
+    registry_image: "localhost:5000/semantic-kernel/gateway"
+
+  # Critical Services
+  database:
+    <<: *service_template
+    port: 5432
+    tier: critical
+    resources: *resources_large
+    registry_image: "localhost:5000/semantic-kernel/database"
+
+  vector:
+    <<: *service_template
+    port: 6333
+    tier: ai
+    resources: *resources_gpu_small
+    gpu_enabled: true
+    cuda_visible_devices: "0"
+    registry_image: "localhost:5000/semantic-kernel/vector"
+    environment:
+      - "CUDA_MEMORY_FRACTION=0.125"
+
+  embeddings:
+    <<: *service_template
+    port: 8001
+    tier: ai
+    resources: *resources_gpu_large
+    gpu_enabled: true
+    cuda_visible_devices: "0"
+    registry_image: "localhost:5000/semantic-kernel/embeddings"
+    environment:
+      - "CUDA_MEMORY_FRACTION=0.40"
+      - "PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512,expandable_segments:True"
+
+  nginx:
+    <<: *service_template
+    port: 80
+    tier: critical
+    resources:
+      cpus: 0.25
+      memory: 128M
+
+  devsite:
+    <<: *service_template
+    port: 8000
+    tier: development
+    resources:
+      cpus: 0.25
+      memory: 128M
+
+  runner:
+    <<: *service_template
+    tier: development
+    resources: *resources_xlarge
+
+  redis:
+    <<: *service_template
+    port: 6379
+    tier: critical
+    resources:
+      cpus: 0.5
+      memory: 256M
+
+  redisinsight:
+    <<: *service_template
+    port: 5540
+    tier: development
+    resources:
+      cpus: 0.25
+      memory: 256M
+
+# =============================================================================
+# BuildKit Configuration
+# =============================================================================
+buildkit:
+  enabled: true
+
+  # Builder instance
+  builder:
+    name: "semantic-kernel-builder"
+    driver: "docker-container"
+
+  # Cache configuration
+  cache:
+    type: "registry"
+    registry: "localhost:5000/semantic-kernel/cache"
+    mode: "max" # max | min
+
+  # Build arguments
+  build_args:
+    BUILDKIT_INLINE_CACHE: "1"
+
+  # Parallel builds
+  parallelism:
+    max_parallelism: 4
+
+  # Garbage collection
+  gc:
+    enabled: true
+    keep_storage: "10GB"
+    keep_duration: "168h" # 7 days
+
+# =============================================================================
+# Startup Profiles
+# =============================================================================
+profiles:
+  # Minimal - Only critical services
+  minimal:
+    services: [database, redis, nginx]
+    description: "Critical services only"
+
+  # Core - Critical + Core application
+  core:
+    services: [database, redis, nginx, backend, gateway, frontend]
+    description: "Core application stack"
+
+  # AI - Core + AI services
+  ai:
+    services:
+      [
+        database,
+        redis,
+        nginx,
+        backend,
+        gateway,
+        frontend,
+        embeddings,
+        engine,
+        vector,
+      ]
+    description: "Full AI-enabled stack"
+    gpu_required: true
+
+  # Full - All services
+  full:
+    services:
+      [
+        database,
+        redis,
+        nginx,
+        backend,
+        gateway,
+        frontend,
+        embeddings,
+        engine,
+        vector,
+        devsite,
+        redisinsight,
+        tools,
+        registry,
+        registry-ui,
+      ]
+    description: "Complete development stack"
+    gpu_required: true
+
+  # Development - Registry + Dev tools
+  development:
+    services: [database, redis, registry, registry-ui, devsite, tools]
+    description: "Development and build environment"
+
+cross_references:
+  - ".config/gpu-resources.yml: GPU resource partitioning and VRAM allocation"
+  - ".config/optimization-toggles.yml: Real-time optimization controls"
+  - ".config/copilot/references/services.yml: Service architecture documentation"
+  - ".config/copilot/references/technology-stack.yml: Technology stack details"
+  - "docker-compose.yml: Docker Compose service definitions"
+  - ".config/infrastructure.yml: Infrastructure configuration"
+
+related_documentation:
+  - ".config/gpu-resources.yml"
+  - ".config/optimization-toggles.yml"
+  - ".config/copilot/references/services.yml"
+  - ".config/copilot/references/technology-stack.yml"
+  - "docker-compose.yml"
+  - ".config/infrastructure.yml"
+  - ".config/copilot/yaml-best-practices.yml"

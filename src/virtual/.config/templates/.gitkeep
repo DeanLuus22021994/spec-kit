@@ -1,0 +1,19 @@
+# Templates Directory
+# Configuration templates for generating environment-specific files
+#
+# Available Templates:
+# - environment.template.env: Environment variable template (from optimization-toggles.yml)
+# - settings.template.yml: Local settings override template
+#
+# Usage:
+# 1. Copy a template to the appropriate directory (e.g., ../settings/)
+# 2. Rename and modify as needed
+# 3. Ensure generated files are gitignored
+#
+# Template Variables:
+# - ${CUDA_VERSION}: CUDA toolkit version (default: 13.0)
+# - ${PYTORCH_VERSION}: PyTorch version (default: 2.9.1+cu130)
+# - ${COMPUTE_CAPABILITY}: GPU compute capability (default: 8.6)
+# - ${GPU_MEMORY}: GPU memory limit (default: 6G)
+# - ${GPU_DEVICE}: CUDA device ID (default: 0)
+

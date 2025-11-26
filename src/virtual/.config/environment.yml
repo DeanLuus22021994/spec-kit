@@ -1,0 +1,352 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Environment Variables Configuration
+# Centralized environment variable definitions for development and deployment
+# Category: config | Version: 1.0.0 | Updated: 2025-11-25
+
+metadata: &metadata
+  name: environment-variables
+  description: Centralized environment variable configuration
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: config
+  keywords: [environment, variables, config, settings, docker, gpu, cuda]
+
+<<: *metadata
+
+# =============================================================================
+# CUDA / GPU Configuration
+# =============================================================================
+cuda:
+  description: "NVIDIA CUDA toolkit and GPU optimization settings"
+  variables:
+    CUDA_VISIBLE_DEVICES:
+      value: "0"
+      description: "GPU device index to use"
+      required: false
+    CUDA_DEVICE_ORDER:
+      value: "PCI_BUS_ID"
+      description: "Order GPUs by PCI bus ID for consistent numbering"
+      required: false
+    TORCH_CUDA_ARCH_LIST:
+      value: "8.6"
+      description: "CUDA compute capability (8.6 for RTX 3050)"
+      required: false
+    CUDA_LAUNCH_BLOCKING:
+      value: "0"
+      description: "Set to 1 for synchronous CUDA calls (debugging)"
+      required: false
+    PYTORCH_CUDA_ALLOC_CONF:
+      value: "expandable_segments:True"
+      description: "PyTorch memory allocator configuration"
+      required: false
+    CUDA_PATH:
+      value: "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v13.0"
+      description: "CUDA toolkit installation path"
+      required: true
+      platform: windows
+
+# =============================================================================
+# Python Configuration
+# =============================================================================
+python:
+  description: "Python runtime and package settings"
+  variables:
+    PYTHONUNBUFFERED:
+      value: "1"
+      description: "Disable Python output buffering"
+      required: true
+    PYTHONDONTWRITEBYTECODE:
+      value: "1"
+      description: "Prevent Python from writing .pyc files"
+      required: false
+    PYTHONPATH:
+      value: "${WORKSPACE_ROOT}/tools:${WORKSPACE_ROOT}/semantic"
+      description: "Additional Python module search paths"
+      required: false
+    PIP_NO_CACHE_DIR:
+      value: "1"
+      description: "Disable pip cache (for Docker builds)"
+      required: false
+      context: docker
+    PIP_DISABLE_PIP_VERSION_CHECK:
+      value: "1"
+      description: "Disable pip version check warnings"
+      required: false
+
+# =============================================================================
+# .NET Configuration
+# =============================================================================
+dotnet:
+  description: ".NET runtime and SDK settings"
+  variables:
+    DOTNET_CLI_TELEMETRY_OPTOUT:
+      value: "1"
+      description: "Opt out of .NET CLI telemetry"
+      required: false
+    DOTNET_NOLOGO:
+      value: "1"
+      description: "Suppress .NET welcome message"
+      required: false
+    DOTNET_ENVIRONMENT:
+      value: "Development"
+      description: "ASP.NET Core environment"
+      required: true
+      values: ["Development", "Staging", "Production"]
+    ASPNETCORE_ENVIRONMENT:
+      value: "Development"
+      description: "ASP.NET Core hosting environment"
+      required: true
+      values: ["Development", "Staging", "Production"]
+    ASPNETCORE_URLS:
+      value: "http://+:5000"
+      description: "ASP.NET Core listening URLs"
+      required: false
+    DOTNET_RUNNING_IN_CONTAINER:
+      value: "true"
+      description: "Indicates running in Docker container"
+      required: false
+      context: docker
+
+# =============================================================================
+# Node.js Configuration
+# =============================================================================
+nodejs:
+  description: "Node.js runtime settings"
+  variables:
+    NODE_ENV:
+      value: "development"
+      description: "Node.js environment"
+      required: true
+      values: ["development", "test", "production"]
+    NODE_OPTIONS:
+      value: "--max-old-space-size=4096"
+      description: "Node.js runtime options"
+      required: false
+    NPM_CONFIG_LOGLEVEL:
+      value: "warn"
+      description: "npm logging verbosity"
+      required: false
+      values: ["silent", "error", "warn", "info", "verbose"]
+
+# =============================================================================
+# Database Configuration
+# =============================================================================
+database:
+  description: "PostgreSQL and database connection settings"
+  variables:
+    POSTGRES_HOST:
+      value: "localhost"
+      description: "PostgreSQL server hostname"
+      required: true
+    POSTGRES_PORT:
+      value: "5432"
+      description: "PostgreSQL server port"
+      required: true
+    POSTGRES_DB:
+      value: "semantic_kernel_db"
+      description: "PostgreSQL database name"
+      required: true
+    POSTGRES_USER:
+      value: "postgres"
+      description: "PostgreSQL username"
+      required: true
+      sensitive: true
+    POSTGRES_PASSWORD:
+      value: ""
+      description: "PostgreSQL password"
+      required: true
+      sensitive: true
+    DATABASE_URL:
+      value: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+      description: "Full database connection string"
+      required: true
+      sensitive: true
+    PGVECTOR_DIMENSIONS:
+      value: "1536"
+      description: "Vector embedding dimensions for pgvector"
+      required: false
+
+# =============================================================================
+# Redis Configuration
+# =============================================================================
+redis:
+  description: "Redis cache and session settings"
+  variables:
+    REDIS_HOST:
+      value: "localhost"
+      description: "Redis server hostname"
+      required: true
+    REDIS_PORT:
+      value: "6379"
+      description: "Redis server port"
+      required: true
+    REDIS_PASSWORD:
+      value: ""
+      description: "Redis password"
+      required: false
+      sensitive: true
+    REDIS_CONNECTION_STRING:
+      value: "${REDIS_HOST}:${REDIS_PORT}"
+      description: "Redis connection string"
+      required: true
+
+# =============================================================================
+# Semantic Kernel / AI Configuration
+# =============================================================================
+semantic_kernel:
+  description: "Semantic Kernel and AI model settings"
+  variables:
+    OPENAI_API_KEY:
+      value: ""
+      description: "OpenAI API key"
+      required: true
+      sensitive: true
+    AZURE_OPENAI_ENDPOINT:
+      value: ""
+      description: "Azure OpenAI service endpoint"
+      required: false
+      sensitive: true
+    AZURE_OPENAI_API_KEY:
+      value: ""
+      description: "Azure OpenAI API key"
+      required: false
+      sensitive: true
+    AZURE_OPENAI_DEPLOYMENT_NAME:
+      value: ""
+      description: "Azure OpenAI deployment name"
+      required: false
+    EMBEDDING_MODEL:
+      value: "text-embedding-3-small"
+      description: "Default embedding model"
+      required: false
+    COMPLETION_MODEL:
+      value: "gpt-4o"
+      description: "Default completion model"
+      required: false
+    CHAT_MODEL:
+      value: "gpt-4o"
+      description: "Default chat model"
+      required: false
+
+# =============================================================================
+# Docker Configuration
+# =============================================================================
+docker:
+  description: "Docker and container runtime settings"
+  variables:
+    COMPOSE_PROJECT_NAME:
+      value: "semantic-kernel-app"
+      description: "Docker Compose project name"
+      required: false
+    COMPOSE_FILE:
+      value: "docker-compose.yml"
+      description: "Docker Compose file path"
+      required: false
+    DOCKER_BUILDKIT:
+      value: "1"
+      description: "Enable Docker BuildKit"
+      required: false
+    BUILDKIT_PROGRESS:
+      value: "plain"
+      description: "BuildKit progress output format"
+      required: false
+      values: ["auto", "plain", "tty"]
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+logging:
+  description: "Application logging settings"
+  variables:
+    LOG_LEVEL:
+      value: "Information"
+      description: "Default log level"
+      required: false
+      values: ["Trace", "Debug", "Information", "Warning", "Error", "Critical"]
+    SERILOG_MINIMUM_LEVEL:
+      value: "Information"
+      description: "Serilog minimum log level"
+      required: false
+    LOGGING_CONSOLE_ENABLED:
+      value: "true"
+      description: "Enable console logging"
+      required: false
+    LOGGING_FILE_ENABLED:
+      value: "false"
+      description: "Enable file logging"
+      required: false
+
+# =============================================================================
+# CI/CD Configuration
+# =============================================================================
+ci_cd:
+  description: "Continuous integration and deployment settings"
+  variables:
+    CI:
+      value: "true"
+      description: "Indicates CI environment"
+      required: false
+      context: ci
+    GITHUB_TOKEN:
+      value: ""
+      description: "GitHub authentication token"
+      required: false
+      sensitive: true
+      context: ci
+    GITHUB_ACTIONS:
+      value: "true"
+      description: "Indicates GitHub Actions environment"
+      required: false
+      context: ci
+
+# =============================================================================
+# Development Tools
+# =============================================================================
+development:
+  description: "Development environment settings"
+  variables:
+    EDITOR:
+      value: "code"
+      description: "Default text editor"
+      required: false
+    TERM:
+      value: "xterm-256color"
+      description: "Terminal type"
+      required: false
+    FORCE_COLOR:
+      value: "1"
+      description: "Force colored output"
+      required: false
+    PLAYWRIGHT_BROWSERS_PATH:
+      value: "${WORKSPACE_ROOT}/tests/.playwright"
+      description: "Playwright browser cache location"
+      required: false
+      context: test
+
+# =============================================================================
+# Security Configuration
+# =============================================================================
+security:
+  description: "Security and authentication settings"
+  variables:
+    JWT_SECRET_KEY:
+      value: ""
+      description: "JWT signing secret key"
+      required: true
+      sensitive: true
+    JWT_ISSUER:
+      value: "semantic-kernel-app"
+      description: "JWT token issuer"
+      required: false
+    JWT_AUDIENCE:
+      value: "semantic-kernel-api"
+      description: "JWT token audience"
+      required: false
+    JWT_EXPIRATION_MINUTES:
+      value: "60"
+      description: "JWT token expiration in minutes"
+      required: false
+    CORS_ORIGINS:
+      value: "http://localhost:3000,http://localhost:5000"
+      description: "Allowed CORS origins"
+      required: false

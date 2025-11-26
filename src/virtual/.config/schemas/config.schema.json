@@ -1,0 +1,305 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semantic-kernel-app/.config/schemas/config.schema.json",
+  "title": "Configuration Schema",
+  "description": "Master schema for YAML configuration files",
+  "type": "object",
+  "properties": {
+    "metadata": {
+      "$ref": "definitions/metadata.schema.json"
+    },
+    "version": { "type": "string" },
+    "category": { "type": "string" },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "updated": { "type": "string" },
+    "description": { "type": "string" },
+    "cross_references": { "type": "array", "items": { "type": "string" } },
+    "related_documentation": { "type": "array", "items": { "type": "string" } },
+
+    "test_template": {
+      "type": "object",
+      "properties": {
+        "timeout": { "type": ["integer", "null"] },
+        "requires_services": { "type": "boolean" },
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "docker": {
+      "type": "object",
+      "properties": {
+        "startup_wait": { "type": "integer" },
+        "health_checks": {
+          "type": "object",
+          "properties": {
+            "interval": { "type": "integer" },
+            "timeout": { "type": "integer" },
+            "retries": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "rules": {
+      "$ref": "definitions/rules.schema.json"
+    },
+
+    "build": {
+      "type": "object",
+      "properties": {
+        "solution": { "type": "string" },
+        "configuration": { "type": "string" },
+        "verbosity": { "type": "string" }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "properties": {
+            "timeout": { "type": ["integer", "null"] },
+            "requires_services": { "type": "boolean" },
+            "enabled": { "type": "boolean" },
+            "browsers": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "lint": {
+      "type": "object",
+      "properties": {
+        "continue_on_error": { "type": "boolean" },
+        "python": { "type": "boolean" },
+        "frontend": { "type": "boolean" },
+        "sql": { "type": "boolean" },
+        "shell": { "type": "boolean" }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "properties": {
+        "retention_days": { "type": "integer" },
+        "format": { "type": "string" }
+      }
+    },
+
+    "categories": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "oneOf": [
+            { "$ref": "definitions/toggles.schema.json#/definitions/category" },
+            {
+              "type": "object",
+              "properties": {
+                "description": { "type": "string" },
+                "path": { "type": "string" },
+                "files": { "type": "object" }
+              },
+              "required": ["description", "path", "files"]
+            }
+          ]
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "properties": {
+        "active_profile": { "type": "string" }
+      },
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "oneOf": [
+            { "$ref": "definitions/toggles.schema.json#/definitions/profile" },
+            {
+              "type": "object",
+              "properties": {
+                "services": { "type": "array", "items": { "type": "string" } },
+                "description": { "type": "string" },
+                "gpu_required": { "type": "boolean" }
+              },
+              "required": ["services", "description"]
+            },
+            { "type": "string" }
+          ]
+        }
+      }
+    },
+    "subagent_tasks": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "properties": {
+            "description": { "type": "string" },
+            "parallel_calls": { "type": "array", "items": { "type": "string" } },
+            "context_required": { "type": "boolean" }
+          },
+          "required": ["description", "parallel_calls"]
+        }
+      }
+    },
+    "execution_profiles": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "properties": {
+            "tasks": { "type": "array", "items": { "type": "string" } },
+            "max_parallel": { "type": "integer" },
+            "timeout_seconds": { "type": "integer" }
+          },
+          "required": ["tasks"]
+        }
+      }
+    },
+    "env_template": { "type": "string" },
+    "quick_reference": { "type": "object" },
+
+    "wsl_memory_limit": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "wsl_processor_limit": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "wsl_swap_size": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "localhost_forwarding": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "docker_build_cache_cleanup": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "docker_prune_on_startup": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "registry_enabled": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "buildkit_enabled": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "gpu_enabled": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "mixed_precision": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "flash_attention": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "tf32_enabled": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "memory_pool": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "dynamic_batching": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "async_execution": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "stream_responses": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "connection_pooling": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "aggressive_gc": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "memory_efficient_attention": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "expandable_segments": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "embedding_cache": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "completion_cache": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "memory_cache": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+
+    "gpu": {
+      "description": "GPU Configuration or Report Data",
+      "oneOf": [
+        { "$ref": "definitions/gpu.schema.json#/definitions/gpu_config" },
+        { "$ref": "definitions/gpu.schema.json#/definitions/gpu_report" },
+        { "$ref": "definitions/gpu.schema.json#/definitions/gpu_infrastructure" }
+      ]
+    },
+
+    "service": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "port": { "type": "integer" },
+        "resources": { "$ref": "definitions/resources.schema.json" },
+        "gpu_enabled": { "type": "boolean" }
+      }
+    },
+    "semantic_kernel": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "python_environment": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "agents": { "type": "object" },
+    "soap_services": { "type": "object" },
+    "communication": { "type": "object" },
+    "monitoring": { "type": "object" },
+    "security": { "type": "object" },
+    "usage": { "type": "object" },
+    "context_loading_strategy": { "type": "object" },
+    "optimization_benefits": { "type": "object" },
+    "migration_notes": { "type": "object" },
+    "naming_conventions": { "type": "object" },
+    "overview": { "type": "string" },
+    "standard_templates": { "type": "object" },
+    "resource_templates": { "type": "object" },
+    "configuration_templates": { "type": "object" },
+    "file_organization": { "type": "object" },
+    "architecture": { "type": "object" },
+    "admin_portal": { "type": "object" },
+    "backend_dashboard": { "type": "object" },
+    "business_orchestration": { "type": "object" },
+    "frontend_client": { "type": "object" },
+    "integration": { "type": "object" },
+    "deployment": { "type": "object" },
+    "investor_demo": { "type": "object" },
+    "cli": { "type": "object" },
+    "commands": { "type": "object" },
+    "api": { "type": "object" },
+    "auth": { "type": "object" },
+    "logging": { "type": "object" },
+    "output": { "type": "object" },
+    "database": { "type": "object" },
+    "vector_db": { "type": "object" },
+    "openai": { "type": "object" },
+    "self_hosted_runner": { "type": "object" },
+    "cache": { "type": "object" },
+    "features": { "type": "object" },
+    "runtime": { "type": "object" },
+    "auto_provisioning": { "type": "object" },
+    "sdk_tools": { "type": "object" },
+    "packages": { "type": "object" },
+    "service_architecture": { "type": "object" },
+    "ci_cd_integration": { "type": "object" },
+    "troubleshooting": { "type": "object" },
+    "cuda": { "type": "object" },
+    "python": { "type": "object" },
+    "dotnet": { "type": "object" },
+    "nodejs": { "type": "object" },
+    "redis": { "type": "object" },
+    "ci_cd": { "type": "object" },
+    "development": { "type": "object" },
+    "host_gpu": { "type": "object" },
+    "toggles": { "type": "object" },
+    "vram_partitioning": { "type": "object" },
+    "scheduling": { "type": "object" },
+    "memory_management": { "type": "object" },
+    "docker_config": { "type": "object" },
+    "host_hardware": { "type": "object" },
+    "docker_gpu": { "type": "object" },
+    "network": { "type": "object" },
+    "wsl2": { "type": "object" },
+    "host": { "type": "object" },
+    "performance": { "type": "object" },
+    "memory": { "type": "object" },
+    "caching": { "type": "object" },
+    "services": { "type": "object" },
+    "internal": { "type": "object" },
+    "dev_tools": { "type": "object" },
+    "admin": { "type": "object" },
+    "ranges": { "type": "object" },
+    "external": { "type": "object" },
+    "usage_notes": { "type": "string" },
+    "installation": { "type": "object" },
+    "import_patterns": { "type": "object" },
+    "local_services": { "type": "object" },
+    "filters": { "type": "object" },
+    "host_environment": { "type": "object" },
+    "optimization_toggles": { "type": "object" },
+    "registry": { "type": "object" },
+    "service_tiers": { "type": "object" },
+    "resources": { "type": "object" },
+    "service_template": { "type": "object" },
+    "buildkit": { "type": "object" },
+    "opentelemetry": { "type": "object" },
+    "jaeger": { "type": "object" },
+    "agent_tracing": { "type": "object" },
+    "gpu_metrics": { "type": "object" },
+    "alerts": { "type": "object" },
+    "docker_compose": { "type": "object" },
+    "frameworks": { "type": "object" },
+    "databases": { "type": "object" },
+    "build_tools": { "type": "object" },
+    "ai_ml": { "type": "object" },
+    "base_images": { "type": "object" },
+    "testing": { "type": "object" },
+    "code_quality": { "type": "object" },
+    "documentation": { "type": "object" },
+    "github_actions": { "type": "object" }
+  }
+}

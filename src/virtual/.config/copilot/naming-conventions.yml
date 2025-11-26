@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=../schemas/config.schema.json
+# YAML Naming Conventions
+# Standards for naming anchors, categories, and keywords in .config/ files
+
+metadata: &metadata
+  name: "naming-conventions"
+  description: "YAML Naming Conventions"
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: standard
+  keywords: [naming, conventions, standards, anchors, yaml]
+
+<<: *metadata
+
+naming_conventions:
+  anchor_names:
+    format: "lowercase_with_underscores"
+    examples:
+      - "metadata"
+      - "service_template"
+      - "resources_small"
+      - "default_timeout"
+
+    guidelines:
+      - "Use descriptive, intention-revealing names"
+      - "Prefer specificity over brevity (service_template vs svc_tmpl)"
+      - "Group related anchors with common prefix (resources_small, resources_medium)"
+      - "Avoid abbreviations unless widely recognized (url, api, http)"
+      - "Use singular for templates (service_template, not services_template)"
+      - "Use plural for collections (resources, services, workflows)"
+
+    anti_patterns:
+      - "Camel case: serviceTemplate ❌"
+      - "Kebab case: service-template ❌"
+      - "Single letter: t, s, r ❌"
+      - "Numeric suffixes without context: template1, template2 ❌"
+
+  category_values:
+    description: "Allowed values for metadata.category field"
+    values:
+      - name: "pattern"
+        description: "Structural or architectural patterns"
+        examples: ["dependency-injection.yml", "event-sourcing.yml"]
+
+      - name: "reference"
+        description: "Reference data, catalogs, specifications"
+        examples: ["services.yml", "technologies.yml", "troubleshooting.yml"]
+
+      - name: "standard"
+        description: "Standards, conventions, best practices"
+        examples: ["naming-conventions.yml", "code-quality.yml"]
+
+      - name: "workflow"
+        description: "Operational workflows and processes"
+        examples: ["development.yml", "deployment.yml", "ci-cd.yml"]
+
+      - name: "config"
+        description: "Configuration specifications"
+        examples: ["docker.yml", "github-cli.yml", "vscode.yml"]
+
+    guidelines:
+      - "Use singular form (pattern, not patterns)"
+      - "One category per file"
+      - "Category determines directory structure (.config/copilot/patterns/, .config/copilot/references/)"
+
+  keyword_selection:
+    description: "Best practices for choosing semantic keywords"
+
+    guidelines:
+      - "5-15 keywords per file (sweet spot: 8-10)"
+      - "Mix of broad and specific terms"
+      - "Include technology names (React, PostgreSQL, Docker)"
+      - "Include domain concepts (microservices, testing, deployment)"
+      - "Include action verbs (build, deploy, test, configure)"
+      - "Avoid stop words (the, and, or, a)"
+      - "Use commonly searched terms, not jargon"
+
+    examples:
+      good:
+        ["docker", "containers", "orchestration", "microservices", "deployment"]
+      poor: ["stuff", "things", "misc", "other", "general"]
+
+    coverage:
+      technologies:
+        - "Language: csharp, typescript, python, sql"
+        - "Framework: dotnet, react, playwright, fastapi"
+        - "Infrastructure: docker, nginx, postgresql, redis, qdrant"
+
+      domains:
+        - "Architecture: microservices, event-driven, layered, semantic-kernel"
+        - "Operations: ci-cd, deployment, monitoring, troubleshooting"
+        - "Quality: testing, validation, code-quality, security"
+
+      actions:
+        - "Development: build, run, debug, configure"
+        - "Testing: unit-test, integration-test, e2e-test"
+        - "Deployment: deploy, provision, scale"
+
+  file_naming:
+    format: "kebab-case.yml"
+    examples:
+      - "naming-conventions.yml"
+      - "dependency-injection.yml"
+      - "github-workflows-reference.yml"
+
+    guidelines:
+      - "Use kebab-case (hyphens) for file names"
+      - "Use .yml extension (not .yaml)"
+      - "Be descriptive but concise (2-4 words ideal)"
+      - "Match content purpose (troubleshooting.yml contains troubleshooting patterns)"
+      - "Prefix related files (github-cli.yml, github-workflows-development.yml)"
+
+    anti_patterns:
+      - "Snake case: naming_conventions.yml ❌"
+      - "Camel case: namingConventions.yml ❌"
+      - "Spaces: naming conventions.yml ❌"
+      - "Wrong extension: naming-conventions.yaml ❌"
+
+related_documentation:
+  - ".config/copilot/templates.yml: YAML anchor templates"
+  - ".config/copilot/yaml-best-practices.yml: YAML syntax best practices"
+  - ".config/copilot/index.yml: Semantic search index structure"

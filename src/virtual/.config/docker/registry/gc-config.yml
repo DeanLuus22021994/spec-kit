@@ -1,0 +1,73 @@
+# Garbage Collection Configuration for Local Registry
+# Run with: docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml
+
+metadata: &metadata
+  name: "registry-gc-config"
+  description: "Garbage Collection Configuration for Local Registry"
+  version: "1.0.0"
+  category: config
+  keywords: [docker, registry, gc, garbage-collection]
+  updated: "2025-11-26"
+
+<<: *metadata
+
+# Scheduling (for external cron/scheduler)
+schedule:
+  # Run GC daily at 3 AM
+  cron: "0 3 * * *"
+
+  # Or interval-based
+  interval: 24h
+
+# GC Configuration
+garbage_collection:
+  # Delete untagged manifests
+  delete_untagged: true
+
+  # Dry run mode (set to false for actual deletion)
+  dry_run: false
+
+  # Remove orphaned blobs
+  remove_untagged: true
+
+# Retention Policies
+retention:
+  # Keep last N tags per repository
+  keep_last_tags: 5
+
+  # Keep tags younger than N days
+  keep_younger_than_days: 7
+
+  # Always keep these tag patterns
+  keep_tags:
+    - "latest"
+    - "stable"
+    - "production"
+    - "v*" # Version tags
+
+  # Delete tags matching these patterns (after retention rules)
+  delete_tags:
+    - "dev-*"
+    - "test-*"
+    - "tmp-*"
+
+# Storage limits
+storage_limits:
+  # Maximum registry storage size
+  max_size_gb: 10
+
+  # Warning threshold
+  warning_threshold_percent: 80
+
+  # Critical threshold (triggers aggressive GC)
+  critical_threshold_percent: 90
+
+# Cleanup actions when limits exceeded
+cleanup_actions:
+  on_warning:
+    - "notify"
+    - "gc_untagged"
+  on_critical:
+    - "notify"
+    - "gc_aggressive"
+    - "delete_old_tags"

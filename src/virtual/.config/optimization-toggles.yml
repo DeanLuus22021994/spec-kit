@@ -1,0 +1,523 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Real-Time Optimization Toggles
+# Controls for runtime optimization adjustments
+
+metadata: &metadata
+  name: "optimization-toggles"
+  description: "Real-time optimization toggles configuration"
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: config
+  keywords:
+    - optimization
+    - toggles
+    - runtime
+    - gpu
+    - cuda
+    - performance
+    - hot-reload
+
+<<: *metadata
+
+description: |
+  Real-time optimization toggles that can be adjusted at runtime via environment
+  variables. Hot-reloadable toggles take effect immediately without container restart.
+  Non-hot-reloadable toggles require container restart to apply.
+
+# =============================================================================
+# Toggle Categories
+# =============================================================================
+categories:
+  wsl2:
+    description: "WSL2 and Docker Desktop memory management"
+    toggles:
+      - wsl_memory_limit
+      - wsl_processor_limit
+      - wsl_swap_size
+      - localhost_forwarding
+
+  host:
+    description: "Host-level resource management"
+    toggles:
+      - docker_build_cache_cleanup
+      - docker_prune_on_startup
+      - registry_enabled
+      - buildkit_enabled
+
+  gpu:
+    description: "GPU and CUDA related optimizations"
+    toggles:
+      - gpu_enabled
+      - mixed_precision
+      - flash_attention
+      - tf32_enabled
+      - memory_pool
+
+  performance:
+    description: "Performance tuning toggles"
+    toggles:
+      - dynamic_batching
+      - async_execution
+      - stream_responses
+      - connection_pooling
+
+  memory:
+    description: "Memory management toggles"
+    toggles:
+      - aggressive_gc
+      - memory_efficient_attention
+      - expandable_segments
+
+  caching:
+    description: "Caching behavior toggles"
+    toggles:
+      - embedding_cache
+      - completion_cache
+      - memory_cache
+
+# =============================================================================
+# WSL2 Toggles (Host Level)
+# =============================================================================
+wsl_memory_limit:
+  env_var: "WSL_MEMORY"
+  default: "10GB"
+  hot_reload: false # Requires WSL restart
+  description: "WSL2 memory limit - affects Docker available memory"
+  current_issue: "No .wslconfig found - using 50% of host (8GB)"
+  recommended: "10GB"
+  impact: "Docker memory: 7.6GB → 10GB"
+  configuration_file: "$env:USERPROFILE\\.wslconfig"
+  usage: |
+    # Create or update .wslconfig
+    [wsl2]
+    memory=10GB
+
+wsl_processor_limit:
+  env_var: "WSL_PROCESSORS"
+  default: 12
+  hot_reload: false
+  description: "Number of processors available to WSL2"
+  current_available: 16
+  recommended: 12
+  usage: |
+    # In .wslconfig
+    [wsl2]
+    processors=12
+
+wsl_swap_size:
+  env_var: "WSL_SWAP"
+  default: "4GB"
+  hot_reload: false
+  description: "WSL2 swap file size"
+  usage: |
+    # In .wslconfig
+    [wsl2]
+    swap=4GB
+
+localhost_forwarding:
+  env_var: "WSL_LOCALHOST_FORWARDING"
+  default: true
+  hot_reload: false
+  description: "Enable localhost forwarding from WSL2 to Windows"
+  usage: |
+    # In .wslconfig
+    [wsl2]
+    localhostForwarding=true
+
+# =============================================================================
+# Host Resource Toggles
+# =============================================================================
+docker_build_cache_cleanup:
+  env_var: "DOCKER_BUILD_CACHE_CLEANUP"
+  default: false
+  hot_reload: true
+  description: "Automatically clean build cache on startup"
+  current_usage_gb: 24.9
+  reclaimable_gb: 20.61
+  command: "docker builder prune --keep-storage 5GB --force"
+
+docker_prune_on_startup:
+  env_var: "DOCKER_PRUNE_ON_STARTUP"
+  default: false
+  hot_reload: true
+  description: "Run docker system prune on stack startup"
+  warning: "May remove unused images and volumes"
+
+registry_enabled:
+  env_var: "LOCAL_REGISTRY_ENABLED"
+  default: true
+  hot_reload: false
+  description: "Enable local Docker registry for faster builds"
+  ports:
+    api: 5000
+    ui: 5080
+  benefits:
+    - "Faster image pulls (local vs remote)"
+    - "Reduced bandwidth usage"
+    - "Offline capability"
+
+buildkit_enabled:
+  env_var: "DOCKER_BUILDKIT"
+  default: 1
+  hot_reload: false
+  description: "Enable BuildKit for optimized Docker builds"
+  benefits:
+    - "Parallel build stages"
+    - "Better caching"
+    - "Faster builds"
+
+# =============================================================================
+# GPU Toggles
+# =============================================================================
+gpu_enabled:
+  env_var: "GPU_ENABLED"
+  default: true
+  hot_reload: false # Requires restart
+  description: "Master toggle for GPU acceleration"
+  affects:
+    - embeddings
+    - engine
+    - vector
+  usage: |
+    # Disable GPU (use CPU-only)
+    export GPU_ENABLED=false
+    docker compose up -d embeddings engine vector
+
+mixed_precision:
+  env_var: "CUDA_MIXED_PRECISION"
+  default: true
+  hot_reload: true
+  description: "Enable FP16 mixed precision for faster inference"
+  benefits:
+    - "~40% memory reduction"
+    - "~2x faster inference on Ampere GPUs"
+  tradeoffs:
+    - "Slightly reduced numerical precision"
+  affects:
+    - embeddings
+    - engine
+  usage: |
+    # Disable for maximum precision
+    export CUDA_MIXED_PRECISION=false
+
+flash_attention:
+  env_var: "ENABLE_FLASH_ATTENTION"
+  default: true
+  hot_reload: true
+  description: "Enable flash attention for memory-efficient attention computation"
+  benefits:
+    - "~30% memory reduction"
+    - "Faster attention computation"
+    - "Better scaling for long sequences"
+  affects:
+    - embeddings
+    - engine
+  usage: |
+    # Enable flash attention
+    export ENABLE_FLASH_ATTENTION=true
+
+tf32_enabled:
+  env_var: "CUDA_TF32_ENABLED"
+  default: true
+  hot_reload: true
+  description: "Enable TensorFloat-32 for matrix multiplication operations"
+  benefits:
+    - "Faster matmul on Ampere GPUs"
+    - "Good balance of speed and accuracy"
+  affects:
+    - embeddings
+    - engine
+  usage: |
+    # Disable for full FP32 precision
+    export CUDA_TF32_ENABLED=false
+
+memory_pool:
+  env_var: "CUDA_MEMORY_POOL"
+  default: true
+  hot_reload: false # Requires restart
+  description: "Enable CUDA memory pooling for reduced allocation overhead"
+  benefits:
+    - "Reduced memory fragmentation"
+    - "Faster memory allocation"
+  affects:
+    - embeddings
+    - engine
+    - vector
+
+# =============================================================================
+# Performance Toggles
+# =============================================================================
+dynamic_batching:
+  env_var: "ENABLE_DYNAMIC_BATCHING"
+  default: true
+  hot_reload: true
+  description: "Dynamically adjust batch sizes based on available GPU memory"
+  benefits:
+    - "Automatic adaptation to memory constraints"
+    - "Better GPU utilization"
+  configuration:
+    min_batch_size: 1
+    max_batch_size: 64
+    target_memory_usage: 0.8
+  affects:
+    - embeddings
+  usage: |
+    export ENABLE_DYNAMIC_BATCHING=true
+
+async_execution:
+  env_var: "ENABLE_ASYNC_EXECUTION"
+  default: true
+  hot_reload: true
+  description: "Enable asynchronous execution for non-blocking operations"
+  benefits:
+    - "Better throughput"
+    - "Non-blocking API calls"
+  affects:
+    - embeddings
+    - engine
+    - backend
+
+stream_responses:
+  env_var: "ENABLE_STREAM_RESPONSES"
+  default: true
+  hot_reload: true
+  description: "Enable streaming responses for long-running operations"
+  benefits:
+    - "Faster time-to-first-token"
+    - "Better user experience"
+  affects:
+    - engine
+
+connection_pooling:
+  env_var: "ENABLE_CONNECTION_POOLING"
+  default: true
+  hot_reload: false
+  description: "Enable connection pooling for database and cache connections"
+  configuration:
+    postgres_min: 5
+    postgres_max: 100
+    redis_pool_size: 50
+  affects:
+    - backend
+    - engine
+
+# =============================================================================
+# Memory Management Toggles
+# =============================================================================
+aggressive_gc:
+  env_var: "CUDA_AGGRESSIVE_GC"
+  default: true
+  hot_reload: true
+  description: "Aggressive garbage collection of unused CUDA memory"
+  benefits:
+    - "Reduced memory fragmentation"
+    - "More available memory for new allocations"
+  tradeoffs:
+    - "Slight overhead from frequent GC"
+  configuration:
+    gc_threshold: 0.8
+    gc_interval_seconds: 30
+  affects:
+    - embeddings
+    - engine
+    - vector
+
+memory_efficient_attention:
+  env_var: "MEMORY_EFFICIENT_ATTENTION"
+  default: true
+  hot_reload: true
+  description: "Use memory-efficient attention implementation"
+  benefits:
+    - "Reduced peak memory usage"
+    - "Better handling of long sequences"
+  affects:
+    - embeddings
+    - engine
+
+expandable_segments:
+  env_var: "CUDA_EXPANDABLE_SEGMENTS"
+  default: true
+  hot_reload: false
+  description: "Enable expandable memory segments for PyTorch CUDA allocator"
+  pytorch_config: "expandable_segments:True"
+  affects:
+    - embeddings
+    - engine
+
+# =============================================================================
+# Caching Toggles
+# =============================================================================
+embedding_cache:
+  env_var: "ENABLE_EMBEDDING_CACHE"
+  default: true
+  hot_reload: true
+  description: "Enable caching of generated embeddings in Redis"
+  configuration:
+    ttl_seconds: 86400 # 24 hours
+    max_entries: 100000
+  benefits:
+    - "Avoid recomputation of identical embeddings"
+    - "Faster response times"
+
+completion_cache:
+  env_var: "ENABLE_COMPLETION_CACHE"
+  default: true
+  hot_reload: true
+  description: "Enable caching of AI completions"
+  configuration:
+    ttl_seconds: 3600 # 1 hour
+    max_entries: 10000
+  benefits:
+    - "Faster responses for repeated queries"
+
+memory_cache:
+  env_var: "ENABLE_MEMORY_CACHE"
+  default: true
+  hot_reload: true
+  description: "Enable in-memory caching layer"
+  configuration:
+    max_size_mb: 512
+    eviction_policy: "lru"
+  benefits:
+    - "Fastest access for frequently used data"
+
+# =============================================================================
+# Preset Profiles
+# =============================================================================
+profiles:
+  # Maximum performance - all optimizations enabled
+  maximum_performance:
+    description: "All optimizations enabled for maximum speed"
+    toggles:
+      GPU_ENABLED: true
+      CUDA_MIXED_PRECISION: true
+      ENABLE_FLASH_ATTENTION: true
+      CUDA_TF32_ENABLED: true
+      CUDA_MEMORY_POOL: true
+      ENABLE_DYNAMIC_BATCHING: true
+      ENABLE_ASYNC_EXECUTION: true
+      ENABLE_STREAM_RESPONSES: true
+      CUDA_AGGRESSIVE_GC: false
+      ENABLE_EMBEDDING_CACHE: true
+      ENABLE_COMPLETION_CACHE: true
+    command: |
+      export GPU_ENABLED=true CUDA_MIXED_PRECISION=true ENABLE_FLASH_ATTENTION=true \
+             CUDA_TF32_ENABLED=true ENABLE_DYNAMIC_BATCHING=true CUDA_AGGRESSIVE_GC=false
+      docker compose up -d embeddings engine vector
+
+  # Balanced - default profile
+  balanced:
+    description: "Balanced performance and stability (default)"
+    toggles:
+      GPU_ENABLED: true
+      CUDA_MIXED_PRECISION: true
+      ENABLE_FLASH_ATTENTION: true
+      CUDA_TF32_ENABLED: true
+      CUDA_MEMORY_POOL: true
+      ENABLE_DYNAMIC_BATCHING: true
+      CUDA_AGGRESSIVE_GC: true
+      ENABLE_EMBEDDING_CACHE: true
+    command: |
+      export GPU_ENABLED=true CUDA_MIXED_PRECISION=true ENABLE_FLASH_ATTENTION=true \
+             CUDA_TF32_ENABLED=true ENABLE_DYNAMIC_BATCHING=true CUDA_AGGRESSIVE_GC=true
+      docker compose up -d embeddings engine vector
+
+  # Conservative - prioritize stability and accuracy
+  conservative:
+    description: "Conservative settings for maximum stability"
+    toggles:
+      GPU_ENABLED: true
+      CUDA_MIXED_PRECISION: false # FP32 for accuracy
+      ENABLE_FLASH_ATTENTION: true
+      CUDA_TF32_ENABLED: false # Full precision
+      CUDA_MEMORY_POOL: false
+      ENABLE_DYNAMIC_BATCHING: true
+      CUDA_AGGRESSIVE_GC: true
+      ENABLE_EMBEDDING_CACHE: true
+    command: |
+      export GPU_ENABLED=true CUDA_MIXED_PRECISION=false ENABLE_FLASH_ATTENTION=true \
+             CUDA_TF32_ENABLED=false ENABLE_DYNAMIC_BATCHING=true CUDA_AGGRESSIVE_GC=true
+      docker compose up -d embeddings engine vector
+
+  # Memory constrained - for limited GPU memory
+  memory_constrained:
+    description: "Optimized for limited GPU memory (< 6GB)"
+    toggles:
+      GPU_ENABLED: true
+      CUDA_MIXED_PRECISION: true
+      ENABLE_FLASH_ATTENTION: true
+      CUDA_TF32_ENABLED: true
+      MEMORY_EFFICIENT_ATTENTION: true
+      CUDA_AGGRESSIVE_GC: true
+      ENABLE_DYNAMIC_BATCHING: true
+    command: |
+      export GPU_ENABLED=true CUDA_MIXED_PRECISION=true ENABLE_FLASH_ATTENTION=true \
+             MEMORY_EFFICIENT_ATTENTION=true CUDA_AGGRESSIVE_GC=true
+      docker compose up -d embeddings engine vector
+
+  # CPU only - disable GPU entirely
+  cpu_only:
+    description: "CPU-only mode, no GPU acceleration"
+    toggles:
+      GPU_ENABLED: false
+    command: |
+      export GPU_ENABLED=false
+      docker compose up -d embeddings engine vector
+
+# =============================================================================
+# Environment File Template
+# =============================================================================
+env_template: |
+  # GPU Configuration
+  GPU_ENABLED=true
+  CUDA_MIXED_PRECISION=true
+  ENABLE_FLASH_ATTENTION=true
+  CUDA_TF32_ENABLED=true
+  CUDA_MEMORY_POOL=true
+  CUDA_AGGRESSIVE_GC=true
+  MEMORY_EFFICIENT_ATTENTION=true
+  CUDA_EXPANDABLE_SEGMENTS=true
+
+  # Performance
+  ENABLE_DYNAMIC_BATCHING=true
+  ENABLE_ASYNC_EXECUTION=true
+  ENABLE_STREAM_RESPONSES=true
+  ENABLE_CONNECTION_POOLING=true
+
+  # Caching
+  ENABLE_EMBEDDING_CACHE=true
+  ENABLE_COMPLETION_CACHE=true
+  ENABLE_MEMORY_CACHE=true
+
+# =============================================================================
+# Quick Reference
+# =============================================================================
+quick_reference:
+  # View current toggle values
+  view_toggles: |
+    docker compose exec embeddings env | grep -E "GPU_|CUDA_|ENABLE_"
+
+  # Apply profile
+  apply_profile: |
+    # Source a profile's environment
+    source .config/profiles/balanced.env
+    docker compose up -d embeddings engine vector
+
+  # Hot-reload a toggle
+  hot_reload: |
+    # For hot-reloadable toggles, just update the env and signal the process
+    docker compose exec embeddings bash -c "export CUDA_MIXED_PRECISION=false"
+
+  # Check GPU memory usage
+  check_memory: |
+    nvidia-smi --query-gpu=memory.used,memory.free,memory.total --format=csv
+
+# =============================================================================
+# Related Documentation
+# =============================================================================
+related_documentation:
+  - ".config/gpu-resources.yml: GPU VRAM partitioning configuration"
+  - ".config/services.yml: Service configuration with toggles"
+  - ".config/semantic-kernel.yml: Semantic Kernel optimization settings"
+  - ".config/copilot/workflows/local-docker-stack.yml: Docker stack integration"
+  - "docker-compose.yml: Docker service definitions with environment variables"

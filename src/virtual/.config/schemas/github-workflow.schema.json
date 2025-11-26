@@ -1,0 +1,472 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semantic-kernel-app/.config/schemas/github-workflow.schema.json",
+  "title": "GitHub Actions Workflow Schema",
+  "description": "Schema for GitHub Actions workflow files with self-hosted GPU runner support",
+  "type": "object",
+  "required": ["name", "on"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Workflow name"
+    },
+    "on": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } },
+        { "$ref": "#/definitions/workflowTriggers" }
+      ],
+      "description": "Workflow triggers"
+    },
+    "concurrency": {
+      "$ref": "#/definitions/concurrency"
+    },
+    "permissions": {
+      "$ref": "#/definitions/permissions"
+    },
+    "env": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Environment variables for all jobs"
+    },
+    "jobs": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/job" },
+      "description": "Job definitions"
+    }
+  },
+  "definitions": {
+    "workflowTriggers": {
+      "type": "object",
+      "properties": {
+        "push": {
+          "$ref": "#/definitions/pushTrigger"
+        },
+        "pull_request": {
+          "$ref": "#/definitions/pullRequestTrigger"
+        },
+        "workflow_dispatch": {
+          "oneOf": [
+            { "type": "object" },
+            { "$ref": "#/definitions/workflowDispatchInputs" }
+          ],
+          "description": "Manual workflow trigger with optional inputs"
+        },
+        "workflow_call": {
+          "$ref": "#/definitions/workflowCallInputs",
+          "description": "Reusable workflow trigger"
+        },
+        "schedule": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cron": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "workflowDispatchInputs": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "required": { "type": "boolean" },
+              "default": { "type": "string" },
+              "type": {
+                "type": "string",
+                "enum": ["string", "boolean", "choice", "environment"]
+              },
+              "options": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "workflowCallInputs": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "required": { "type": "boolean" },
+              "default": {},
+              "type": {
+                "type": "string",
+                "enum": ["string", "boolean", "number"]
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "value": { "type": "string" }
+            }
+          }
+        },
+        "secrets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "required": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "pushTrigger": {
+      "type": "object",
+      "properties": {
+        "branches": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "paths-ignore": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "pullRequestTrigger": {
+      "type": "object",
+      "properties": {
+        "branches": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "opened",
+              "synchronize",
+              "reopened",
+              "closed",
+              "labeled",
+              "unlabeled",
+              "ready_for_review",
+              "converted_to_draft"
+            ]
+          }
+        },
+        "paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "paths-ignore": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "concurrency": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "Concurrency group name"
+        },
+        "cancel-in-progress": {
+          "type": "boolean",
+          "description": "Cancel in-progress runs"
+        }
+      }
+    },
+    "permissions": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["read-all", "write-all"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contents": { "$ref": "#/definitions/permissionLevel" },
+            "actions": { "$ref": "#/definitions/permissionLevel" },
+            "packages": { "$ref": "#/definitions/permissionLevel" },
+            "pull-requests": { "$ref": "#/definitions/permissionLevel" },
+            "issues": { "$ref": "#/definitions/permissionLevel" },
+            "security-events": { "$ref": "#/definitions/permissionLevel" },
+            "id-token": { "$ref": "#/definitions/permissionLevel" }
+          }
+        }
+      ]
+    },
+    "permissionLevel": {
+      "type": "string",
+      "enum": ["read", "write", "none"]
+    },
+    "job": {
+      "type": "object",
+      "required": ["runs-on", "steps"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Job display name"
+        },
+        "runs-on": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } },
+            { "$ref": "#/definitions/runsOnConfig" }
+          ],
+          "description": "Runner specification (supports self-hosted-gpu for GPU workloads)"
+        },
+        "needs": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
+          ],
+          "description": "Job dependencies"
+        },
+        "if": {
+          "type": "string",
+          "description": "Conditional execution"
+        },
+        "permissions": {
+          "$ref": "#/definitions/permissions"
+        },
+        "timeout-minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Job timeout in minutes"
+        },
+        "strategy": {
+          "$ref": "#/definitions/strategy"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "services": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/serviceContainer" },
+          "description": "Service containers"
+        },
+        "container": {
+          "$ref": "#/definitions/containerConfig",
+          "description": "Job container configuration"
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Job outputs for downstream jobs"
+        },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/step" },
+          "minItems": 1
+        }
+      }
+    },
+    "runsOnConfig": {
+      "type": "object",
+      "description": "Advanced runner configuration with labels and groups",
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "Runner group name"
+        },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Runner labels (e.g., ['self-hosted', 'gpu', 'linux'])"
+        }
+      }
+    },
+    "serviceContainer": {
+      "type": "object",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Container image"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "oneOf": [{ "type": "string" }, { "type": "integer" }]
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "options": {
+          "type": "string",
+          "description": "Docker options (health checks, etc.)"
+        },
+        "credentials": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string" },
+            "password": { "type": "string" }
+          }
+        }
+      }
+    },
+    "containerConfig": {
+      "type": "object",
+      "description": "Container configuration for job",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Container image"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "ports": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "volumes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "options": {
+          "type": "string",
+          "description": "Docker options (e.g., --gpus all for GPU access)"
+        },
+        "credentials": {
+          "type": "object",
+          "properties": {
+            "username": { "type": "string" },
+            "password": { "type": "string" }
+          }
+        }
+      }
+    },
+    "strategy": {
+      "type": "object",
+      "properties": {
+        "fail-fast": {
+          "type": "boolean",
+          "default": true
+        },
+        "max-parallel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "matrix": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Step name"
+        },
+        "id": {
+          "type": "string",
+          "description": "Step ID for referencing outputs"
+        },
+        "if": {
+          "type": "string",
+          "description": "Conditional execution"
+        },
+        "uses": {
+          "type": "string",
+          "description": "Action to use (prefer SHA-pinned versions)"
+        },
+        "run": {
+          "type": "string",
+          "description": "Shell command to run"
+        },
+        "shell": {
+          "type": "string",
+          "enum": ["bash", "pwsh", "python", "sh", "cmd", "powershell"],
+          "description": "Shell to use for run commands"
+        },
+        "with": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Action inputs"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "working-directory": {
+          "type": "string",
+          "description": "Working directory for run commands"
+        },
+        "continue-on-error": {
+          "type": "boolean",
+          "default": false
+        },
+        "timeout-minutes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "selfHostedGpuRunner": {
+      "type": "object",
+      "description": "Self-hosted GPU runner configuration (pre-configured, no token required)",
+      "properties": {
+        "label": {
+          "type": "string",
+          "const": "self-hosted-gpu",
+          "description": "Runner label for GPU workloads"
+        },
+        "token_required": {
+          "type": "boolean",
+          "const": false,
+          "description": "No token required (already registered)"
+        },
+        "specs": {
+          "type": "object",
+          "properties": {
+            "gpu": {
+              "type": "string",
+              "description": "GPU model (e.g., 'RTX 3050 6GB')"
+            },
+            "cuda": {
+              "type": "string",
+              "description": "CUDA version (e.g., '13.0')"
+            },
+            "pytorch": {
+              "type": "string",
+              "description": "PyTorch version (e.g., '2.9.1+cu130')"
+            },
+            "compute_capability": {
+              "type": "string",
+              "description": "GPU compute capability (e.g., '8.6')"
+            }
+          }
+        }
+      }
+    }
+  }
+}

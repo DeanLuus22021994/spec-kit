@@ -1,0 +1,158 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Version Numbers Configuration
+# Centralized version definitions for all technologies
+# Single source of truth for version management across the project
+
+metadata: &metadata
+  name: "versions-config"
+  description: "Version Numbers Configuration"
+  version: "1.1.0"
+  category: config
+  keywords:
+    [
+      versions,
+      dependencies,
+      runtime,
+      frameworks,
+      tools,
+      sdk,
+      cuda,
+      gpu,
+      pytorch,
+    ]
+  updated: "2025-11-25"
+
+<<: *metadata
+
+# Runtime Versions
+runtime:
+  dotnet: "10.0.x"
+  node: "20"
+  python: "3.14"
+
+# CUDA / GPU Versions
+cuda:
+  toolkit: "13.0"
+  driver: "581.57"
+  cudnn: "9.1.2"
+  compute_capability: "8.6" # RTX 3050
+  pytorch_cuda: "cu130"
+
+# Framework Versions
+frameworks:
+  aspnet_core: "10.0"
+  entity_framework: "10.0"
+  react: "18"
+  typescript: "5"
+  fastapi: "0.109"
+
+# Database Versions
+databases:
+  postgresql: "16"
+  qdrant: "1.7.4"
+  redis: "7.2"
+
+# Build Tools
+build_tools:
+  vite: "5"
+  webpack: "5"
+  npm: "10"
+
+# AI/ML Versions
+ai_ml:
+  openai_api: "latest"
+  semantic_kernel: "1.0.0"
+  text_embedding_model: "text-embedding-3-small"
+  chat_model: "gpt-4o"
+  pytorch: "2.9.1+cu130"
+  torchvision: "0.24.1+cu130"
+  torchaudio: "2.9.1+cu130"
+  transformers: "4.57.2"
+  accelerate: "1.12.0"
+  numpy: "2.3.3"
+  triton: "3.0.0" # GPU kernel compiler
+
+# Container Base Images
+base_images:
+  dotnet: "mcr.microsoft.com/dotnet/aspnet:10.0-alpine"
+  dotnet_sdk: "mcr.microsoft.com/dotnet/sdk:10.0-alpine"
+  python: "python:3.14-slim"
+  python_cuda: "nvidia/cuda:13.0-cudnn-runtime-ubuntu24.04" # GPU-enabled Python base
+  pytorch: "pytorch/pytorch:2.9.1-cuda13.0-cudnn9-runtime" # Official PyTorch CUDA image
+  node: "node:20-alpine"
+  postgres: "postgres:16-alpine"
+  qdrant: "qdrant/qdrant:v1.7.4"
+  redis: "redis:7.2-alpine"
+  nginx: "nginx:1.25-alpine"
+
+# Testing Frameworks
+testing:
+  dotnet:
+    xunit: "2.6"
+    moq: "4.20"
+    fluent_assertions: "6.12"
+  frontend:
+    playwright: "1.40"
+    vitest: "1.0"
+  python:
+    pytest: "7.4"
+    coverage: "7.3"
+
+# Code Quality Tools
+code_quality:
+  python:
+    black: "25.11.0"
+    pylint: "3.0"
+    isort: "5.13"
+    ruff: "0.1"
+  dotnet:
+    dotnet_format: "included"
+    csharpier: "0.26"
+  frontend:
+    eslint: "8.55"
+    prettier: "3.1"
+  yaml:
+    yamllint: "1.33"
+  sql:
+    sqlfluff: "2.3"
+
+# Docker
+docker:
+  compose_version: "3.8"
+  buildx: "latest"
+
+# Documentation
+documentation:
+  mkdocs: "1.5"
+  mkdocs_material: "9.5"
+
+# GitHub Actions
+github_actions:
+  checkout: "v4"
+  setup_dotnet: "v4"
+  setup_node: "v4"
+  setup_python: "v4"
+  upload_artifact: "v4"
+  docker_buildx: "v3"
+
+# Development Tools
+dev_tools:
+  dotnet_ef: "10.0"
+  dotnet_openapi: "10.0"
+  gh_cli: "2.40"
+
+usage_notes: |
+  This file serves as the canonical source for all version numbers.
+  When updating versions:
+  1. Update this file FIRST
+  2. Reference these versions in documentation using comments
+  3. Update actual dependency files (package.json, requirements.txt, etc.)
+  4. Test thoroughly before committing
+
+related_documentation:
+  - ".config/copilot/references/technology-stack.yml: Technology stack documentation"
+  - ".config/github-workflows.yml: GitHub Actions configuration"
+  - "package.json: Frontend dependencies"
+  - "requirements.txt: Python dependencies"
+  - "global.json: .NET SDK version pinning"
+  - ".config/dotnet-tools.json: .NET tool versions"

@@ -1,0 +1,107 @@
+# Architecture and Coding Standards
+# Guidelines for architecture, coding practices, and API design
+
+metadata: &metadata
+  version: "1.0.0"
+  category: standard
+  keywords: [architecture, coding-standards, solid-principles, microservices, api-design, dependency-injection, error-handling]
+  updated: "2025-11-24"
+
+<<: *metadata
+
+architecture:
+  principles:
+    - Follow SOLID principles for object-oriented design
+    - Implement dependency injection for service management
+    - Use repository pattern for data access abstraction
+    - Apply separation of concerns across microservices
+    - Design for testability and maintainability
+
+  microservices:
+    pattern: One service per container
+    communication: HTTP/REST for synchronous, message queue for async
+    data_storage: Each service owns its data domain
+
+  layers:
+    frontend: React + TypeScript SPA
+    gateway: Nginx reverse proxy with routing
+    backend: .NET 10 Web API with business logic
+    engine: Semantic Kernel AI capabilities (GPU-accelerated)
+    business: Business logic layer with validators
+    database: PostgreSQL 16 with migrations
+    vector: Qdrant vector database for embeddings
+    embeddings: FastAPI service with OpenAI integration (GPU-accelerated)
+
+  gpu_acceleration:
+    enabled_services:
+      - engine: "CUDA 13.0 for Semantic Kernel operations"
+      - embeddings: "PyTorch 2.9.1+cu130 for embedding generation"
+    runtime: "nvidia"
+    compute_capability: "8.6"
+    environment_config: ".config/environment.yml"
+
+coding_standards:
+  async_operations:
+    rule: "Use async/await for all I/O operations"
+    applies_to:
+      - "Database queries"
+      - "HTTP requests"
+      - "File system operations"
+      - "External API calls"
+    example: "await _httpClient.GetAsync(...)"
+
+  error_handling:
+    rule: "Apply proper error handling with try-catch"
+    requirements:
+      - "Catch specific exceptions before general ones"
+      - "Log errors with context information"
+      - "Return appropriate HTTP status codes"
+      - "Include user-friendly error messages"
+    example: "try { ... } catch (HttpRequestException ex) { _logger.LogError(ex, ...); }"
+
+  dependency_injection:
+    rule: "Use DI for service registration and lifecycle management"
+    registration: "builder.Services.AddScoped<IService, Service>()"
+    consumption: "Constructor injection with interface dependencies"
+
+  configuration:
+    rule: "Use strongly-typed configuration with IOptions<T>"
+    location: "appsettings.json for .NET, config.yml for Python"
+    access: "Inject IOptions<TConfig> in constructors"
+
+api_design:
+  conventions: "Follow RESTful principles"
+
+  http_methods:
+    GET: "Retrieve resources (idempotent)"
+    POST: "Create new resources"
+    PUT: "Update/replace entire resources"
+    PATCH: "Partial resource updates"
+    DELETE: "Remove resources"
+
+  status_codes:
+    "200": "OK - Successful GET, PUT, PATCH"
+    "201": "Created - Successful POST"
+    "204": "No Content - Successful DELETE"
+    "400": "Bad Request - Invalid input"
+    "401": "Unauthorized - Authentication required"
+    "403": "Forbidden - Insufficient permissions"
+    "404": "Not Found - Resource doesn't exist"
+    "500": "Internal Server Error - Unexpected failures"
+
+  response_format:
+    use: "DTOs for API responses"
+    structure: "Consistent JSON structure across endpoints"
+    naming: "camelCase for JSON properties"
+
+cross_references:
+  - ".config/copilot/standards/infrastructure-standards.yml: Infrastructure, database, Docker, security"
+  - ".config/copilot/standards/ci-cd-standards.yml: CI/CD, testing, pr-validation"
+  - ".config/copilot/patterns/documentation.yml: Documentation patterns"
+
+related_documentation:
+  - ".config/copilot/standards/infrastructure-standards.yml"
+  - ".config/copilot/standards/ci-cd-standards.yml"
+  - ".config/copilot/patterns/documentation.yml"
+  - ".config/environment.yml"
+  - ".config/copilot/yaml-best-practices.yml"

@@ -1,0 +1,111 @@
+# Infrastructure Standards
+# Guidelines for database, Docker, logging, security, and infrastructure
+
+metadata: &metadata
+  version: "1.0.0"
+  category: standard
+  keywords: [infrastructure, database, docker, logging, security, networking, monitoring, migrations]
+  updated: "2025-11-24"
+
+<<: *metadata
+
+database:
+  migrations:
+    tool: "SQL migration files in infrastructure/database/migrations/"
+    naming: "V{number}__{description}.sql"
+    execution: "Sequential version-based migration"
+
+  stored_procedures:
+    location: "infrastructure/database/scripts/"
+    naming: "snake_case for procedure names"
+    usage: "Complex business logic and batch operations"
+
+  connection_management:
+    rule: "Use connection pooling and proper disposal"
+    pattern: "Dependency injection of DbContext"
+
+docker:
+  base_images:
+    rule: "Use Alpine Linux base images for minimal size"
+    dotnet: "mcr.microsoft.com/dotnet/aspnet:10.0-alpine"
+    python: "python:3.14-slim"
+    node: "node:20-alpine"
+    python_gpu: "nvidia/cuda:13.0.0-runtime-ubuntu24.04"
+
+  gpu_support:
+    runtime: "nvidia"
+    driver: "nvidia-container-toolkit"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "all"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+    reference: ".config/environment.yml for full GPU environment variables"
+
+  multi_stage_builds:
+    rule: "Separate build and runtime stages"
+    benefit: "Smaller final images, faster deployments"
+
+  health_checks:
+    rule: "Implement health checks for all services"
+    endpoint: "/health or /healthz"
+    interval: "30s in docker-compose.yml"
+
+logging:
+  structured: "Use structured logging with context"
+  levels:
+    debug: "Detailed diagnostic information"
+    info: "General informational messages"
+    warning: "Potentially harmful situations"
+    error: "Error events with recovery possibility"
+    critical: "Critical failures requiring immediate attention"
+
+security:
+  secrets:
+    rule: "Never commit secrets to version control"
+    storage: "Environment variables or Azure Key Vault"
+    dotnet: "User Secrets for local development"
+
+  authentication:
+    pattern: "JWT tokens for API authentication"
+    validation: "Validate and refresh tokens appropriately"
+
+  authorization:
+    pattern: "Role-based access control (RBAC)"
+    implementation: "Authorize attributes on controllers/actions"
+
+  tls:
+    development: "TLS disabled for local development"
+    production: "TLS enabled with valid certificates"
+    certificates_directory: "./certs"
+
+infrastructure:
+  networking:
+    driver: "bridge"
+    subnet: "172.20.0.0/16"
+    gateway: "172.20.0.1"
+    name: "app-network"
+
+  monitoring:
+    enabled: true
+    metrics_port: 9090
+    health_check_interval: 10
+
+  logging:
+    level: "info"
+    format: "json"
+    outputs:
+      - "stdout"
+      - "file"
+
+cross_references:
+  - ".config/copilot/standards/architecture-standards.yml: Architecture and coding standards"
+  - ".config/copilot/standards/ci-cd-standards.yml: CI/CD and testing standards"
+  - ".config/infrastructure.yml: Infrastructure configuration"
+  - "infrastructure/database/README.md: Database migration details"
+
+related_documentation:
+  - ".config/copilot/standards/architecture-standards.yml"
+  - ".config/copilot/standards/ci-cd-standards.yml"
+  - ".config/infrastructure.yml"
+  - ".config/environment.yml"
+  - "infrastructure/database/README.md"
+  - ".config/copilot/yaml-best-practices.yml"

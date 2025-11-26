@@ -1,0 +1,84 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Pull Request Validation Configuration
+
+# Metadata
+metadata: &metadata
+  name: "pr-validation"
+  description: "Pull Request validation configuration"
+  version: "1.0.0"
+  updated: "2025-11-26"
+  category: config
+  keywords:
+    - pr
+    - validation
+    - ci
+
+<<: *metadata
+
+# Build Configuration
+build:
+  solution: semantic-kernel-app.sln
+  configuration: Release
+  verbosity: normal
+
+# Test Configuration Template
+test_template: &test_template
+  timeout: null
+  requires_services: false
+  enabled: true
+
+tests:
+  unit:
+    <<: *test_template
+    timeout: 300
+
+  integration:
+    <<: *test_template
+    timeout: 600
+    requires_services: true
+
+  e2e:
+    <<: *test_template
+    timeout: 900
+    requires_services: true
+    browsers:
+      - chromium
+      - firefox
+      - webkit
+
+docker:
+  startup_wait: 30
+  health_checks:
+    interval: 15
+    timeout: 5
+    retries: 3
+
+lint:
+  continue_on_error: false
+  python: true
+  frontend: true
+  sql: true
+  shell: true
+
+reporting:
+  retention_days: 30
+  format: markdown
+
+related_documentation:
+  - ".config/github-workflows.yml: GitHub Actions workflow configuration"
+  - ".config/copilot/standards/ci-cd-standards.yml: CI/CD standards and best practices"
+  - ".github/workflows/pr-validation.yml: Actual PR validation workflow"
+  - ".config/copilot/standards/code-quality.yml: Code quality standards"
+
+rules:
+  require_tests: true
+  require_lint: true
+  require_build: true
+  coverage_threshold: 80
+  forbidden_artifacts:
+    - "**/node_modules/**"
+    - "**/bin/**"
+    - "**/obj/**"
+    - "**/publish/**"
+    - "**/test-results/**"
+    - "**/playwright-report/**"

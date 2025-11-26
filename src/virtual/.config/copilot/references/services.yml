@@ -1,0 +1,378 @@
+# Microservices Architecture Reference
+# Service specifications and architecture documentation
+# For actual runtime configuration, see .config/services.yml
+
+metadata: &metadata
+  version: "1.0.0"
+  category: reference
+  keywords: [services, microservices, architecture, ports, resources, Docker]
+
+<<: *metadata
+
+description: Semantic Kernel application with microservices architecture
+
+# Configuration References
+# This file documents the architecture. For actual runtime values, see:
+config_references:
+  resources: ".config/services.yml - Resource allocations (small/medium/large/xlarge)"
+  ports: ".config/ports.yml - Port definitions for all services"
+  versions: ".config/versions.yml - Framework and runtime versions"
+  infrastructure: ".config/infrastructure.yml - Network and security configuration"
+  environment: ".config/environment.yml - Environment variables for CUDA, Python, etc."
+
+# GPU-Accelerated Services
+# Services with GPU support for AI/ML workloads:
+gpu_enabled_services:
+  services:
+    - engine: "Semantic Kernel AI processing with CUDA acceleration"
+    - embeddings: "GPU-accelerated embedding generation with PyTorch"
+  runtime: "nvidia"
+  compute_capability: "8.6"
+  cuda_version: "13.0"
+
+# Service Architecture Documentation
+# Documents service purposes, technologies, and relationships
+# Note: Port numbers and versions reference centralized config files
+
+# Service Template
+service_template: &service_template
+  technology: null
+  purpose: null
+  location: null
+  dockerfile: null
+  enabled: true
+
+services:
+  frontend:
+    <<: *service_template
+    technology: "React + TypeScript"
+    purpose: "User interface and client application"
+    build_tool: Vite
+    port: 3000 # See .config/ports.yml
+    location: src/frontend/
+    dockerfile: dockerfiles/frontend.Dockerfile
+    resource_tier: medium # See .config/services.yml for allocation
+
+  backend:
+    <<: *service_template
+    technology: ".NET Web API"
+    purpose: "RESTful API for business operations"
+    framework: ASP.NET Core
+    port: 5000 # See .config/ports.yml
+    location: src/backend/
+    dockerfile: dockerfiles/backend.Dockerfile
+    resource_tier: large
+
+  engine:
+    <<: *service_template
+    technology: "Semantic Kernel AI Service"
+    purpose: "AI processing with plugins and planners"
+    framework: ".NET + Semantic Kernel"
+    port: 5001 # See .config/ports.yml
+    location: src/engine/
+    dockerfile: dockerfiles/engine.Dockerfile
+    resource_tier: xlarge
+
+  business:
+    <<: *service_template
+    technology: "Business Logic Layer"
+    purpose: "Core business rules and domain logic"
+    framework: ".NET class library"
+    port: 5002 # See .config/ports.yml
+    location: src/business/
+    dockerfile: dockerfiles/business.Dockerfile
+    resource_tier: large
+
+  gateway:
+    <<: *service_template
+    technology: "API Gateway (ASP.NET)"
+    purpose: "Request routing and API composition"
+    port: 8080 # See .config/ports.yml
+    internal_port: 80
+    configuration: infrastructure/nginx/nginx.conf
+    dockerfile: dockerfiles/gateway.Dockerfile
+    resource_tier: medium
+
+  database:
+    <<: *service_template
+    technology: "PostgreSQL with pgvector"
+    purpose: "Primary data store with vector support"
+    port: 5432 # See .config/ports.yml
+    migrations: infrastructure/database/migrations/
+    scripts: infrastructure/database/scripts/
+    dockerfile: dockerfiles/database.Dockerfile
+    resource_tier: large
+
+  vector:
+    <<: *service_template
+    technology: "Qdrant Vector Database"
+    purpose: "Vector similarity search for embeddings"
+    port: 6333 # See .config/ports.yml
+    grpc_port: 6334
+    dimensions: 1536
+    dockerfile: dockerfiles/vector.Dockerfile
+    resource_tier: large
+
+  embeddings:
+    <<: *service_template
+    technology: "FastAPI + OpenAI"
+    purpose: "Generate and manage text embeddings"
+    port: 8001 # See .config/ports.yml
+    model: text-embedding-3-small # See .config/versions.yml
+    location: semantic/embeddings/
+    dockerfile: dockerfiles/embeddings.Dockerfile
+    resource_tier: large
+
+  nginx:
+    <<: *service_template
+    technology: "Nginx Web Server"
+    purpose: "Static file serving and reverse proxy"
+    port: 80 # See .config/ports.yml
+    configuration: infrastructure/nginx/nginx.conf
+    dockerfile: dockerfiles/nginx.Dockerfile
+    resource_tier: small
+
+  devsite:
+    <<: *service_template
+    technology: "MkDocs Documentation"
+    purpose: "Development documentation site"
+    port: 8000 # See .config/ports.yml
+    location: docs/
+    dockerfile: dockerfiles/devsite.Dockerfile
+    resource_tier: small
+
+  runner:
+    <<: *service_template
+    technology: "Python Tools Container"
+    purpose: "Test execution and automation tasks"
+    dockerfile: dockerfiles/runner.Dockerfile
+    resource_tier: xlarge
+
+semantic_kernel:
+  version: "latest"
+  service_name: "semantic-kernel-engine"
+  service_type: "ai-processing"
+  config_file: ".config/semantic-kernel.yml"
+  dependencies_config: ".config/dotnet-dependencies.yml"
+
+  plugins_directory: "/app/plugins"
+  skills_directory: "/app/skills"
+  auto_load_plugins: true
+  auto_discover_skills: true
+
+  packages:
+    core:
+      - "Microsoft.SemanticKernel"
+      - "Microsoft.SemanticKernel.Connectors.OpenAI"
+    memory:
+      - "Microsoft.SemanticKernel.Connectors.Postgres"
+      - "Microsoft.SemanticKernel.Connectors.Qdrant"
+    planning:
+      - "Microsoft.SemanticKernel.Planners.Handlebars"
+      - "Microsoft.SemanticKernel.Planners.OpenAI"
+    plugins:
+      - "Microsoft.SemanticKernel.Plugins.Core"
+      - "Microsoft.SemanticKernel.Plugins.Memory"
+
+  planners:
+    default: "handlebars"
+    enabled:
+      - "HandlebarsPlanner"
+      - "FunctionCallingStepwisePlanner"
+    max_planning_steps: 10
+
+  ai_settings:
+    default_model: "gpt-4o"
+    embedding_model: "text-embedding-3-small"
+    temperature: 0.7
+    max_tokens: 4000
+    timeout_seconds: 60
+
+  memory_store:
+    primary: "PostgreSQL"
+    secondary: "Qdrant"
+    vector_dimensions: 1536
+    similarity_function: "cosine"
+
+  gpu_acceleration:
+    enabled: true
+    cuda_version: "13.0"
+    compute_capability: "8.6"
+    settings:
+      batch_inference: true
+      mixed_precision: true
+      memory_efficient_attention: true
+      torch_compile: true
+      cudnn_benchmark: true
+
+  optimizations:
+    streaming:
+      enabled: true
+      response_streaming: true
+    batching:
+      enabled: true
+      embedding_batch_size: 64
+      max_concurrent_requests: 32
+    caching:
+      enabled: true
+      embedding_cache_ttl: 1440
+      completion_cache_ttl: 60
+      memory_cache_size_mb: 512
+    async_patterns:
+      enable_async_execution: true
+      use_configureawait_false: true
+
+  docker:
+    runtime: "nvidia"
+    base_image: "mcr.microsoft.com/dotnet/aspnet:10.0-jammy"
+    environment:
+      - "NVIDIA_VISIBLE_DEVICES=all"
+      - "NVIDIA_DRIVER_CAPABILITIES=compute,utility"
+      - "SemanticKernel__ConfigPath=/.config/semantic-kernel.yml"
+    volumes:
+      - "engine-plugins:/app/plugins"
+      - "engine-skills:/app/skills"
+      - "engine-cache:/app/cache"
+      - ".config:/.config:ro"
+
+  performance:
+    max_concurrent_requests: 32
+    request_timeout_ms: 60000
+    enable_caching: true
+    cache_expiration_minutes: 60
+    gpu_memory_pool: true
+    async_inference: true
+    stream_responses: true
+
+project_structure:
+  source_code: "src/"
+  infrastructure: "infrastructure/"
+  semantic: "semantic/"
+  tests: "tests/"
+  documentation: "docs/"
+  tools: "tools/"
+  dockerfiles: "dockerfiles/"
+  configuration: ".config/"
+  vscode: ".vscode/"
+  github: ".github/"
+
+related_documentation:
+  - ".config/copilot/references/technology-stack.yml: Technology versions and frameworks"
+  - ".config/copilot/workflows/local-docker-stack.yml: Local Docker stack integration"
+  - ".config/services.yml: Service configuration with resources"
+  - ".config/semantic-kernel.yml: Semantic Kernel GPU and optimization settings"
+  - ".config/dotnet-dependencies.yml: .NET package auto-provisioning"
+  - ".config/environment.yml: Environment variables for CUDA, GPU, Python"
+  - "docker-compose.yml: Container orchestration with GPU support"
+  - "dockerfiles/engine.Dockerfile: Engine container build"
+  - "src/engine/: Semantic Kernel implementation source code"
+
+# =============================================================================
+# Local Docker Service Integration
+# =============================================================================
+# Copilot should ALWAYS prefer local Docker services over external APIs
+
+local_docker_integration:
+  configuration_file: ".config/copilot/workflows/local-docker-stack.yml"
+
+  preference_rules:
+    embeddings: "ALWAYS use localhost:8001 for embedding generation"
+    vector_search: "ALWAYS use localhost:6333 (Qdrant) for similarity search"
+    caching: "ALWAYS use localhost:6379 (Redis) for caching"
+    persistence: "ALWAYS use localhost:5432 (PostgreSQL) for data storage"
+
+  service_endpoints:
+    embeddings:
+      health: "http://localhost:8001/health"
+      generate: "http://localhost:8001/api/embeddings"
+      batch: "http://localhost:8001/api/embeddings/batch"
+    vector:
+      health: "http://localhost:6333/healthz"
+      dashboard: "http://localhost:6333/dashboard"
+      collections: "http://localhost:6333/collections"
+    cache:
+      host: "localhost"
+      port: 6379
+    database:
+      host: "localhost"
+      port: 5432
+      database: "semantic_kernel"
+    engine:
+      health: "http://localhost:5001/health"
+      api: "http://localhost:5001/api"
+
+  startup_commands:
+    all: "docker compose up -d"
+    core: "docker compose up -d database redis vector embeddings"
+    gpu: "docker compose up -d engine embeddings vector"
+
+  workflow_integration:
+    embedding_workflow:
+      - "Check Redis cache for existing embedding"
+      - "If cached, return immediately"
+      - "If not cached, call local embeddings service at localhost:8001"
+      - "Store result in Redis cache with 24hr TTL"
+      - "Optionally persist to PostgreSQL for long-term storage"
+
+    search_workflow:
+      - "Generate embedding for query using local service"
+      - "Search Qdrant (localhost:6333) for similar vectors"
+      - "Optionally search PostgreSQL pgvector for persistent data"
+      - "Combine and rank results"
+      - "Cache frequent queries in Redis"
+
+    memory_workflow:
+      - "Use Semantic Kernel memory APIs"
+      - "Engine routes to appropriate vector store (Qdrant/PostgreSQL)"
+      - "Embeddings generated locally via GPU service"
+      - "Results cached in Redis for fast retrieval"
+
+  # Filter configuration for optimized local operations
+  filters:
+    embedding_filters:
+      preprocessing:
+        min_length: 10
+        max_length: 8192
+        deduplication: true
+        chunking_strategy: "semantic"
+      postprocessing:
+        l2_normalize: true
+        validate_dimensions: true
+      quality_checks:
+        check_nan_values: true
+        min_magnitude: 0.001
+
+    vector_filters:
+      similarity_threshold: 0.7
+      max_results: 100
+      collection_specific:
+        code_embeddings:
+          score_threshold: 0.8
+          max_results: 30
+        semantic_memory:
+          score_threshold: 0.75
+          max_results: 50
+        document_chunks:
+          score_threshold: 0.7
+          max_results: 100
+
+    cache_filters:
+      embedding_cache:
+        ttl_seconds: 86400
+        max_entries: 100000
+        eviction_policy: "lru"
+      skip_patterns:
+        - "test_*"
+        - "temp_*"
+        - "debug_*"
+
+    content_routing:
+      code_files: "code_embeddings"
+      documentation: "document_chunks"
+      configuration: "document_chunks"
+      default: "semantic_memory"
+
+    rate_limiting:
+      embeddings_rps: 100
+      vector_search_rps: 500
+      circuit_breaker_enabled: true

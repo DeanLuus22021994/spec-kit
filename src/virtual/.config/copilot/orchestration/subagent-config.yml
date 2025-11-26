@@ -1,0 +1,298 @@
+# Subagent Orchestration Configuration
+# Config-first approach for parallel execution patterns
+# Reference: docs/retro/workforce/subagent-capabilities.md
+
+metadata: &metadata
+  name: "subagent-orchestration"
+  description: "Configuration for parallel subagent orchestration patterns"
+  version: "1.0.0"
+  category: "orchestration"
+  updated: "2025-11-25"
+
+<<: *metadata
+
+# Performance targets based on GPU/CPU specs from .config/infrastructure.yml
+performance_targets: &performance_targets
+  max_parallel_agents: 8 # Based on 16 threads available
+  target_utilization: 0.80 # 80% resource utilization
+  safety_overhead: 0.05 # 5% safety margin
+  effective_utilization: 0.75 # 80% - 5% = 75% effective
+  timeout_seconds: 30
+  retry_attempts: 3
+  batch_size: 10 # Max parallel tool calls per batch
+
+# Subagent capability matrix (from subagent-capabilities.md)
+capability_matrix:
+  strengths:
+    parallel_execution:
+      description: "Batch 5-10 independent tool calls simultaneously"
+      optimal_use: "Data gathering, file searches, grep operations"
+      performance_gain: "2-3x speedup vs sequential"
+
+    focused_execution:
+      description: "No conversation history = no context switching"
+      optimal_use: "Single-purpose validation tasks"
+      anti_pattern: "Multi-step debugging sessions"
+
+    structured_processing:
+      description: "Raw tool output → formatted reports"
+      optimal_use: "Validation reports, metrics aggregation"
+      output_formats: ["json", "markdown", "yaml"]
+
+    repetitive_validation:
+      description: "Same check pattern across multiple targets"
+      optimal_use: "Linting, schema validation, config checks"
+      fatigue_resistant: true
+
+  weaknesses:
+    contextual_decisions:
+      description: "Cannot access conversation history"
+      mitigation: "Include context snapshot in prompt"
+      max_context_lines: 10
+
+    user_intent:
+      description: "Cannot interpret ambiguous requests"
+      mitigation: "Primary agent preprocesses request"
+
+    iterative_debugging:
+      description: "Stateless between invocations"
+      mitigation: "Use primary agent for debug loops"
+      max_iterations: 1
+
+    creative_solutions:
+      description: "Follows predefined patterns only"
+      mitigation: "Primary agent innovates, subagent executes"
+
+# Task routing rules
+routing_rules:
+  delegate_to_subagent:
+    criteria:
+      - "Well-defined, self-contained tasks"
+      - "No user preference decisions required"
+      - "Parallelizable operations"
+      - "Structured output expected"
+    examples:
+      - "Check these 10 files for pattern X"
+      - "Validate all YAML configs"
+      - "Run lint checks across workspace"
+      - "Generate validation report"
+
+  keep_in_primary:
+    criteria:
+      - "Requires conversation history"
+      - "Ambiguous user intent"
+      - "Multi-iteration problem solving"
+      - "Creative solution needed"
+    examples:
+      - "Debug why tests are failing"
+      - "Should I use approach A or B?"
+      - "Improve the architecture"
+      - "Fix this bug (iterative)"
+
+# Parallel execution patterns
+execution_patterns:
+  parallel_file_search:
+    pattern: "Search multiple patterns across files simultaneously"
+    max_concurrent: 5
+    tool_calls:
+      - file_search
+      - grep_search
+      - semantic_search
+    example:
+      description: "Find all TODO, FIXME, and HACK comments"
+      parallel_calls:
+        - { tool: "grep_search", query: "TODO" }
+        - { tool: "grep_search", query: "FIXME" }
+        - { tool: "grep_search", query: "HACK" }
+
+  parallel_validation:
+    pattern: "Validate multiple files/configs in parallel"
+    max_concurrent: 8
+    tool_calls:
+      - read_file
+      - get_errors
+      - runTests
+    example:
+      description: "Validate all test files compile"
+      parallel_calls:
+        - { tool: "get_errors", path: "tests/business-tests/" }
+        - { tool: "get_errors", path: "tests/engine-tests/" }
+        - { tool: "get_errors", path: "tests/gateway-tests/" }
+
+  parallel_diagnostics:
+    pattern: "Run multiple diagnostic commands"
+    max_concurrent: 4
+    tool_calls:
+      - run_in_terminal
+    sequential_dependency: false
+    example:
+      description: "Docker health check"
+      commands:
+        - "docker ps --format 'table {{.Names}}\\t{{.Status}}'"
+        - "docker stats --no-stream"
+        - "docker-compose logs --tail=50"
+
+  batch_file_operations:
+    pattern: "Apply same operation to multiple files"
+    max_concurrent: 10
+    tool_calls:
+      - multi_replace_string_in_file
+      - replace_string_in_file
+    example:
+      description: "Update version in all csproj files"
+      operation: "replace_string_in_file"
+      targets: ["**/*.csproj"]
+
+# XML prompt templates for subagent invocation
+xml_templates:
+  validation_task: |
+    <subagent_task type="validation">
+      <context>
+        <workspace_root>{{workspace_root}}</workspace_root>
+        <target_files>{{target_files}}</target_files>
+        <validation_profile>{{profile}}</validation_profile>
+      </context>
+      <objectives>
+        <primary>Validate files against profile rules</primary>
+        <output_format>structured_json</output_format>
+        <severity_levels>error,warning,info</severity_levels>
+      </objectives>
+      <constraints>
+        <max_parallel_calls>{{max_parallel}}</max_parallel_calls>
+        <timeout_seconds>{{timeout}}</timeout_seconds>
+        <fail_fast>{{fail_fast}}</fail_fast>
+      </constraints>
+      <tools_allowed>
+        <tool>read_file</tool>
+        <tool>grep_search</tool>
+        <tool>get_errors</tool>
+        <tool>file_search</tool>
+      </tools_allowed>
+    </subagent_task>
+
+  diagnostics_task: |
+    <subagent_task type="diagnostics">
+      <context>
+        <services>{{services}}</services>
+        <check_types>{{check_types}}</check_types>
+      </context>
+      <objectives>
+        <primary>Diagnose service health and configuration</primary>
+        <output_format>markdown_report</output_format>
+        <include_recommendations>true</include_recommendations>
+      </objectives>
+      <constraints>
+        <max_parallel_calls>4</max_parallel_calls>
+        <timeout_seconds>30</timeout_seconds>
+      </constraints>
+      <tools_allowed>
+        <tool>run_in_terminal</tool>
+        <tool>read_file</tool>
+        <tool>grep_search</tool>
+      </tools_allowed>
+    </subagent_task>
+
+  batch_edit_task: |
+    <subagent_task type="batch_edit">
+      <context>
+        <files>{{files}}</files>
+        <operation>{{operation}}</operation>
+        <pattern>{{pattern}}</pattern>
+        <replacement>{{replacement}}</replacement>
+      </context>
+      <objectives>
+        <primary>Apply batch edits across files</primary>
+        <output_format>edit_summary</output_format>
+        <validate_after_edit>true</validate_after_edit>
+      </objectives>
+      <constraints>
+        <dry_run>{{dry_run}}</dry_run>
+        <backup_files>false</backup_files>
+      </constraints>
+      <tools_allowed>
+        <tool>multi_replace_string_in_file</tool>
+        <tool>read_file</tool>
+        <tool>get_errors</tool>
+      </tools_allowed>
+    </subagent_task>
+
+  research_task: |
+    <subagent_task type="research">
+      <context>
+        <query>{{query}}</query>
+        <scope>{{scope}}</scope>
+      </context>
+      <objectives>
+        <primary>Search and analyze codebase</primary>
+        <output_format>findings_report</output_format>
+        <max_results>{{max_results}}</max_results>
+      </objectives>
+      <constraints>
+        <max_parallel_calls>5</max_parallel_calls>
+        <timeout_seconds>20</timeout_seconds>
+      </constraints>
+      <tools_allowed>
+        <tool>semantic_search</tool>
+        <tool>grep_search</tool>
+        <tool>file_search</tool>
+        <tool>read_file</tool>
+      </tools_allowed>
+    </subagent_task>
+
+# Tracing integration (from .config/tracing.yml)
+tracing:
+  enabled: true
+  provider: "opentelemetry"
+  exporter: "jaeger"
+  endpoint: "http://localhost:4318/v1/traces"
+  service_name: "subagent-orchestrator"
+  attributes:
+    - task_type
+    - parallel_calls
+    - execution_time_ms
+    - success_rate
+    - tool_calls_count
+
+# Performance metrics collection
+metrics:
+  enabled: true
+  collection_interval_ms: 1000
+  exporters:
+    - prometheus
+    - console
+  tracked_metrics:
+    - name: "subagent_task_duration_ms"
+      type: "histogram"
+      buckets: [100, 500, 1000, 2000, 5000, 10000, 30000]
+    - name: "subagent_parallel_efficiency"
+      type: "gauge"
+      description: "Ratio of parallel vs sequential execution time"
+    - name: "subagent_tool_calls_total"
+      type: "counter"
+      labels: ["tool_name", "task_type", "status"]
+    - name: "subagent_errors_total"
+      type: "counter"
+      labels: ["error_type", "task_type"]
+
+# Profiles for different execution contexts
+profiles:
+  development:
+    <<: *performance_targets
+    max_parallel_agents: 4
+    timeout_seconds: 60
+    retry_attempts: 5
+    verbose_logging: true
+
+  ci_cd:
+    <<: *performance_targets
+    max_parallel_agents: 8
+    timeout_seconds: 30
+    retry_attempts: 2
+    fail_fast: true
+
+  production:
+    <<: *performance_targets
+    max_parallel_agents: 6
+    timeout_seconds: 45
+    retry_attempts: 3
+    circuit_breaker: true

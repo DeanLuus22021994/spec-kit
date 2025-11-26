@@ -1,0 +1,129 @@
+# CI/CD Standards
+# Guidelines for continuous integration, testing, and pr-validation
+
+metadata: &metadata
+  version: "1.0.0"
+  category: standard
+  keywords: [ci-cd, testing, pr-validation, build, artifacts, caching, cli, performance]
+  updated: "2025-11-24"
+
+<<: *metadata
+
+pr_validation:
+  config_file: ".config/pr-validation.yml"
+
+  build:
+    solution: "semantic-kernel-app.sln"
+    configuration: "Release"
+    verbosity: "normal"
+
+  tests:
+    unit:
+      timeout: 300
+    integration:
+      timeout: 600
+      requires_services: true
+    e2e:
+      timeout: 900
+      requires_services: true
+      browsers:
+        - "chromium"
+        - "firefox"
+        - "webkit"
+
+  docker:
+    startup_wait: 30
+    health_checks:
+      interval: 15
+      timeout: 5
+      retries: 3
+
+  linting:
+    continue_on_error: false
+    languages:
+      - "python"
+      - "frontend"
+      - "sql"
+      - "shell"
+
+  reporting:
+    retention_days: 30
+    format: "markdown"
+
+cli:
+  config_file: ".config/cli.yml"
+  name: "sk-cli"
+  description: "Semantic Kernel CLI for managing AI operations"
+
+  commands:
+    - "kernel (create, list, delete, status)"
+    - "plugins (install, list, remove, update)"
+    - "skills (add, list, invoke, test)"
+    - "embeddings (generate, search, index, query)"
+    - "config (show, set, reset)"
+
+  api_endpoints:
+    backend: "http://localhost:5000"
+    engine: "http://localhost:5001"
+    embeddings: "http://localhost:8001"
+    vector: "http://localhost:6333"
+
+  output_formats:
+    - "json"
+    - "yaml"
+    - "table"
+    - "csv"
+
+testing_best_practices:
+  unit_tests:
+    - "Test individual methods and classes in isolation"
+    - "Use mocking for external dependencies"
+    - "Aim for 80%+ code coverage"
+    - "Follow AAA pattern: Arrange, Act, Assert"
+
+  integration_tests:
+    - "Test service interactions with real dependencies"
+    - "Use test containers for databases"
+    - "Validate API contracts"
+    - "Test error handling and edge cases"
+
+  e2e_tests:
+    - "Test complete user workflows"
+    - "Use Playwright for browser automation"
+    - "Run against full docker-compose stack"
+    - "Include visual regression testing"
+
+build_standards:
+  artifacts:
+    retention: "7 days for builds, 30 days for test results"
+    naming: "build-artifacts, test-results, coverage-report"
+
+  caching:
+    dotnet: "~/.nuget/packages (key: packages.lock.json)"
+    npm: "~/.npm (key: package-lock.json)"
+    pip: "~/.cache/pip (key: requirements.txt)"
+    pytorch: "~/.cache/torch (for model weights)"
+
+  gpu_testing:
+    note: "GPU tests require NVIDIA runtime and CUDA toolkit"
+    local_testing: "Use docker --gpus all for GPU container testing"
+    ci_environment: "Self-hosted runners with NVIDIA GPU support"
+    environment_config: ".config/environment.yml"
+
+  performance:
+    max_build_time: "20 minutes for full pipeline"
+    fast_feedback: "2-3 minutes for pr-validation"
+
+cross_references:
+  - ".config/copilot/standards/architecture-standards.yml: Architecture standards"
+  - ".config/copilot/standards/infrastructure-standards.yml: Infrastructure standards"
+  - ".config/copilot/workflows/github-workflows-reference.yml: Workflow catalog"
+  - ".config/pr-validation.yml: PR validation configuration"
+
+related_documentation:
+  - ".config/copilot/standards/architecture-standards.yml"
+  - ".config/copilot/standards/infrastructure-standards.yml"
+  - ".config/copilot/workflows/github-workflows-reference.yml"
+  - ".config/pr-validation.yml"
+  - ".config/environment.yml"
+  - ".config/copilot/yaml-best-practices.yml"

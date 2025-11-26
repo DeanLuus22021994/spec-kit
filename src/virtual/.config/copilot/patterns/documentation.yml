@@ -1,0 +1,126 @@
+# Documentation Organization Patterns
+# Structural guidelines for documentation maintenance
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: pattern
+  keywords:
+    - documentation
+    - mkdocs
+    - structure
+    - organization
+    - navigation
+
+<<: *metadata
+
+# Paths
+paths:
+  root: &docs_root docs/
+  navigation: &nav_config docs/mkdocs.yml
+
+root: *docs_root
+navigation: *nav_config
+
+# Structure Templates
+structure_template: &structure_template
+  location: null
+  examples: []
+  purpose: null
+
+structure:
+  reference:
+    <<: *structure_template
+    location: docs/*.md
+    examples:
+      - github-cli-reference.md
+      - tools-container.md
+    purpose: Technical reference documentation and field listings
+
+  development:
+    <<: *structure_template
+    location: docs/development/*.md
+    examples:
+      - copilot-patterns.md
+    purpose: Development guides, patterns, and workflows
+
+  deferred:
+    <<: *structure_template
+    location: docs/deferred/*.md
+    examples:
+      - README.md
+      - python-package-updates.md
+      - devcontainer-validation-participant.md
+    purpose: Standardized deferred work items
+
+  cli:
+    <<: *structure_template
+    location: docs/cli/*.md
+    examples:
+      - python-cli.md
+    purpose: CLI tool documentation and usage
+
+  configuration:
+    <<: *structure_template
+    location: docs/configuration/*.md
+    examples:
+      - yaml-files.md
+    purpose: YAML configuration file documentation
+
+  dockerfiles:
+    <<: *structure_template
+    location: docs/dockerfiles/*.md
+    examples:
+      - overview.md
+    purpose: Dockerfile documentation and build patterns
+
+when_to_create:
+  reference_docs:
+    trigger:
+      - "GitHub CLI field names and command patterns"
+      - "Container usage and best practices"
+      - "API references and complete field listings"
+    location: "docs/*.md"
+
+  development_docs:
+    trigger:
+      - "Workflow patterns and guides"
+      - "Environment setup guides"
+      - "Troubleshooting guides"
+    location: "docs/development/*.md"
+
+  deferred_items:
+    trigger:
+      - "Breaking change research plans"
+      - "Major update proposals requiring validation"
+      - "Feature proposals needing stakeholder input"
+    location: "docs/deferred/*.md"
+    format_reference: ".config/copilot/workflows/deferred-items.yml"
+
+update_navigation:
+  rule: "Always update docs/mkdocs.yml when adding new documentation"
+  structure: "Maintain hierarchical navigation reflecting directory structure"
+
+mkdocs_sections:
+  - "Home"
+  - "Reference"
+  - "Development"
+  - "Deferred Items"
+  - "CLI Tools"
+  - "Configuration"
+  - "Dockerfiles"
+
+best_practices:
+  - "Keep documentation close to code (e.g., Dockerfile docs in docs/dockerfiles/)"
+  - "Use consistent naming: kebab-case.md for all markdown files"
+  - "Reference .config/copilot/*.yml for context instead of duplicating content"
+  - "Update MkDocs navigation immediately when adding docs"
+  - "Cross-reference related docs with relative links"
+  - "Include keywords in frontmatter for semantic search optimization"
+  - "Reference .config/environment.yml for GPU/CUDA environment variables"
+
+configuration_references:
+  environment: ".config/environment.yml - All environment variables (CUDA, Python, Docker, etc.)"
+  services: ".config/services.yml - Service configurations with GPU resources"
+  infrastructure: ".config/infrastructure.yml - Docker networking and GPU runtime"
+  semantic_kernel: ".config/semantic-kernel.yml - AI/ML configuration with CUDA settings"

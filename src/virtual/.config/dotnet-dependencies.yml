@@ -1,0 +1,709 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# .NET Dependencies Configuration
+# Auto-provisioning specification for .NET packages with Docker and GPU acceleration
+# Category: config | Version: 1.0.0 | Updated: 2025-11-25
+
+metadata: &metadata
+  name: dotnet-dependencies
+  description: Auto-provisioning configuration for .NET packages with Semantic Kernel optimizations
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: config
+  keywords:
+    [dotnet, dependencies, nuget, packages, configuration, gpu, semantic-kernel]
+  source_files:
+    - global.json
+    - "**/*.csproj"
+    - Directory.Build.props
+    - Directory.Packages.props
+
+<<: *metadata
+
+# =============================================================================
+# Runtime Configuration
+# =============================================================================
+runtime:
+  dotnet_version: "10.0.100"
+  language_version: "C# 13"
+  target_framework: "net10.0"
+  roll_forward: "latestFeature"
+  nullable: "enable"
+  implicit_usings: "enable"
+
+# =============================================================================
+# Auto-Provisioning Rules
+# =============================================================================
+auto_provisioning:
+  description: "Rules for automatic package restoration when cloning repository"
+  enabled: true
+  triggers:
+    - "Repository clone"
+    - "Branch checkout with dependency changes"
+    - "CI/CD pipeline initialization"
+    - "Copilot agent environment setup"
+    - "Docker container build"
+
+  installation_order:
+    - sdk_tools
+    - semantic_kernel
+    - aspnet_core
+    - entity_framework
+    - caching
+    - validation
+    - testing
+
+  commands:
+    restore: "dotnet restore"
+    build: "dotnet build --no-restore"
+    publish: "dotnet publish -c Release --no-build"
+    tool_restore: "dotnet tool restore"
+
+  verification_command: "dotnet --list-sdks && dotnet --list-runtimes"
+
+# =============================================================================
+# SDK Tools
+# =============================================================================
+sdk_tools:
+  description: "Global .NET tools for development"
+  manifest_file: ".config/dotnet-tools.json"
+  tools:
+    dotnet-ef:
+      version: "9.0.0"
+      purpose: "Entity Framework Core CLI tools"
+      commands:
+        - "dotnet ef migrations add"
+        - "dotnet ef database update"
+        - "dotnet ef dbcontext scaffold"
+    dotnet-format:
+      version: "latest"
+      purpose: "Code formatting"
+      commands:
+        - "dotnet format"
+        - "dotnet format --verify-no-changes"
+    dotnet-outdated:
+      version: "latest"
+      purpose: "Check for outdated packages"
+      commands:
+        - "dotnet outdated"
+
+# =============================================================================
+# Package Groups
+# =============================================================================
+packages:
+  semantic_kernel:
+    description: "Microsoft Semantic Kernel AI orchestration framework"
+    required: true
+    gpu_optimized: true
+    install_command: "dotnet add package Microsoft.SemanticKernel"
+    packages:
+      Microsoft.SemanticKernel:
+        version: "latest"
+        purpose: "Core Semantic Kernel SDK"
+        namespaces:
+          - "Microsoft.SemanticKernel"
+        usage:
+          - "Kernel creation and configuration"
+          - "Plugin management"
+          - "AI service orchestration"
+        optimizations:
+          streaming: true
+          async_execution: true
+          memory_efficient: true
+
+      Microsoft.SemanticKernel.Connectors.OpenAI:
+        version: "latest"
+        purpose: "OpenAI/Azure OpenAI connector"
+        namespaces:
+          - "Microsoft.SemanticKernel.Connectors.OpenAI"
+        usage:
+          - "Chat completions"
+          - "Embeddings generation"
+          - "Text generation"
+        models:
+          chat: "gpt-4o"
+          embeddings: "text-embedding-3-small"
+
+      Microsoft.SemanticKernel.Connectors.Postgres:
+        version: "latest"
+        purpose: "PostgreSQL vector store connector"
+        namespaces:
+          - "Microsoft.SemanticKernel.Connectors.Postgres"
+        usage:
+          - "Vector memory storage"
+          - "Semantic search"
+          - "pgvector integration"
+        gpu_acceleration:
+          enabled: true
+          index_type: "ivfflat"
+          lists: 100
+
+      Microsoft.SemanticKernel.Connectors.Qdrant:
+        version: "latest"
+        purpose: "Qdrant vector database connector"
+        namespaces:
+          - "Microsoft.SemanticKernel.Connectors.Qdrant"
+        usage:
+          - "High-performance vector search"
+          - "GPU-accelerated similarity"
+        gpu_acceleration:
+          enabled: true
+          hnsw_ef: 128
+          m: 16
+
+      Microsoft.SemanticKernel.Planners.Handlebars:
+        version: "latest"
+        purpose: "Handlebars-based planner"
+        namespaces:
+          - "Microsoft.SemanticKernel.Planning.Handlebars"
+        planners:
+          - "HandlebarsPlanner"
+
+      Microsoft.SemanticKernel.Planners.OpenAI:
+        version: "latest"
+        purpose: "OpenAI function calling planner"
+        namespaces:
+          - "Microsoft.SemanticKernel.Planning"
+        planners:
+          - "FunctionCallingStepwisePlanner"
+
+      Microsoft.SemanticKernel.Plugins.Core:
+        version: "latest"
+        purpose: "Core plugins (Time, Text, etc.)"
+        namespaces:
+          - "Microsoft.SemanticKernel.Plugins.Core"
+        plugins:
+          - "TimePlugin"
+          - "TextPlugin"
+          - "ConversationSummaryPlugin"
+
+      Microsoft.SemanticKernel.Plugins.Memory:
+        version: "latest"
+        purpose: "Memory management plugins"
+        namespaces:
+          - "Microsoft.SemanticKernel.Plugins.Memory"
+        usage:
+          - "Semantic memory"
+          - "Vector recall"
+
+  aspnet_core:
+    description: "ASP.NET Core web framework packages"
+    required: true
+    install_command: "dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer"
+    packages:
+      Microsoft.AspNetCore.Authentication.JwtBearer:
+        version: "10.0.0"
+        purpose: "JWT authentication"
+        namespaces:
+          - "Microsoft.AspNetCore.Authentication.JwtBearer"
+        usage:
+          - "API authentication"
+          - "Token validation"
+
+      Microsoft.AspNetCore.Mvc.NewtonsoftJson:
+        version: "10.0.0"
+        purpose: "JSON serialization with Newtonsoft"
+        namespaces:
+          - "Microsoft.AspNetCore.Mvc"
+        usage:
+          - "Complex JSON handling"
+          - "Custom serialization"
+
+      Swashbuckle.AspNetCore:
+        version: "7.0.0"
+        purpose: "OpenAPI/Swagger documentation"
+        namespaces:
+          - "Swashbuckle.AspNetCore"
+        endpoints:
+          - "/swagger"
+          - "/swagger/v1/swagger.json"
+
+  entity_framework:
+    description: "Entity Framework Core ORM packages"
+    required: true
+    install_command: "dotnet add package Microsoft.EntityFrameworkCore.Design"
+    packages:
+      Microsoft.EntityFrameworkCore:
+        version: "10.0.0"
+        purpose: "Core EF functionality"
+        namespaces:
+          - "Microsoft.EntityFrameworkCore"
+        usage:
+          - "DbContext configuration"
+          - "Entity mapping"
+          - "LINQ queries"
+
+      Microsoft.EntityFrameworkCore.Design:
+        version: "10.0.0"
+        purpose: "Design-time tools"
+        usage:
+          - "Migrations scaffolding"
+          - "DbContext scaffolding"
+
+      Npgsql.EntityFrameworkCore.PostgreSQL:
+        version: "10.0.0"
+        purpose: "PostgreSQL provider for EF Core"
+        namespaces:
+          - "Npgsql.EntityFrameworkCore.PostgreSQL"
+        extensions:
+          - "pgvector"
+          - "uuid-ossp"
+        connection_pooling:
+          min_size: 5
+          max_size: 100
+
+      Pgvector.EntityFrameworkCore:
+        version: "latest"
+        purpose: "pgvector support for EF Core"
+        namespaces:
+          - "Pgvector.EntityFrameworkCore"
+        usage:
+          - "Vector column types"
+          - "Similarity search queries"
+        gpu_acceleration:
+          ivfflat_probes: 10
+
+  caching:
+    description: "Distributed caching packages"
+    required: true
+    install_command: "dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis"
+    packages:
+      Microsoft.Extensions.Caching.StackExchangeRedis:
+        version: "10.0.0"
+        purpose: "Redis distributed cache"
+        namespaces:
+          - "Microsoft.Extensions.Caching.StackExchangeRedis"
+        usage:
+          - "Session caching"
+          - "Response caching"
+          - "Semantic Kernel memory cache"
+
+      StackExchange.Redis:
+        version: "2.8.0"
+        purpose: "Redis client library"
+        namespaces:
+          - "StackExchange.Redis"
+        optimizations:
+          multiplexer_pooling: true
+          async_timeout: 5000
+          sync_timeout: 5000
+
+  validation:
+    description: "Validation and mapping packages"
+    required: true
+    install_command: "dotnet add package FluentValidation.AspNetCore"
+    packages:
+      FluentValidation:
+        version: "11.10.0"
+        purpose: "Fluent validation rules"
+        namespaces:
+          - "FluentValidation"
+        usage:
+          - "Request validation"
+          - "Model validation"
+
+      FluentValidation.AspNetCore:
+        version: "11.3.0"
+        purpose: "ASP.NET Core integration"
+        namespaces:
+          - "FluentValidation.AspNetCore"
+
+      AutoMapper:
+        version: "13.0.0"
+        purpose: "Object-to-object mapping"
+        namespaces:
+          - "AutoMapper"
+        usage:
+          - "DTO mapping"
+          - "Entity projection"
+
+      MediatR:
+        version: "12.4.0"
+        purpose: "Mediator pattern implementation"
+        namespaces:
+          - "MediatR"
+        usage:
+          - "CQRS pattern"
+          - "Request/Response handling"
+          - "Notification publishing"
+
+  testing:
+    description: "Testing framework packages"
+    required: false
+    install_command: "dotnet add package xunit"
+    packages:
+      xunit:
+        version: "2.9.0"
+        purpose: "Unit testing framework"
+        namespaces:
+          - "Xunit"
+
+      xunit.runner.visualstudio:
+        version: "2.8.0"
+        purpose: "Visual Studio test runner"
+
+      Moq:
+        version: "4.20.0"
+        purpose: "Mocking framework"
+        namespaces:
+          - "Moq"
+
+      FluentAssertions:
+        version: "6.12.0"
+        purpose: "Fluent assertion library"
+        namespaces:
+          - "FluentAssertions"
+
+      Microsoft.NET.Test.Sdk:
+        version: "17.11.0"
+        purpose: "Test SDK"
+
+      coverlet.collector:
+        version: "6.0.0"
+        purpose: "Code coverage collector"
+
+  logging:
+    description: "Logging and observability packages"
+    required: true
+    install_command: "dotnet add package Serilog.AspNetCore"
+    packages:
+      Serilog.AspNetCore:
+        version: "8.0.0"
+        purpose: "Structured logging for ASP.NET Core"
+        namespaces:
+          - "Serilog"
+        sinks:
+          - "Console"
+          - "File"
+          - "Seq"
+
+      Serilog.Sinks.Console:
+        version: "6.0.0"
+        purpose: "Console output sink"
+
+      Serilog.Sinks.File:
+        version: "6.0.0"
+        purpose: "File output sink"
+
+      OpenTelemetry.Exporter.Console:
+        version: "1.9.0"
+        purpose: "OpenTelemetry console exporter"
+
+      OpenTelemetry.Extensions.Hosting:
+        version: "1.9.0"
+        purpose: "OpenTelemetry hosting integration"
+
+# =============================================================================
+# Docker Configuration
+# =============================================================================
+docker:
+  base_images:
+    sdk: "mcr.microsoft.com/dotnet/sdk:10.0-alpine"
+    aspnet: "mcr.microsoft.com/dotnet/aspnet:10.0-alpine"
+    runtime: "mcr.microsoft.com/dotnet/runtime:10.0-alpine"
+
+  gpu_images:
+    cuda_sdk: "mcr.microsoft.com/dotnet/sdk:10.0-jammy"
+    cuda_aspnet: "mcr.microsoft.com/dotnet/aspnet:10.0-jammy"
+    note: "Use jammy (Ubuntu) base for NVIDIA runtime compatibility"
+
+  multi_stage_build:
+    description: "Optimized multi-stage build pattern"
+    stages:
+      - name: "restore"
+        base: "sdk"
+        purpose: "Restore NuGet packages (cached layer)"
+        commands:
+          - "COPY *.csproj ./"
+          - "RUN dotnet restore"
+
+      - name: "build"
+        base: "restore"
+        purpose: "Build application"
+        commands:
+          - "COPY . ./"
+          - "RUN dotnet build -c Release --no-restore"
+
+      - name: "publish"
+        base: "build"
+        purpose: "Publish for deployment"
+        commands:
+          - "RUN dotnet publish -c Release -o /app/publish --no-build"
+
+      - name: "runtime"
+        base: "aspnet"
+        purpose: "Minimal runtime image"
+        commands:
+          - "COPY --from=publish /app/publish ."
+          - 'ENTRYPOINT ["dotnet", "app.dll"]'
+
+  gpu_runtime:
+    description: "GPU-enabled runtime configuration"
+    dockerfile_additions: |
+      # GPU Support
+      ENV NVIDIA_VISIBLE_DEVICES=all
+      ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      ENV DOTNET_RUNNING_IN_CONTAINER=true
+    compose_config: |
+      runtime: nvidia
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities: [gpu]
+
+  environment_variables:
+    DOTNET_RUNNING_IN_CONTAINER: "true"
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "false"
+    ASPNETCORE_ENVIRONMENT: "Production"
+    ASPNETCORE_URLS: "http://+:80"
+    DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    DOTNET_NOLOGO: "1"
+
+# =============================================================================
+# Semantic Kernel Optimizations
+# =============================================================================
+semantic_kernel_optimizations:
+  description: "Performance optimizations for Semantic Kernel implementations"
+
+  kernel_configuration:
+    builder_pattern: |
+      var builder = Kernel.CreateBuilder();
+      builder.AddOpenAIChatCompletion(modelId, apiKey);
+      builder.AddOpenAITextEmbeddingGeneration(embeddingModel, apiKey);
+      var kernel = builder.Build();
+
+    dependency_injection: |
+      services.AddKernel()
+          .AddOpenAIChatCompletion(modelId, apiKey)
+          .AddOpenAITextEmbeddingGeneration(embeddingModel, apiKey);
+
+  memory_optimization:
+    vector_store_config:
+      postgres:
+        connection_pooling: true
+        min_pool_size: 5
+        max_pool_size: 100
+        enable_retries: true
+      qdrant:
+        grpc_enabled: true
+        prefer_grpc: true
+        timeout_seconds: 60
+
+    embedding_batch_size: 64
+    max_concurrent_requests: 32
+    enable_response_streaming: true
+
+  gpu_acceleration:
+    enabled: true
+    cuda_version: "13.0"
+    compute_capability: "8.6"
+    settings:
+      batch_inference: true
+      mixed_precision: true
+      memory_efficient_attention: true
+      torch_compile: true
+      cudnn_benchmark: true
+
+  caching_strategy:
+    embedding_cache:
+      enabled: true
+      provider: "Redis"
+      ttl_minutes: 1440
+      key_prefix: "sk:emb:"
+
+    completion_cache:
+      enabled: true
+      provider: "Redis"
+      ttl_minutes: 60
+      key_prefix: "sk:comp:"
+
+    memory_cache:
+      enabled: true
+      size_limit_mb: 512
+
+  async_patterns:
+    description: "Recommended async patterns for Semantic Kernel"
+    examples:
+      streaming: |
+        await foreach (var chunk in kernel.InvokeStreamingAsync<string>(function))
+        {
+            yield return chunk;
+        }
+
+      batch_processing: |
+        var tasks = inputs.Select(input => kernel.InvokeAsync(function, new() { ["input"] = input }));
+        var results = await Task.WhenAll(tasks);
+
+      cancellation: |
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+        await kernel.InvokeAsync(function, cancellationToken: cts.Token);
+
+# =============================================================================
+# Service Architecture
+# =============================================================================
+service_architecture:
+  services:
+    engine:
+      project: "src/engine/engine.csproj"
+      type: "Library"
+      dockerfile: "dockerfiles/engine.Dockerfile"
+      gpu_enabled: true
+      packages:
+        - "Microsoft.SemanticKernel"
+        - "Microsoft.SemanticKernel.Connectors.OpenAI"
+        - "Microsoft.SemanticKernel.Connectors.Postgres"
+        - "Microsoft.SemanticKernel.Planners.Handlebars"
+      responsibilities:
+        - "Kernel factory and lifecycle"
+        - "Plugin management"
+        - "Planner orchestration"
+        - "Memory operations"
+
+    backend:
+      project: "src/backend/backend.csproj"
+      type: "Web API"
+      dockerfile: "dockerfiles/backend.Dockerfile"
+      gpu_enabled: false
+      packages:
+        - "Microsoft.AspNetCore.Authentication.JwtBearer"
+        - "Microsoft.EntityFrameworkCore"
+        - "Swashbuckle.AspNetCore"
+        - "StackExchange.Redis"
+      responsibilities:
+        - "REST API endpoints"
+        - "Authentication/Authorization"
+        - "Data persistence"
+        - "Cache management"
+
+    business:
+      project: "src/business/business.csproj"
+      type: "Library"
+      dockerfile: "dockerfiles/business.Dockerfile"
+      gpu_enabled: false
+      packages:
+        - "FluentValidation"
+        - "MediatR"
+        - "AutoMapper"
+      responsibilities:
+        - "Business logic"
+        - "Validation rules"
+        - "CQRS handlers"
+
+    gateway:
+      project: "src/gateway/gateway.csproj"
+      type: "Web API"
+      dockerfile: "dockerfiles/gateway.Dockerfile"
+      gpu_enabled: false
+      packages:
+        - "Microsoft.AspNetCore.Authentication.JwtBearer"
+        - "Swashbuckle.AspNetCore"
+      responsibilities:
+        - "API gateway"
+        - "Request routing"
+        - "Rate limiting"
+
+# =============================================================================
+# CI/CD Integration
+# =============================================================================
+ci_cd_integration:
+  github_actions:
+    cache_key: "${{ runner.os }}-nuget-${{ hashFiles('global.json', '**/*.csproj') }}"
+    cache_path: "~/.nuget/packages"
+    setup_action: "actions/setup-dotnet@v4"
+    setup_config:
+      dotnet-version: "10.0.x"
+
+  build_steps:
+    - name: "Setup .NET"
+      uses: "actions/setup-dotnet@v4"
+      with:
+        dotnet-version: "10.0.x"
+
+    - name: "Restore dependencies"
+      run: "dotnet restore"
+
+    - name: "Build"
+      run: "dotnet build --no-restore -c Release"
+
+    - name: "Test"
+      run: 'dotnet test --no-build -c Release --collect:"XPlat Code Coverage"'
+
+    - name: "Publish"
+      run: "dotnet publish -c Release -o ./publish --no-build"
+
+  docker_build:
+    buildx: true
+    cache_from: "type=gha"
+    cache_to: "type=gha,mode=max"
+    platforms:
+      - "linux/amd64"
+
+  copilot_agent:
+    description: "Package restoration for Copilot Coding Agent"
+    setup_workflow: ".github/workflows/copilot-setup-steps.yml"
+    installation_step: |
+      - name: Restore .NET dependencies
+        run: dotnet restore
+        shell: pwsh
+
+# =============================================================================
+# Troubleshooting
+# =============================================================================
+troubleshooting:
+  package_restore_failed:
+    symptom: "Unable to resolve package or restore failed"
+    solutions:
+      - "Clear NuGet cache: dotnet nuget locals all --clear"
+      - "Check NuGet.config for correct feeds"
+      - "Verify internet connectivity"
+      - "Check package version exists"
+
+  sdk_version_mismatch:
+    symptom: "SDK version not found or mismatched"
+    solutions:
+      - "Install correct SDK: winget install Microsoft.DotNet.SDK.10"
+      - "Check global.json version specification"
+      - "Use rollForward policy for flexibility"
+
+  docker_build_failed:
+    symptom: "Docker build fails during restore or build"
+    solutions:
+      - "Use --no-cache flag for clean build"
+      - "Verify COPY paths match project structure"
+      - "Check multi-stage build layer caching"
+      - "Ensure base images are accessible"
+
+  semantic_kernel_errors:
+    symptom: "Semantic Kernel operation failed"
+    solutions:
+      api_key_invalid:
+        fix: "Verify OPENAI_API_KEY environment variable"
+      model_not_found:
+        fix: "Check model ID matches available models"
+      rate_limited:
+        fix: "Implement retry with exponential backoff"
+      memory_error:
+        fix: "Reduce batch size or enable streaming"
+
+  gpu_not_detected:
+    symptom: "GPU not available in container"
+    solutions:
+      - "Verify NVIDIA runtime in docker-compose: runtime: nvidia"
+      - "Check NVIDIA_VISIBLE_DEVICES environment variable"
+      - "Ensure nvidia-container-toolkit is installed"
+      - "Use Ubuntu base image instead of Alpine for GPU support"
+
+# =============================================================================
+# Related Documentation
+# =============================================================================
+related_documentation:
+  - "global.json: .NET SDK version specification"
+  - ".config/semantic-kernel.yml: Semantic Kernel configuration"
+  - ".config/services.yml: Service resource allocation"
+  - ".config/environment.yml: Environment variables"
+  - "docker-compose.yml: Container orchestration"
+  - "dockerfiles/engine.Dockerfile: Engine container build"
+  - ".config/copilot/references/technology-stack.yml: Technology overview"
+  - ".config/copilot/references/services.yml: Service architecture"

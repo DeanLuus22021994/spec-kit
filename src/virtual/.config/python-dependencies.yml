@@ -1,0 +1,384 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Python Dependencies Configuration
+# Auto-provisioning specification for Python packages across the codebase
+# Category: config | Version: 1.0.0 | Updated: 2025-11-25
+
+metadata: &metadata
+  name: python-dependencies
+  description: Auto-provisioning configuration for Python packages
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: config
+  keywords: [python, dependencies, pip, packages, configuration, gpu, cuda]
+  source_files:
+    - tools/requirements.txt
+    - pyproject.toml
+
+<<: *metadata
+
+# =============================================================================
+# Runtime Configuration
+# =============================================================================
+runtime:
+  python_version: "3.14"
+  pip_version: ">=24.0"
+  virtual_environment:
+    recommended: true
+    name: ".venv"
+    creation: "python -m venv .venv"
+
+# =============================================================================
+# Auto-Provisioning Rules
+# =============================================================================
+auto_provisioning:
+  description: "Rules for automatic package installation when cloning repository"
+  enabled: true
+  triggers:
+    - "Repository clone"
+    - "Branch checkout with dependency changes"
+    - "CI/CD pipeline initialization"
+    - "Copilot agent environment setup"
+
+  installation_order:
+    - core
+    - testing
+    - code_quality
+    - utilities
+    - documentation
+    - gpu_acceleration
+
+  verification_command: 'python -c ''import yaml, jsonschema, click, pytest, black, ruff, mypy, rich, tabulate, jinja2, watchdog; print("All packages verified")'''
+
+# =============================================================================
+# Package Groups
+# =============================================================================
+packages:
+  core:
+    description: "Essential runtime dependencies"
+    required: true
+    install_command: "pip install pyyaml jsonschema click"
+    packages:
+      pyyaml:
+        version: "6.0.2"
+        purpose: "YAML parsing and serialization"
+        imports: ["yaml"]
+        usage:
+          - "Configuration file parsing"
+          - "Test fixture loading"
+          - "Rule definition parsing"
+      jsonschema:
+        version: "4.23.0"
+        purpose: "JSON Schema validation"
+        imports: ["jsonschema"]
+        usage:
+          - "Configuration validation"
+          - "API payload validation"
+          - "Schema enforcement"
+      click:
+        version: "8.1.7"
+        purpose: "CLI framework"
+        imports: ["click"]
+        usage:
+          - "Command-line interface"
+          - "Argument parsing"
+          - "Interactive prompts"
+
+  testing:
+    description: "Test framework and coverage"
+    required: true
+    install_command: "pip install pytest pytest-cov"
+    packages:
+      pytest:
+        version: "8.3.3"
+        purpose: "Testing framework"
+        imports: ["pytest"]
+        usage:
+          - "Unit testing"
+          - "Integration testing"
+          - "Test fixtures"
+      pytest-cov:
+        version: "5.0.0"
+        purpose: "Coverage reporting"
+        imports: ["pytest_cov"]
+        usage:
+          - "Code coverage measurement"
+          - "Coverage HTML reports"
+          - "CI coverage gates"
+
+  code_quality:
+    description: "Linting, formatting, and type checking"
+    required: true
+    install_command: "pip install black ruff mypy types-jsonschema pylint isort"
+    packages:
+      black:
+        version: "24.10.0"
+        purpose: "Code formatting"
+        imports: ["black"]
+        config_file: "pyproject.toml"
+        settings:
+          line_length: 150
+          target_version: "py312"
+      ruff:
+        version: "0.7.4"
+        purpose: "Fast linting"
+        imports: ["ruff"]
+        usage:
+          - "Lint checking"
+          - "Import sorting"
+          - "Code style enforcement"
+      mypy:
+        version: "1.13.0"
+        purpose: "Static type checking"
+        imports: ["mypy"]
+        config_file: "pyproject.toml"
+        settings:
+          python_version: "3.14"
+          warn_return_any: true
+      types-jsonschema:
+        version: "4.23.0.20240813"
+        purpose: "Type stubs for jsonschema"
+        imports: []
+        usage:
+          - "Type hints for jsonschema"
+          - "IDE autocompletion"
+      pylint:
+        version: ">=3.0.0"
+        purpose: "Comprehensive linting"
+        imports: ["pylint"]
+        config_file: "pyproject.toml"
+        settings:
+          max_line_length: 150
+      isort:
+        version: ">=5.12.0"
+        purpose: "Import sorting"
+        imports: ["isort"]
+        config_file: "pyproject.toml"
+        settings:
+          profile: "black"
+          line_length: 150
+
+  utilities:
+    description: "Development and runtime utilities"
+    required: true
+    install_command: "pip install rich tabulate jinja2 watchdog"
+    packages:
+      rich:
+        version: "13.9.4"
+        purpose: "Terminal formatting"
+        imports: ["rich"]
+        usage:
+          - "Colored console output"
+          - "Progress bars"
+          - "Tables and panels"
+      tabulate:
+        version: "0.9.0"
+        purpose: "Table formatting"
+        imports: ["tabulate"]
+        usage:
+          - "CLI table output"
+          - "Report generation"
+      jinja2:
+        version: "3.1.4"
+        purpose: "Template engine"
+        imports: ["jinja2"]
+        usage:
+          - "Code scaffolding"
+          - "Report templates"
+          - "Configuration generation"
+      watchdog:
+        version: "5.0.3"
+        purpose: "File system monitoring"
+        imports: ["watchdog"]
+        usage:
+          - "Watch mode for validation"
+          - "Auto-reload on changes"
+
+  documentation:
+    description: "Documentation generation tools"
+    required: false
+    install_command: "pip install mkdocs mkdocs-material"
+    packages:
+      mkdocs:
+        version: "1.6.1"
+        purpose: "Documentation generation"
+        imports: ["mkdocs"]
+        config_file: "docs/mkdocs.yml"
+      mkdocs-material:
+        version: "9.5.47"
+        purpose: "Material theme for MkDocs"
+        imports: []
+        usage:
+          - "Documentation styling"
+          - "Search functionality"
+          - "Navigation enhancement"
+
+  gpu_acceleration:
+    description: "CUDA and GPU-accelerated packages"
+    required: false
+    condition: "GPU available (RTX 3050 or compatible)"
+    install_command: "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130"
+    packages:
+      torch:
+        version: "2.9.1+cu130"
+        purpose: "PyTorch with CUDA support"
+        imports: ["torch"]
+        cuda_version: "13.0"
+        compute_capability: "8.6"
+        usage:
+          - "Embeddings generation"
+          - "Model inference"
+          - "GPU-accelerated computation"
+      torchvision:
+        version: "0.22.1+cu130"
+        purpose: "PyTorch vision utilities"
+        imports: ["torchvision"]
+        optional: true
+      torchaudio:
+        version: "2.9.1+cu130"
+        purpose: "PyTorch audio utilities"
+        imports: ["torchaudio"]
+        optional: true
+
+# =============================================================================
+# Installation Scripts
+# =============================================================================
+installation:
+  full_install:
+    description: "Install all required packages"
+    commands:
+      - "python -m pip install --upgrade pip"
+      - "pip install -r tools/requirements.txt"
+    verification: "pip check"
+
+  minimal_install:
+    description: "Install only core packages"
+    commands:
+      - "python -m pip install --upgrade pip"
+      - "pip install pyyaml jsonschema click"
+
+  development_install:
+    description: "Install all packages including dev tools"
+    commands:
+      - "python -m pip install --upgrade pip"
+      - "pip install -r tools/requirements.txt"
+      - "pip install pylint isort"
+    verification: "pylint --version && isort --version"
+
+  gpu_install:
+    description: "Install GPU-accelerated packages"
+    prerequisites:
+      - "CUDA Toolkit 13.0 installed"
+      - "cuDNN 9.12.0 installed"
+      - "NVIDIA driver 545+"
+    commands:
+      - "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130"
+    verification: 'python -c ''import torch; print(f"CUDA available: {torch.cuda.is_available()}")'''
+
+# =============================================================================
+# Import Patterns
+# =============================================================================
+import_patterns:
+  optional_import:
+    description: "Pattern for optional package imports"
+    example: |
+      _yaml: ModuleType | None
+      try:
+          import yaml as _yaml_module
+          _yaml = _yaml_module
+      except ImportError:
+          _yaml = None
+    usage:
+      - "Graceful degradation when package not installed"
+      - "Runtime dependency checking"
+      - "Conditional feature availability"
+
+  lazy_import:
+    description: "Pattern for lazy loading heavy packages"
+    example: |
+      def get_torch():
+          import torch
+          return torch
+    usage:
+      - "Reduce startup time"
+      - "Load GPU packages only when needed"
+
+# =============================================================================
+# CI/CD Integration
+# =============================================================================
+ci_cd_integration:
+  github_actions:
+    cache_key: "${{ runner.os }}-pip-${{ hashFiles('tools/requirements.txt') }}"
+    cache_path: "~/.cache/pip"
+    setup_action: "actions/setup-python@v5"
+    setup_config:
+      python-version: "3.14"
+      cache: "pip"
+      cache-dependency-path: "tools/requirements.txt"
+
+  pre_commit:
+    hooks:
+      - id: "pylint-local"
+        name: "pylint (local)"
+        entry: "python -m pylint"
+        language: "system"
+        types: ["python"]
+      - id: "black"
+        name: "black"
+        entry: "black --check"
+        language: "system"
+        types: ["python"]
+      - id: "isort"
+        name: "isort"
+        entry: "isort --check-only"
+        language: "system"
+        types: ["python"]
+      - id: "ruff"
+        name: "ruff"
+        entry: "ruff check"
+        language: "system"
+        types: ["python"]
+
+  copilot_agent:
+    description: "Package installation for Copilot Coding Agent"
+    setup_workflow: ".github/workflows/copilot-setup-steps.yml"
+    installation_step: |
+      - name: Install Python packages
+        run: pip install -r tools/requirements.txt
+        shell: pwsh
+
+# =============================================================================
+# Troubleshooting
+# =============================================================================
+troubleshooting:
+  missing_module:
+    symptom: "ModuleNotFoundError: No module named 'xxx'"
+    solution: "pip install xxx"
+    prevention: "Run full_install commands on clone"
+
+  version_mismatch:
+    symptom: "Package version conflicts"
+    solution: "pip install --upgrade xxx==<version>"
+    prevention: "Use pinned versions from requirements.txt"
+
+  pylint_not_found:
+    symptom: "No module named pylint in pre-commit"
+    solution: "pip install pylint"
+    note: "pylint may not be available in Python 3.14 yet"
+
+  cuda_not_available:
+    symptom: "torch.cuda.is_available() returns False"
+    solutions:
+      - "Verify CUDA toolkit installation"
+      - "Check NVIDIA driver version (545+)"
+      - "Install correct PyTorch CUDA version"
+      - "Verify GPU compute capability matches"
+
+# =============================================================================
+# Related Documentation
+# =============================================================================
+related_documentation:
+  - "tools/requirements.txt: Pinned package versions"
+  - "pyproject.toml: Tool configurations (black, mypy, pylint)"
+  - ".config/environment.yml: Python environment variables"
+  - ".config/copilot/workflows/copilot-agent-setup.yml: CI/CD setup"
+  - ".config/copilot/references/technology-stack.yml: Technology overview"

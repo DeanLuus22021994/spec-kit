@@ -1,0 +1,85 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Port Definitions Configuration
+# Centralized port mappings for all services
+# Single source of truth for network configuration
+
+metadata: &metadata
+  name: "ports-config"
+  description: "Port Definitions Configuration"
+  version: "1.1.0"
+  category: config
+  keywords: [ports, networking, services, endpoints, configuration, gpu]
+  updated: "2025-11-25"
+
+<<: *metadata
+
+# Service Ports
+services:
+  frontend: 3000
+  backend: 5000
+  engine: 5001
+  business: 5002
+  gateway: 8080
+  database: 5432
+  vector: 6333
+  vector_grpc: 6334
+  embeddings: 8001
+  redis: 6379
+  redis_insight: 5540
+  nginx: 80
+  devsite: 8000
+
+# Internal Container Ports (when different from host)
+internal:
+  nginx: 80
+  gateway: 80
+
+# Monitoring & Observability
+monitoring:
+  prometheus: 9090
+  grafana: 3001
+  health_checks: 8080
+
+# Development Tools
+dev_tools:
+  hot_reload: 5173
+  webpack_dev: 8081
+
+# Database Admin Tools
+admin:
+  pgadmin: 5050
+  qdrant_dashboard: 6333
+
+# Port Ranges
+ranges:
+  services: "5000-5999"
+  monitoring: "9000-9999"
+  databases: "5432-6379"
+
+# External Access Points
+external:
+  http: 80
+  https: 443
+  gateway: 8080
+
+usage_notes: |
+  This file serves as the canonical source for all port definitions.
+
+  Port allocation strategy:
+  - 3000-3999: Frontend applications
+  - 5000-5999: Backend services (.NET, business logic)
+  - 6000-6999: Databases and caches
+  - 8000-8999: Gateways, proxies, and dev tools
+  - 9000-9999: Monitoring and observability
+
+  When adding new services:
+  1. Check this file to avoid port conflicts
+  2. Add the new port here FIRST
+  3. Update docker-compose.yml
+  4. Update service documentation
+
+related_documentation:
+  - ".config/services.yml: Service configurations with port assignments"
+  - ".config/copilot/references/services.yml: Service architecture documentation"
+  - "docker-compose.yml: Docker Compose port mappings"
+  - ".config/infrastructure.yml: Network infrastructure configuration"

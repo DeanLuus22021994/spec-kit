@@ -1,0 +1,927 @@
+# yaml-language-server: $schema=./schemas/config.schema.json
+# Multi-Tier Architecture Configuration
+# Enterprise-ready solution for investor demo
+
+metadata: &metadata
+  name: "architecture-config"
+  description: "Multi-Tier Architecture Configuration"
+  version: "1.0.0"
+  updated: "2025-11-25"
+  category: config
+  keywords:
+    [
+      architecture,
+      multi-tier,
+      admin-portal,
+      dashboard,
+      orchestration,
+      authentication,
+      investor-demo,
+      enterprise,
+    ]
+
+<<: *metadata
+
+description: |
+  Multi-tier enterprise architecture definition for the Semantic Kernel application.
+  Designed as a turn-key solution for investor demonstrations.
+
+  Architecture Tiers:
+  1. Admin Portal - YAML configuration management interface
+  2. Backend Dashboard - Real-time/historical metrics, agent data, costs
+  3. Business Orchestration - Standards, workflows, policy enforcement
+  4. Frontend Client Portal - User authentication and client interface
+
+# =============================================================================
+# Architecture Overview
+# =============================================================================
+architecture:
+  name: "Semantic Kernel Enterprise Platform"
+  version: "1.0.0"
+  deployment_model: "microservices"
+
+  tiers:
+    presentation:
+      description: "User-facing applications"
+      components: ["admin-portal", "frontend-client", "backend-dashboard"]
+
+    api:
+      description: "API Gateway and routing"
+      components: ["gateway", "nginx"]
+
+    business:
+      description: "Business logic and orchestration"
+      components: ["business", "engine"]
+
+    data:
+      description: "Data persistence and retrieval"
+      components: ["database", "vector", "redis"]
+
+    ai:
+      description: "AI/ML processing"
+      components: ["embeddings", "engine"]
+
+# =============================================================================
+# Admin Portal Configuration
+# =============================================================================
+admin_portal:
+  name: "Admin Portal"
+  description: "YAML configuration management interface for administrators"
+  port: 3001
+  tier: presentation
+
+  features:
+    yaml_editor:
+      enabled: true
+      syntax_highlighting: true
+      schema_validation: true
+      live_preview: true
+      description: "Real-time YAML editing with validation"
+
+    config_management:
+      enabled: true
+      version_control: true
+      rollback_support: true
+      audit_trail: true
+      description: "Configuration lifecycle management"
+
+    deployment_controls:
+      enabled: true
+      hot_reload: true
+      staged_rollout: true
+      health_checks: true
+      description: "Safe configuration deployment"
+
+    service_monitor:
+      enabled: true
+      health_status: true
+      resource_usage: true
+      log_viewer: true
+      description: "Service health monitoring"
+
+  ui_framework:
+    name: "Semantic UI React"
+    version: "^2.1.5"
+    theme: "default"
+    components:
+      - "Form" # YAML editing forms
+      - "Table" # Configuration listing
+      - "Menu" # Navigation
+      - "Modal" # Confirmation dialogs
+      - "Message" # Status messages
+      - "Accordion" # Collapsible sections
+      - "Tab" # Multi-view tabs
+      - "Icon" # Action icons
+      - "Loader" # Loading states
+      - "Dimmer" # Overlay states
+
+  routes:
+    - path: "/admin"
+      component: "AdminDashboard"
+      auth_required: true
+      roles: ["admin", "operator"]
+
+    - path: "/admin/config"
+      component: "ConfigEditor"
+      auth_required: true
+      roles: ["admin"]
+
+    - path: "/admin/services"
+      component: "ServiceMonitor"
+      auth_required: true
+      roles: ["admin", "operator"]
+
+    - path: "/admin/deployments"
+      component: "DeploymentManager"
+      auth_required: true
+      roles: ["admin"]
+
+    - path: "/admin/audit"
+      component: "AuditLog"
+      auth_required: true
+      roles: ["admin"]
+
+  api_endpoints:
+    base_url: "/api/admin"
+    endpoints:
+      - method: "GET"
+        path: "/configs"
+        description: "List all configuration files"
+
+      - method: "GET"
+        path: "/configs/{filename}"
+        description: "Get configuration file content"
+
+      - method: "PUT"
+        path: "/configs/{filename}"
+        description: "Update configuration file"
+
+      - method: "POST"
+        path: "/configs/{filename}/validate"
+        description: "Validate configuration"
+
+      - method: "POST"
+        path: "/configs/{filename}/deploy"
+        description: "Deploy configuration changes"
+
+      - method: "POST"
+        path: "/configs/{filename}/rollback"
+        description: "Rollback to previous version"
+
+      - method: "GET"
+        path: "/services/status"
+        description: "Get all service statuses"
+
+      - method: "POST"
+        path: "/services/{service}/restart"
+        description: "Restart a service"
+
+# =============================================================================
+# Backend Dashboard Configuration
+# =============================================================================
+backend_dashboard:
+  name: "Backend Dashboard"
+  description: "Real-time and historical agent data, costs, and performance metrics"
+  port: 5000
+  tier: presentation
+
+  features:
+    real_time_metrics:
+      enabled: true
+      refresh_interval_ms: 5000
+      websocket_enabled: true
+      description: "Live metrics streaming"
+
+    historical_data:
+      enabled: true
+      retention_days: 90
+      aggregation_intervals: ["1m", "5m", "1h", "1d"]
+      description: "Historical data analysis"
+
+    agent_monitoring:
+      enabled: true
+      trace_visualization: true
+      decision_replay: true
+      description: "AI agent activity monitoring"
+
+    cost_tracking:
+      enabled: true
+      per_request_costing: true
+      budget_alerts: true
+      projections: true
+      description: "API and resource cost tracking"
+
+  dashboards:
+    overview:
+      name: "System Overview"
+      refresh: "5s"
+      widgets:
+        - widget_type: "metric"
+          name: "Total Requests"
+          query: "sum(requests_total)"
+
+        - widget_type: "metric"
+          name: "Active Agents"
+          query: "count(agent_active)"
+
+        - widget_type: "metric"
+          name: "GPU Utilization"
+          query: "avg(gpu_utilization)"
+
+        - widget_type: "line_chart"
+          name: "Request Rate"
+          query: "rate(requests_total[5m])"
+
+        - widget_type: "histogram_chart"
+          name: "Response Time"
+          query: "http_request_duration_seconds"
+
+    agents:
+      name: "Agent Activity"
+      refresh: "10s"
+      widgets:
+        - widget_type: "table"
+          name: "Recent Agent Sessions"
+          columns: ["session_id", "agent_type", "duration", "status"]
+
+        - widget_type: "sankey_chart"
+          name: "Agent Decisions"
+          description: "Decision flow visualization"
+
+        - widget_type: "trace"
+          name: "Trace Explorer"
+          source: "jaeger"
+
+        - widget_type: "stacked_area_chart"
+          name: "Token Usage"
+          query: "sum(tokens_used) by (agent_type)"
+
+    costs:
+      name: "Cost Analysis"
+      refresh: "1m"
+      widgets:
+        - widget_type: "metric"
+          name: "Daily Cost"
+          query: "sum(cost_usd{period='today'})"
+          format: "currency"
+
+        - widget_type: "metric"
+          name: "Monthly Projection"
+          query: "sum(cost_usd{period='today'}) * 30"
+          format: "currency"
+
+        - widget_type: "pie_chart"
+          name: "Cost by Service"
+          query: "sum(cost_usd) by (service)"
+
+        - widget_type: "line_chart"
+          name: "Cost Trend"
+          query: "sum(cost_usd) by (day)"
+
+        - widget_type: "table"
+          name: "Top Cost Drivers"
+          columns: ["operation", "count", "avg_cost", "total_cost"]
+
+    performance:
+      name: "Performance"
+      refresh: "5s"
+      widgets:
+        - widget_type: "heatmap_chart"
+          name: "Latency Distribution"
+          query: "http_request_duration_seconds"
+
+        - widget_type: "line_chart"
+          name: "Error Rate"
+          query: "rate(errors_total[5m])"
+
+        - widget_type: "gauge_chart"
+          name: "GPU Memory"
+          query: "gpu_memory_used / gpu_memory_total"
+
+        - widget_type: "bar_chart"
+          name: "Throughput"
+          query: "rate(embeddings_processed[1m])"
+
+  metrics:
+    sources:
+      - name: "prometheus"
+        endpoint: "http://prometheus:9090"
+
+      - name: "jaeger"
+        endpoint: "http://jaeger:16686"
+
+      - name: "redis"
+        endpoint: "redis://redis:6379"
+
+    custom_metrics:
+      - name: "agent_decisions_total"
+        type: "counter"
+        labels: ["agent_type", "decision_type", "outcome"]
+
+      - name: "embedding_latency_seconds"
+        type: "histogram"
+        buckets: [0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+
+      - name: "cost_usd"
+        type: "counter"
+        labels: ["service", "operation", "model"]
+
+      - name: "tokens_used"
+        type: "counter"
+        labels: ["agent_type", "token_type"]
+
+# =============================================================================
+# Business Orchestration Layer Configuration
+# =============================================================================
+business_orchestration:
+  name: "Business Orchestration Layer"
+  description: "Standards, workflows, rule engine, and policy enforcement"
+  port: 5002
+  tier: business
+
+  features:
+    workflow_engine:
+      enabled: true
+      async_execution: true
+      retry_policy: true
+      description: "Workflow orchestration engine"
+
+    rule_engine:
+      enabled: true
+      hot_reload: true
+      version_control: true
+      description: "Business rules evaluation"
+
+    policy_enforcement:
+      enabled: true
+      audit_logging: true
+      violation_alerts: true
+      description: "Policy compliance enforcement"
+
+    agent_coordination:
+      enabled: true
+      load_balancing: true
+      failover: true
+      description: "Multi-agent coordination"
+
+  workflows:
+    - name: "DocumentProcessing"
+      description: "Process and index documents"
+      steps:
+        - id: "extract"
+          action: "ExtractContent"
+          next: "chunk"
+
+        - id: "chunk"
+          action: "ChunkDocument"
+          next: "embed"
+
+        - id: "embed"
+          action: "GenerateEmbeddings"
+          next: "index"
+
+        - id: "index"
+          action: "IndexVectors"
+          next: null
+
+    - name: "QueryProcessing"
+      description: "Process semantic queries"
+      steps:
+        - id: "parse"
+          action: "ParseQuery"
+          next: "embed"
+
+        - id: "embed"
+          action: "EmbedQuery"
+          next: "search"
+
+        - id: "search"
+          action: "VectorSearch"
+          next: "rank"
+
+        - id: "rank"
+          action: "RerankResults"
+          next: "respond"
+
+        - id: "respond"
+          action: "GenerateResponse"
+          next: null
+
+    - name: "AgentOrchestration"
+      description: "Coordinate multi-agent tasks"
+      steps:
+        - id: "analyze"
+          action: "AnalyzeTask"
+          next: "plan"
+
+        - id: "plan"
+          action: "CreatePlan"
+          next: "execute"
+
+        - id: "execute"
+          action: "ExecuteParallel"
+          next: "aggregate"
+
+        - id: "aggregate"
+          action: "AggregateResults"
+          next: null
+
+  rules:
+    rate_limiting:
+      - name: "api_rate_limit"
+        condition: "request_count > 100 per minute"
+        action: "throttle"
+
+      - name: "cost_limit"
+        condition: "daily_cost > budget_threshold"
+        action: "alert_and_throttle"
+
+    content_policy:
+      - name: "content_filter"
+        condition: "content_score < 0.5"
+        action: "reject"
+
+      - name: "pii_detection"
+        condition: "contains_pii == true"
+        action: "redact"
+
+    quality_gates:
+      - name: "response_quality"
+        condition: "confidence < 0.7"
+        action: "escalate_to_human"
+
+      - name: "hallucination_check"
+        condition: "grounding_score < 0.8"
+        action: "regenerate"
+
+  standards:
+    coding:
+      file_path: ".config/copilot/standards/coding.yml"
+      enforcement: "strict"
+
+    naming:
+      file_path: ".config/copilot/naming-conventions.yml"
+      enforcement: "strict"
+
+    documentation:
+      file_path: ".config/copilot/standards/documentation.yml"
+      enforcement: "warn"
+
+  api_endpoints:
+    base_url: "/api/business"
+    endpoints:
+      - method: "POST"
+        path: "/workflows/{workflow}/execute"
+        description: "Execute a workflow"
+
+      - method: "GET"
+        path: "/workflows/{workflow}/status/{execution_id}"
+        description: "Get workflow execution status"
+
+      - method: "POST"
+        path: "/rules/evaluate"
+        description: "Evaluate business rules"
+
+      - method: "GET"
+        path: "/policies"
+        description: "List all policies"
+
+      - method: "POST"
+        path: "/agents/coordinate"
+        description: "Coordinate multi-agent task"
+
+# =============================================================================
+# Frontend Client Portal Configuration
+# =============================================================================
+frontend_client:
+  name: "Frontend Client Portal"
+  description: "Client-facing login portal and user interface"
+  port: 3000
+  tier: presentation
+
+  features:
+    authentication:
+      enabled: true
+      providers: ["local", "oauth2", "saml"]
+      mfa_support: true
+      session_management: true
+      description: "Multi-provider authentication"
+
+    user_management:
+      enabled: true
+      self_registration: false
+      profile_editing: true
+      role_based_access: true
+      description: "User account management"
+
+    api_access:
+      enabled: true
+      api_key_management: true
+      usage_quotas: true
+      rate_limiting: true
+      description: "API access management"
+
+    interactive_demo:
+      enabled: true
+      sample_queries: true
+      guided_tour: true
+      description: "Interactive feature demonstration"
+
+  ui_framework:
+    name: "Semantic UI React"
+    version: "^2.1.5"
+    theme: "default"
+    components:
+      - "Form" # Login forms
+      - "Button" # Actions
+      - "Input" # Text inputs
+      - "Message" # Alerts
+      - "Card" # Content cards
+      - "Grid" # Layout
+      - "Container" # Page container
+      - "Header" # Page headers
+      - "Segment" # Content sections
+      - "Dropdown" # Select inputs
+      - "Modal" # Dialogs
+      - "Sidebar" # Navigation
+      - "Menu" # Top navigation
+      - "Icon" # Icons
+      - "Loader" # Loading states
+      - "Transition" # Animations
+
+  pages:
+    login:
+      path: "/login"
+      auth_required: false
+      components:
+        - "LoginForm"
+        - "OAuthButtons"
+        - "ForgotPassword"
+
+    register:
+      path: "/register"
+      auth_required: false
+      enabled: false # Admin-only registration
+
+    dashboard:
+      path: "/dashboard"
+      auth_required: true
+      components:
+        - "WelcomeMessage"
+        - "QuickActions"
+        - "RecentActivity"
+        - "UsageStats"
+
+    profile:
+      path: "/profile"
+      auth_required: true
+      components:
+        - "ProfileForm"
+        - "PasswordChange"
+        - "ApiKeyManager"
+
+    playground:
+      path: "/playground"
+      auth_required: true
+      components:
+        - "QueryInput"
+        - "ResponseDisplay"
+        - "HistoryPanel"
+
+    documentation:
+      path: "/docs"
+      auth_required: false
+      components:
+        - "ApiDocs"
+        - "GettingStarted"
+        - "Examples"
+
+  authentication:
+    local:
+      enabled: true
+      password_policy:
+        min_length: 12
+        require_uppercase: true
+        require_lowercase: true
+        require_number: true
+        require_special: true
+      session:
+        duration_hours: 24
+        sliding_expiration: true
+        secure_cookie: true
+
+    oauth2:
+      enabled: true
+      providers:
+        - name: "github"
+          client_id: "${GITHUB_OAUTH_CLIENT_ID}"
+          scopes: ["user:email"]
+
+        - name: "azure_ad"
+          client_id: "${AZURE_AD_CLIENT_ID}"
+          tenant: "${AZURE_AD_TENANT}"
+          scopes: ["openid", "profile", "email"]
+
+    mfa:
+      enabled: true
+      methods: ["totp", "email"]
+      grace_period_days: 7
+
+  api_endpoints:
+    base_url: "/api/client"
+    endpoints:
+      - method: "POST"
+        path: "/auth/login"
+        description: "Authenticate user"
+
+      - method: "POST"
+        path: "/auth/logout"
+        description: "End user session"
+
+      - method: "GET"
+        path: "/profile"
+        description: "Get user profile"
+
+      - method: "PUT"
+        path: "/profile"
+        description: "Update user profile"
+
+      - method: "POST"
+        path: "/api-keys"
+        description: "Generate API key"
+
+      - method: "DELETE"
+        path: "/api-keys/{key_id}"
+        description: "Revoke API key"
+
+      - method: "POST"
+        path: "/query"
+        description: "Submit semantic query"
+
+# =============================================================================
+# Service Integration Matrix
+# =============================================================================
+integration:
+  # Service dependencies
+  dependencies:
+    admin_portal:
+      requires: ["backend", "gateway", "redis"]
+      optional: ["jaeger"]
+
+    backend_dashboard:
+      requires: ["backend", "database", "redis"]
+      optional: ["prometheus", "jaeger"]
+
+    business_orchestration:
+      requires: ["engine", "embeddings", "vector", "database"]
+      optional: ["redis"]
+
+    frontend_client:
+      requires: ["backend", "gateway"]
+      optional: ["redis"]
+
+  # API Gateway routing
+  gateway_routes:
+    - prefix: "/api/admin"
+      upstream: "admin-portal:3001"
+      auth: "admin"
+      rate_limit: "100/minute"
+
+    - prefix: "/api/dashboard"
+      upstream: "backend:5000"
+      auth: "admin"
+      rate_limit: "1000/minute"
+
+    - prefix: "/api/business"
+      upstream: "business:5002"
+      auth: "service"
+      rate_limit: "500/minute"
+
+    - prefix: "/api/client"
+      upstream: "backend:5000"
+      auth: "user"
+      rate_limit: "100/minute"
+
+    - prefix: "/api/query"
+      upstream: "engine:5001"
+      auth: "user"
+      rate_limit: "50/minute"
+
+  # Event bus topics
+  events:
+    config_updated:
+      publisher: "admin-portal"
+      subscribers: ["backend", "business", "engine", "gateway"]
+
+    agent_completed:
+      publisher: "engine"
+      subscribers: ["backend-dashboard", "business"]
+
+    cost_threshold:
+      publisher: "backend-dashboard"
+      subscribers: ["admin-portal", "business"]
+
+    auth_event:
+      publisher: "frontend-client"
+      subscribers: ["backend", "admin-portal"]
+
+# =============================================================================
+# Security Configuration
+# =============================================================================
+security:
+  # Role definitions
+  roles:
+    admin:
+      description: "Full system access"
+      permissions: ["*"]
+
+    operator:
+      description: "Monitor and restart services"
+      permissions:
+        - "services:read"
+        - "services:restart"
+        - "metrics:read"
+        - "logs:read"
+
+    developer:
+      description: "API access and testing"
+      permissions:
+        - "api:read"
+        - "api:write"
+        - "playground:use"
+
+    user:
+      description: "Basic client access"
+      permissions:
+        - "profile:read"
+        - "profile:write"
+        - "query:submit"
+
+  # JWT configuration
+  jwt:
+    issuer: "semantic-kernel-app"
+    audience: "semantic-kernel-api"
+    expiration_hours: 24
+    refresh_enabled: true
+    algorithm: "RS256"
+
+  # CORS configuration
+  cors:
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://localhost:3001"
+      - "https://*.semantic-kernel.local"
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Authorization", "Content-Type", "X-Request-ID"]
+    expose_headers: ["X-Request-ID", "X-RateLimit-Remaining"]
+    max_age_seconds: 86400
+
+# =============================================================================
+# Deployment Configuration
+# =============================================================================
+deployment:
+  # Environment profiles
+  profiles:
+    development:
+      debug: true
+      hot_reload: true
+      verbose_logging: true
+      mock_auth: true
+
+    staging:
+      debug: false
+      hot_reload: false
+      verbose_logging: true
+      mock_auth: false
+
+    production:
+      debug: false
+      hot_reload: false
+      verbose_logging: false
+      mock_auth: false
+
+  # Health check endpoints
+  health_checks:
+    admin_portal:
+      endpoint: "/health"
+      interval: "30s"
+      timeout: "10s"
+
+    backend_dashboard:
+      endpoint: "/health"
+      interval: "30s"
+      timeout: "10s"
+
+    business_orchestration:
+      endpoint: "/health"
+      interval: "30s"
+      timeout: "10s"
+
+    frontend_client:
+      endpoint: "/health"
+      interval: "30s"
+      timeout: "10s"
+
+  # Resource allocation
+  resources:
+    admin_portal:
+      cpu: "0.5"
+      memory: "256M"
+      replicas: 1
+
+    backend_dashboard:
+      cpu: "1.0"
+      memory: "512M"
+      replicas: 1
+
+    business_orchestration:
+      cpu: "1.0"
+      memory: "512M"
+      replicas: 1
+
+    frontend_client:
+      cpu: "0.5"
+      memory: "256M"
+      replicas: 1
+
+# =============================================================================
+# Investor Demo Configuration
+# =============================================================================
+investor_demo:
+  name: "Semantic Kernel Platform Demo"
+  version: "1.0.0"
+
+  demo_scenarios:
+    - name: "Configuration Management"
+      description: "Show real-time YAML editing and hot-reload"
+      duration_minutes: 5
+      tier: "admin_portal"
+      steps:
+        - "Navigate to Admin Portal"
+        - "Open a configuration file"
+        - "Make a change with syntax highlighting"
+        - "Validate the configuration"
+        - "Deploy and show hot-reload"
+
+    - name: "Agent Orchestration"
+      description: "Demonstrate multi-agent task execution"
+      duration_minutes: 10
+      tier: "business_orchestration"
+      steps:
+        - "Submit a complex query"
+        - "Show task decomposition"
+        - "Display parallel agent execution"
+        - "Show decision tracing in Jaeger"
+        - "Present aggregated results"
+
+    - name: "Real-Time Metrics"
+      description: "Show live metrics and cost tracking"
+      duration_minutes: 5
+      tier: "backend_dashboard"
+      steps:
+        - "Open the metrics dashboard"
+        - "Show real-time request flow"
+        - "Demonstrate GPU utilization"
+        - "Display cost tracking"
+        - "Show historical trends"
+
+    - name: "Client Experience"
+      description: "End-user login and interaction"
+      duration_minutes: 5
+      tier: "frontend_client"
+      steps:
+        - "Show the login page"
+        - "Authenticate with OAuth"
+        - "Navigate the dashboard"
+        - "Submit a sample query"
+        - "View results and history"
+
+  key_differentiators:
+    - "Config-first architecture with hot-reload"
+    - "GPU-accelerated embeddings (local, no API costs)"
+    - "Multi-agent orchestration with tracing"
+    - "Real-time cost tracking and budgeting"
+    - "Enterprise security with RBAC"
+    - "Semantic UI for consistent UX"
+
+  technical_highlights:
+    - "Semantic Kernel for AI orchestration"
+    - "Qdrant for vector similarity search"
+    - "OpenTelemetry + Jaeger for observability"
+    - "Docker-based microservices"
+    - "YAML-driven configuration"
+
+# =============================================================================
+# Cross-References
+# =============================================================================
+related_documentation:
+  - ".config/services.yml: Service configurations"
+  - ".config/ports.yml: Port assignments"
+  - ".config/tracing.yml: Observability configuration"
+  - ".config/gpu-resources.yml: GPU allocation"
+  - ".config/copilot/index.yml: Copilot context index"
+  - "docker-compose.yml: Container orchestration"
+  - "src/frontend/: Frontend source code"
+  - "src/backend/: Backend source code"
+  - "src/business/: Business layer source code"
+  - "src/engine/: Semantic Kernel engine"

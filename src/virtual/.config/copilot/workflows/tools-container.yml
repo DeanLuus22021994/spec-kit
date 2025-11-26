@@ -1,0 +1,136 @@
+# Tools Container Workflow
+# Python development tools isolated in Docker container
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: workflow
+  keywords:
+    - docker
+    - python
+    - tools
+    - pylint
+    - pre-commit
+    - cli
+    - container
+
+<<: *metadata
+
+reference:
+  documentation: docs/tools-container.md
+  dockerfile: dockerfiles/runner.Dockerfile
+  description: Complete container documentation and usage
+  note: "Tools container built from runner.Dockerfile with Python development tools"
+
+specifications:
+  image: semantic-kernel-tools:latest
+  base: python:3.14-slim
+  size_mb: 661
+  user: toolsuser:1001
+  workdir: /app/tools
+
+  gpu_variant:
+    image: semantic-kernel-tools:gpu
+    base: nvidia/cuda:13.0.0-runtime-ubuntu24.04
+    description: "GPU-enabled tools container with CUDA support"
+    requirements:
+      - "NVIDIA Container Toolkit installed on host"
+      - "Docker runtime configured with nvidia"
+    build: "docker build -f dockerfiles/runner.Dockerfile --build-arg BASE_IMAGE=nvidia/cuda:13.0.0-runtime-ubuntu24.04 -t semantic-kernel-tools:gpu ."
+
+baked_dependencies:
+  python_packages:
+    core:
+      - PyYAML
+      - requests
+      - click
+      - rich
+      - python-dotenv
+      - colorlog
+
+    database:
+      - psycopg2-binary
+
+    vector:
+      - qdrant-client
+
+    ai:
+      - openai==1.12.0
+      - torch==2.9.1 # GPU variant uses +cu130
+      - transformers
+
+    gpu_acceleration:
+      note: "GPU packages installed in :gpu variant only"
+      packages:
+        - "torch==2.9.1+cu130"
+        - "nvidia-cuda-runtime-cu130"
+      environment_config: ".config/environment.yml"
+
+    quality:
+      - pre-commit
+      - black==25.11.0
+      - isort==5.12.0
+      - ruff==0.14.6
+      - sqlfluff==3.5.0
+
+# Command Template
+command_template: &command_template
+  command: null
+  description: null
+  vscode_task: null
+
+common_commands:
+  cli_config:
+    <<: *command_template
+    command: docker run --rm -v ${PWD}:/workspace -w /workspace semantic-kernel-tools:latest python tools/cli.py --show-config
+    description: Display CLI configuration from .config/cli.yml
+    vscode_task: "Tools: CLI Show Config"
+
+  generate_docs:
+    command: "docker run --rm -v ${PWD}:/workspace -w /workspace semantic-kernel-tools:latest python tools/docgen.py"
+    description: "Generate API and architecture documentation"
+    vscode_task: "Tools: Generate Documentation"
+
+  run_precommit:
+    command: "docker run --rm -v ${PWD}:/workspace -w /workspace semantic-kernel-tools:latest pre-commit run --all-files"
+    description: "Run all pre-commit hooks (black, isort, ruff, etc.)"
+    vscode_task: "Run Pre-commit Hooks"
+
+  pylint_report:
+    command: "docker run --rm -v ${PWD}:/workspace -w /workspace semantic-kernel-tools:latest python -m pylint semantic/ tools/"
+    description: "Generate pylint report for code quality"
+    vscode_task: "Generate Pylint Report"
+
+  interactive_shell:
+    command: "docker run --rm -it -v ${PWD}:/workspace -w /workspace semantic-kernel-tools:latest sh"
+    description: "Enter interactive shell for debugging"
+
+  interactive_shell_gpu:
+    command: "docker run --rm -it --gpus all -v ${PWD}:/workspace -w /workspace semantic-kernel-tools:gpu sh"
+    description: "Enter interactive shell with GPU access"
+
+cache_isolation:
+  mypy:
+    location: "/app/tools/.mypy_cache"
+    description: "MyPy type checking cache isolated in container"
+
+  pip:
+    config: "PYTHONDONTWRITEBYTECODE=1"
+    description: "Prevents .pyc file generation"
+
+  host_protection:
+    description: "No cache pollution on host system"
+    benefits:
+      - "Clean git working directory"
+      - "Consistent cross-platform builds"
+      - "No .mypy_cache or __pycache__ on host"
+
+build:
+  command: "docker build -f dockerfiles/tools.Dockerfile -t semantic-kernel-tools:latest ."
+  context: "Repository root directory"
+  optimization: "Dependencies baked into Dockerfile (no requirements.txt needed)"
+
+rebuild_when:
+  - "Python package versions change"
+  - "New dependencies added"
+  - "Dockerfile configuration updates"

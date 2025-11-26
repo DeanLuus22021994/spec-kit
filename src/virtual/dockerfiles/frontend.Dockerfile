@@ -42,7 +42,7 @@ RUN addgroup -g 1001 -S nginx-user && \
 COPY --from=build --chown=nginx-user:nginx-user /app/dist /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY --chown=nginx-user:nginx-user infrastructure/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY --chown=nginx-user:nginx-user src/frontend/nginx/nginx.conf /etc/nginx/nginx.conf
 
 # Create directories for logs and cache
 RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run && \

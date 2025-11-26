@@ -1,0 +1,112 @@
+# GitHub CLI Workflow Patterns
+# Optimized for AI context injection and semantic search
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: workflow
+  keywords:
+    - github
+    - cli
+    - pr
+    - pull request
+    - repository
+    - field names
+    - graphql
+
+<<: *metadata
+
+# Mistake Template
+mistake_template: &mistake_template
+  wrong: null
+  correct: null
+  reason: null
+  context: null
+
+field_reference:
+  documentation: docs/github-cli-reference.md
+  description: Complete JSON field reference for gh CLI commands
+
+common_mistakes:
+  - <<: *mistake_template
+    wrong: defaultBranch
+    correct: defaultBranchRef
+    reason: Field does not exist in GitHub GraphQL API
+    context: When querying repository information
+
+  - <<: *mistake_template
+    wrong: headRef
+    correct: headRefName
+    reason: Use full field name for PR queries
+    context: When working with pull request head branches
+
+# Command Template
+command_template: &command_template
+  command: null
+  description: null
+  vscode_task: null
+
+common_commands:
+  check_pr:
+    <<: *command_template
+    command: gh pr list --head $(git branch --show-current) --json number,state,url
+    description: Check if PR exists for current branch
+    vscode_task: "GitHub: Check Current Branch PR"
+
+  get_default_branch:
+    <<: *command_template
+    command: gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+    description: Get repository default branch name
+    vscode_task: "GitHub: Get Default Branch"
+
+  view_pr_status:
+    <<: *command_template
+    command: gh pr view --json number,title,state,reviewDecision,statusCheckRollup
+    description: View current PR status with CI/CD checks
+    vscode_task: "GitHub: View Current PR"
+
+  create_pr:
+    command: "gh pr create --base main --head feature-branch --title 'feat: description'"
+    description: Create pull request with conventional title
+    vscode_task: null
+    context: Interactive mode available without flags
+
+best_practices:
+  - "Always use --json for scripting to get structured output"
+  - "Use --jq for filtering JSON output (e.g., '.defaultBranchRef.name')"
+  - "Reference docs/github-cli-reference.md for complete field names"
+  - "Use VS Code tasks for common operations instead of typing commands"
+  - "Check .config/copilot/workflows/github-cli.yml for complete workflow reference"
+  - "For GPU workflows, use self-hosted-gpu runner label (no token required)"
+
+self_hosted_runner:
+  label: "self-hosted-gpu"
+  description: "Pre-configured self-hosted runner with NVIDIA GPU"
+  token_required: false
+  already_registered: true
+  specs:
+    gpu: "RTX 3050 6GB"
+    cuda: "13.0"
+    pytorch: "2.9.1+cu130"
+  workflow_dispatch_example: |
+    # Trigger GPU workflow on self-hosted runner
+    gh workflow run gpu-test.yml --ref main
+  environment_config: ".config/environment.yml"
+
+critical_fields:
+  repository:
+    - "defaultBranchRef (NOT defaultBranch)"
+    - "nameWithOwner"
+    - "url"
+
+  pull_request:
+    - "headRefName (NOT headRef)"
+    - "baseRefName"
+    - "statusCheckRollup (for CI/CD status)"
+    - "reviewDecision"
+
+  common_output:
+    - "number"
+    - "state"
+    - "title"
+    - "url"

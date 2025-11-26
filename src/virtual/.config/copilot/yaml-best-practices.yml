@@ -1,0 +1,1053 @@
+# YAML Best Practices & Red Hat MTA Rules Development Guide
+# Comprehensive syntax standards, conventions, and rule development guidelines
+# Based on Red Hat Migration Toolkit for Applications (MTA) 7.2 Rules Development Guide
+
+metadata: &metadata
+  version: "2.0.0"
+  category: standard
+  keywords:
+    [
+      yaml,
+      best-practices,
+      syntax,
+      formatting,
+      anchors,
+      red-hat,
+      mta,
+      rules,
+      rulesets,
+      validation,
+      migration,
+      providers,
+      conditions,
+      labels,
+    ]
+  updated: "2025-11-24"
+  source: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide"
+
+<<: *metadata
+
+yaml_best_practices:
+  quoting:
+    rules:
+      - "Use unquoted strings for simple values (no special characters)"
+      - "Use double quotes for strings with special characters or escapes"
+      - "Use single quotes for strings that would conflict with YAML syntax"
+      - 'Quote all version numbers to prevent float interpretation ("1.0.0" not 1.0.0)'
+
+    examples:
+      unquoted: |-
+        name: backend
+        technology: PostgreSQL
+        enabled: true
+
+      double_quoted: |-
+        message: "Error: connection failed\nRetrying..."
+        path: "C:\\Users\\Dean\\source"
+        version: "1.0.0"
+
+      single_quoted: |-
+        pattern: 'true|false'
+        regex: '^\d{3}-\d{3}-\d{4}$'
+
+  indentation:
+    rules:
+      - "Use 2 spaces per indentation level (NEVER tabs)"
+      - "Align nested structures consistently"
+      - "Align list items with parent key"
+      - "Align merge keys (<<:) with sibling keys"
+
+    examples:
+      correct: |-
+        services:
+          backend:
+            <<: *service_template
+            technology: ".NET 8"
+            resources:
+              cpus: 2.0
+              memory: "1G"
+
+      incorrect: |-
+        services:
+            backend:  # 4 spaces [WRONG]
+          <<: *service_template  # misaligned [WRONG]
+            technology: ".NET 8"
+
+  multiline_strings:
+    literal_block: |-
+      # Use | for preserving line breaks:
+      description: |
+        This is line 1
+        This is line 2
+        This is line 3
+
+    folded_block: |-
+      # Use > for folding to single line:
+      summary: >
+        This long text
+        will be folded
+        into one line.
+
+    strip_newline: |-
+      # Use |- to strip final newline:
+      script: |-
+        echo "Hello"
+        echo "World"
+
+    guidelines:
+      - "Use | for multi-line documentation"
+      - "Use |- for scripts and code blocks"
+      - "Use > for long prose that wraps"
+      - "Indent content consistently (2 spaces)"
+
+  anchors_and_aliases:
+    definition: |-
+      # Define anchor with &:
+      metadata: &metadata
+        version: "1.0.0"
+        category: reference
+
+    reference: |-
+      # Reference with *:
+      version: *metadata_version
+      other_section:
+        <<: *metadata
+
+    merge_keys: |-
+      # Merge multiple anchors:
+      service:
+        <<: [*service_template, *metadata]
+        name: "My Service"
+
+    guidelines:
+      - "Define anchors early in file (before first use)"
+      - "Use descriptive anchor names (not a, b, c)"
+      - "Anchors are file-scoped (cannot reference across files)"
+      - "Use merge key (<<:) to include entire object"
+      - "Use alias (*name) to reference single values"
+      - "Document anchor purpose in comments"
+
+    limitations:
+      - "Anchors cannot reference across files"
+      - "Circular references cause errors"
+      - "Merge keys only work with mappings (not sequences)"
+
+  collections:
+    sequences: |-
+      # Block style (preferred):
+      keywords:
+        - docker
+        - containers
+        - microservices
+
+      # Flow style (compact):
+      keywords: [docker, containers, microservices]
+
+      # Mixed (use for readability):
+      services:
+        - name: backend
+          ports: [8080, 8443]
+        - name: frontend
+          ports: [3000]
+
+    mappings: |-
+      # Block style:
+      service:
+        name: backend
+        technology: ".NET 8"
+        port: 8080
+
+      # Flow style:
+      service: {name: backend, technology: ".NET 8", port: 8080}
+
+    guidelines:
+      - "Prefer block style for readability"
+      - "Use flow style for short lists (<=3 items)"
+      - "Be consistent within same file"
+      - "Use block style for nested structures"
+
+  comments:
+    guidelines:
+      - "Use # for comments (must be on separate line or after value)"
+      - "Add section headers for clarity"
+      - "Document anchor purpose and usage"
+      - "Explain complex merge keys or references"
+      - "Use | for long documentation blocks"
+
+    examples: |-
+      # Service Configuration Section
+      services:
+        # Backend API service - handles all business logic
+        backend:
+          <<: *service_template  # Inherits default service structure
+          technology: ".NET 8"
+          port: 8080  # Internal container port
+
+red_hat_mta_rules:
+  overview:
+    description: |
+      Red Hat Migration Toolkit for Applications (MTA) rules are written in YAML.
+      Each rule consists of metadata, conditions, and actions that instruct the analyzer
+      to take specified actions when given conditions match.
+    reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide#yaml-rule-structure-syntax_rules-development-guide"
+    pattern: |
+      when(condition)
+        perform(action)
+
+  rule_metadata:
+    description: "Rule metadata contains general information about the rule"
+    structure: |-
+      ruleID: "unique_id"          # Must be unique within ruleset
+      description: "Description"    # Text description of the rule
+      effort: 1                     # Story points (integer)
+      category: mandatory           # mandatory | optional | potential
+      labels:                       # key=val pairs
+        - "label1=val1"
+        - "konveyor.io/source=eap6"
+        - "konveyor.io/target=eap7"
+
+    categories:
+      mandatory:
+        description: "Must resolve for successful migration"
+        severity: "Critical - application will not build or run without fix"
+        example: "Proprietary APIs not supported on target platform"
+
+      optional:
+        description: "Application will work but results may not be optimal"
+        severity: "Medium - should be scheduled soon after migration"
+        example: "EJB 2.x code not upgraded to EJB 3"
+
+      potential:
+        description: "Needs examination during migration"
+        severity: "Low - insufficient information to determine if mandatory"
+        example: "Third-party proprietary type with no direct compatible type"
+
+    effort:
+      description: "Integer value indicating level of effort to fix issue"
+      guidelines:
+        - "1 point: Simple find-and-replace or configuration change"
+        - "3 points: Moderate code refactoring required"
+        - "5 points: Significant redesign or rewrite needed"
+        - "13 points: Major architectural changes required"
+
+  labels_system:
+    description: "Labels are key=val pairs for rules, rulesets, and dependencies"
+    reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide#yaml-rule-structure-syntax_rules-development-guide"
+
+    format:
+      basic: |-
+        labels:
+          - "key1=val1"
+          - "key2=val2"
+
+      subdomain_prefixed: |-
+        labels:
+          - "konveyor.io/source=eap6"
+          - "konveyor.io/target=eap7"
+
+      empty_value: |-
+        labels:
+          - "konveyor.io/key="    # Empty value
+          - "konveyor.io/key"     # Value omitted (treated as empty)
+
+    reserved_labels:
+      - name: "konveyor.io/source"
+        description: "Identifies source technology for rule/ruleset"
+        example: "konveyor.io/source=eap6"
+
+      - name: "konveyor.io/target"
+        description: "Identifies target technology for rule/ruleset"
+        example: "konveyor.io/target=eap7"
+
+    label_selector:
+      description: "Filter rules by labels using logical operators"
+      operators:
+        - "&&: Logical AND"
+        - "||: Logical OR"
+        - "!: Logical NOT"
+        - "(): Grouping for precedence"
+
+      examples:
+        - selector: '--label-selector="konveyor.io/source=eap6"'
+          description: "Filter rules with source=eap6"
+
+        - selector: '--label-selector="konveyor.io/source"'
+          description: "Filter rules with source label (any value)"
+
+        - selector: '--label-selector="key1=val1 && key2"'
+          description: "Logical AND on multiple labels"
+
+        - selector: '--label-selector="key1=val1 || key2=val2"'
+          description: "Logical OR operation"
+
+        - selector: '--label-selector="!key1=val1"'
+          description: "Filter out rules with key1=val1"
+
+        - selector: '--label-selector="(key1=val1 || key2=val2) && !val3"'
+          description: "Complex expression with grouping"
+
+    dependency_labels:
+      description: "Analyzer adds labels to dependencies automatically"
+      system_labels:
+        - "konveyor.io/dep-source=internal"
+        - "konveyor.io/dep-source=open-source"
+        - "konveyor.io/language=java"
+        - "konveyor.io/exclude"
+
+      dep_label_selector:
+        description: "Filter incidents by dependency labels"
+        examples:
+          - selector: '--dep-label-selector "!konveyor.io/dep-source=open-source"'
+            description: "Exclude open source dependencies"
+
+          - selector: '--dep-label-selector "!konveyor.io/exclude"'
+            description: "Exclude packages marked for exclusion"
+
+  rule_actions:
+    description: "Rules can include message actions, tag actions, or both"
+    reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide#yaml-rule-structure-syntax_rules-development-guide"
+
+    message_actions:
+      description: "Creates an issue with a message when rule matches"
+      basic: |-
+        message: "Helpful message about the migration issue"
+
+      with_links: |-
+        message: "The class-loading element is no longer valid"
+        links:
+          - url: "https://access.redhat.com/documentation/..."
+            title: "Migration Guide - Class Loading in JBoss EAP 6"
+
+      templated:
+        description: "Use custom variables for dynamic messages"
+        example: |-
+          message: "Found generic call - {{ VariableName }}"
+
+    tag_actions:
+      description: "Generate tags for the application when match is found"
+      note: "Issues are not created for rules with only tag actions"
+
+      format: |-
+        tag:
+          - "tag1,tag2,tag3"           # Comma-separated list
+          - "Category=tag4,tag5"       # Category assignment
+
+      example: |-
+        - ruleID: test-rule
+          when:
+            <CONDITION>
+          tag:
+            - Language=Golang
+            - Env=production
+            - Source Code
+
+  provider_conditions:
+    description: "Define search queries for specific language providers"
+    reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide#yaml-rule-structure-syntax_rules-development-guide"
+    format: "<provider_name>.<capability>"
+
+    builtin_provider:
+      description: "Internal provider for analyzing various files and metadata"
+      capabilities:
+        file:
+          description: "Search for files matching a pattern"
+          syntax: |-
+            when:
+              builtin.file:
+                pattern: "<regex_to_match_filenames>"
+
+          example: |-
+            when:
+              builtin.file:
+                pattern: ".*\\.xml$"
+
+        filecontent:
+          description: "Search for content matching a pattern"
+          syntax: |-
+            when:
+              builtin.filecontent:
+                filePattern: "<regex_to_match_filenames>"
+                pattern: "<regex_to_match_content>"
+
+          example: |-
+            when:
+              builtin.filecontent:
+                filePattern: ".*\\.properties$"
+                pattern: "jdbc\\.url=.*"
+
+        xml:
+          description: "Query XPath expressions on XML files"
+          syntax: |-
+            when:
+              builtin.xml:
+                xpath: "<xpath_expression>"    # Must be valid XPath
+                filepaths:                      # Optional file list
+                  - "/src/file1.xml"
+                  - "/src/file2.xml"
+
+          example: |-
+            when:
+              builtin.xml:
+                xpath: "jboss-web/class-loading"
+
+        json:
+          description: "Query XPath expressions on JSON files"
+          syntax: |-
+            when:
+              builtin.json:
+                xpath: "<xpath_expression>"    # Must be valid XPath
+
+          example: |-
+            when:
+              builtin.json:
+                xpath: "//dependencies[name='react']"
+
+        hasTags:
+          description: "Check if application has given tags"
+          note: "Multiple tags imply logical AND"
+          syntax: |-
+            when:
+              hasTags:
+                - "tag1"
+                - "tag2"    # Both must exist
+
+    java_provider:
+      description: "Analyzes Java source code"
+      capabilities:
+        referenced:
+          description: "Find references in source code"
+          fields:
+            - name: pattern
+              required: true
+              description: "RegEx pattern to match (e.g., org.kubernetes.*)"
+
+            - name: location
+              required: false
+              description: "Exact location where pattern needs to be matched"
+
+            - name: annotated
+              required: false
+              description: "Check for specific annotations and their elements"
+
+          locations:
+            - CONSTRUCTOR_CALL
+            - TYPE
+            - INHERITANCE
+            - METHOD_CALL
+            - ANNOTATION
+            - IMPLEMENTS_TYPE
+            - ENUM_CONSTANT
+            - RETURN_TYPE
+            - IMPORT
+            - VARIABLE_DECLARATION
+            - FIELD
+            - METHOD
+            - PACKAGE
+
+          syntax: |-
+            when:
+              java.referenced:
+                pattern: "<pattern>"
+                location: "<location>"
+                annotated:
+                  pattern: org.framework.Bean
+                  elements:
+                    - name: url
+                      value: "http://www.example.com"
+
+          examples:
+            - description: "Find package references"
+              code: |-
+                when:
+                  java.referenced:
+                    location: IMPORT
+                    pattern: junit.junit
+
+            - description: "Find method calls"
+              code: |-
+                when:
+                  java.referenced:
+                    location: METHOD_CALL
+                    pattern: com.example.apps.GenericClass.get
+
+        dependency:
+          description: "Check if application has a given dependency"
+          fields:
+            - name: name
+              required: true
+              description: "Name of the dependency"
+
+            - name: nameregex
+              required: false
+              description: "RegEx pattern to match the name"
+
+            - name: upperbound
+              required: false
+              description: "Matches versions <= this value"
+
+            - name: lowerbound
+              required: false
+              description: "Matches versions >= this value"
+
+          syntax: |-
+            when:
+              java.dependency:
+                name: "<dependency_name>"
+                upperbound: "<version_string>"
+                lowerbound: "<version_string>"
+
+          example: |-
+            when:
+              java.dependency:
+                name: junit.junit
+                upperbound: 4.12.2
+                lowerbound: 4.4.0
+
+    go_provider:
+      description: "Analyzes Go source code"
+      capabilities:
+        referenced:
+          description: "Find references in Go source code"
+          syntax: |-
+            when:
+              go.referenced: "<regex_to_find_reference>"
+
+        dependency:
+          description: "Find Go dependencies"
+          syntax: |-
+            when:
+              go.dependency:
+                name: "<dependency_name>"
+                upperbound: "<version_string>"
+                lowerbound: "<version_string>"
+
+    dotnet_provider:
+      description: "Analyzes .NET and C# source code"
+      capabilities:
+        referenced:
+          description: "Find references in .NET source code"
+          fields:
+            - name: pattern
+              required: true
+              description: "RegEx pattern (e.g., HttpNotFound)"
+
+            - name: namespace
+              required: true
+              description: "Namespace to search within (e.g., System.Web.Mvc)"
+
+          syntax: |-
+            when:
+              dotnet.referenced:
+                pattern: "<pattern>"
+                namespace: "<namespace>"
+
+          example: |-
+            when:
+              dotnet.referenced:
+                pattern: HttpNotFound
+                namespace: System.Web.Mvc
+
+  logical_conditions:
+    description: "Combine multiple conditions using logical operators"
+    reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide#yaml-rule-structure-syntax_rules-development-guide"
+
+    and_condition:
+      description: "Matches when ALL child conditions match"
+      syntax: |-
+        when:
+          and:
+            - <condition1>
+            - <condition2>
+
+      example: |-
+        when:
+          and:
+            - java.dependency:
+                name: junit.junit
+                upperbound: 4.12.2
+                lowerbound: 4.4.0
+            - java.referenced:
+                location: IMPORT
+                pattern: junit.junit
+
+      nested_example: |-
+        when:
+          and:
+            - and:
+                - go.referenced: "*CustomResourceDefinition*"
+                - java.referenced:
+                    pattern: "*CustomResourceDefinition*"
+            - go.referenced: "*CustomResourceDefinition*"
+
+    or_condition:
+      description: "Matches when ANY child condition matches"
+      syntax: |-
+        when:
+          or:
+            - <condition1>
+            - <condition2>
+
+      example: |-
+        when:
+          or:
+            - java.dependency:
+                name: junit.junit
+                upperbound: 4.12.2
+                lowerbound: 4.4.0
+            - java.referenced:
+                location: IMPORT
+                pattern: junit.junit
+
+  custom_variables:
+    description: "Extract information from matched code for templated messages"
+    reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide#yaml-rule-structure-syntax_rules-development-guide"
+
+    syntax: |-
+      - ruleID: lang-ref-004
+        customVariables:
+          - pattern: '([A-z]+)\\.get\\(\\)'    # RegEx with capture group
+            name: VariableName              # Variable name for template
+        message: "Found generic call - {{ VariableName }}"
+        when:
+          java.referenced:
+            location: METHOD_CALL
+            pattern: com.example.apps.GenericClass.get
+
+    guidelines:
+      - "Use RegEx capture groups to extract relevant information"
+      - "Variable names can be used in message templates with {{ VariableName }}"
+      - "Pattern is matched on the source code line when a match is found"
+
+  rulesets:
+    description: "Group multiple rules that achieve a common goal"
+    reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide#yaml-rule-structure-syntax_rules-development-guide"
+
+    structure:
+      description: "Create ruleset.yaml at directory root containing rule files"
+      format: |-
+        name: "Name of the ruleset"        # Must be unique
+        description: "Description of the ruleset"
+        labels:                            # Inherited by all rules
+          - key=val
+
+      example: |-
+        name: "eap6-to-eap7-migration"
+        description: "Rules for migrating from JBoss EAP 6 to EAP 7"
+        labels:
+          - konveyor.io/source=eap6
+          - konveyor.io/target=eap7
+
+    directory_structure: |-
+      custom-rules/
+        |-- ruleset.yaml           # Ruleset metadata
+        |-- rule1.yaml            # Individual rule file
+        |-- rule2.yaml            # Individual rule file
+        +-- subfolder/
+            +-- rule3.yaml        # Rules in subdirectories
+
+    cli_usage:
+      analysis: |-
+        mta-cli analyze \\
+          --input=<application_to_analyze> \\
+          --output=<output_dir> \\
+          --rules=<custom_rule_dir> \\
+          --enable-default-rulesets=false
+
+      with_selectors: |-
+        mta-cli analyze \\
+          --input=/app/source \\
+          --output=/app/report \\
+          --rules=/custom-rules \\
+          --label-selector="konveyor.io/source=eap6" \\
+          --dep-label-selector="!konveyor.io/dep-source=open-source"
+
+file_organization:
+  structure: |-
+    # File header comment describing purpose
+
+    # Metadata block (always first)
+    metadata: &metadata
+      version: "1.0.0"
+      category: <type>
+      keywords: [...]
+
+    # Merge metadata into root (optional)
+    <<: *metadata
+
+    # Anchor definitions (before first use)
+    template_name: &template_name
+      field1: null
+      field2: null
+
+    another_template: &another_template
+      field3: null
+
+    # Main content sections
+    section_one:
+      item:
+        <<: *template_name
+        field1: value
+
+    section_two:
+      item:
+        <<: *another_template
+        field3: value
+
+    # Cross-references section
+    cross_references:
+      - "related/file1.yml: Description"
+      - "related/file2.yml: Description"
+
+    # Related documentation (end of file)
+    related_documentation:
+      - "path/to/doc1.yml"
+      - "path/to/doc2.yml"
+
+  section_ordering:
+    - "1. File header comment"
+    - "2. metadata block"
+    - "3. Metadata merge (<<: *metadata)"
+    - "4. Anchor/template definitions"
+    - "5. Main content sections (alphabetical or logical order)"
+    - "6. cross_references section (optional)"
+    - "7. related_documentation section (always last)"
+
+  guidelines:
+    - "Group related anchors together"
+    - "Define anchors before first use"
+    - "Separate major sections with blank lines"
+    - "Keep related_documentation at bottom"
+    - "Use consistent section naming across files"
+
+validation:
+  red_hat_extension:
+    features:
+      - "Real-time YAML linting and validation"
+      - "Anchor navigation (Ctrl+Click on alias)"
+      - "Schema validation (if configured)"
+      - "Auto-completion for keys and values"
+      - "Folding/unfolding for sections"
+
+    configuration: |-
+      # In .vscode/settings.json:
+      {
+        "yaml.schemas": {
+          "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml"
+        },
+        "yaml.format.enable": true,
+        "yaml.format.singleQuote": false,
+        "yaml.validate": true,
+        "yaml.customTags": [
+          "!reference sequence",
+          "!include scalar"
+        ]
+      }
+
+  common_errors:
+    - error: "Duplicate key"
+      cause: "Same key appears twice in same mapping"
+      fix: "Remove duplicate or rename one key"
+
+    - error: "Anchor not found"
+      cause: "Alias references non-existent anchor"
+      fix: "Define anchor before use or fix typo"
+
+    - error: "Unexpected character"
+      cause: "Special characters without quotes"
+      fix: "Quote string values with special characters"
+
+    - error: "Invalid indentation"
+      cause: "Inconsistent spacing or tabs"
+      fix: "Use 2 spaces consistently, never tabs"
+
+complete_rule_examples:
+  description: "Real-world examples from Red Hat MTA documentation"
+  reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide"
+
+  basic_rule_template: |-
+    - ruleID: <UNIQUE_RULE_ID>
+      description: <DESCRIPTION>
+      category: mandatory          # mandatory | optional | potential
+      effort: <EFFORT>             # Integer (story points)
+      labels:
+        - "konveyor.io/source=<SOURCE_TECH>"
+        - "konveyor.io/target=<TARGET_TECH>"
+      when:
+        <CONDITION>
+      message: <MESSAGE>
+      links:
+        - url: <HYPERLINK>
+          title: <HYPERLINK_TITLE>
+
+  jboss_web_xml_example:
+    description: "Detect class-loading element in jboss-web.xml"
+    rule: |-
+      - ruleID: jboss5-web-class-loading
+        description: Find class loading element in JBoss XML file.
+        category: mandatory
+        effort: 3
+        labels:
+          - konveyor.io/source=eap5
+          - konveyor.io/target=eap6
+        when:
+          builtin.xml:
+            xpath: jboss-web/class-loading
+        message: The class-loading element is no longer valid in the jboss-web.xml file.
+        links:
+          - url: https://access.redhat.com/documentation/en-US/JBoss_Enterprise_Application_Platform/6.4/html-single/Migration_Guide/index.html#Create_or_Modify_Files_That_Control_Class_Loading_in_JBoss_Enterprise_Application_Platform_6
+            title: Create or Modify Files That Control Class Loading in JBoss EAP 6
+
+  dependency_check_example:
+    description: "Check for specific dependency version range"
+    rule: |-
+      - ruleID: junit-dependency-check
+        description: Detect JUnit 4.x dependencies that need upgrade
+        category: optional
+        effort: 1
+        labels:
+          - konveyor.io/target=junit5
+        when:
+          java.dependency:
+            name: junit.junit
+            upperbound: 4.12.2
+            lowerbound: 4.4.0
+        message: JUnit 4.x detected. Consider upgrading to JUnit 5 for better features.
+        links:
+          - url: https://junit.org/junit5/docs/current/user-guide/#migrating-from-junit4
+            title: JUnit 5 Migration Guide
+
+  multi_condition_example:
+    description: "Complex rule with AND condition"
+    rule: |-
+      - ruleID: eap6-servlet-deprecated
+        description: Detect deprecated servlet usage with specific version
+        category: mandatory
+        effort: 5
+        labels:
+          - konveyor.io/source=eap6
+          - konveyor.io/target=eap7
+        when:
+          and:
+            - java.dependency:
+                name: javax.servlet
+                upperbound: 3.1.0
+            - java.referenced:
+                location: IMPORT
+                pattern: javax.servlet.http.HttpServlet
+        message: Deprecated servlet API usage detected. Update to Jakarta EE 9+.
+        links:
+          - url: https://jakarta.ee/specifications/servlet/5.0/
+            title: Jakarta Servlet 5.0 Specification
+
+  tagging_rule_example:
+    description: "Tag-only rule (no issues created)"
+    rule: |-
+      - ruleID: golang-detection
+        description: Detect Golang source files
+        when:
+          builtin.file:
+            pattern: ".*\\.go$"
+        tag:
+          - Language=Golang
+          - Source Code
+
+  custom_variable_example:
+    description: "Rule with custom variable for templated message"
+    rule: |-
+      - ruleID: generic-class-usage
+        description: Detect usage of generic class methods
+        category: potential
+        effort: 3
+        customVariables:
+          - pattern: '([A-z]+)\\.get\\(\\)'
+            name: ClassName
+        when:
+          java.referenced:
+            location: METHOD_CALL
+            pattern: com.example.apps.GenericClass.get
+        message: "Generic class method detected: {{ ClassName }}.get(). Review for type safety."
+
+  file_content_search_example:
+    description: "Search for specific content in files"
+    rule: |-
+      - ruleID: hardcoded-jdbc-url
+        description: Detect hardcoded JDBC URLs in properties files
+        category: mandatory
+        effort: 2
+        labels:
+          - konveyor.io/target=cloud-native
+        when:
+          builtin.filecontent:
+            filePattern: ".*\\.properties$"
+            pattern: "jdbc\\.url=jdbc:.*"
+        message: Hardcoded JDBC URL found. Use environment variables or configuration service.
+        links:
+          - url: https://12factor.net/config
+            title: The Twelve-Factor App - Configuration
+
+  annotation_check_example:
+    description: "Check for specific annotations"
+    rule: |-
+      - ruleID: deprecated-annotation-check
+        description: Detect deprecated Spring annotations
+        category: optional
+        effort: 1
+        when:
+          java.referenced:
+            location: ANNOTATION
+            pattern: org.springframework.stereotype.Controller
+            annotated:
+              pattern: org.springframework.web.bind.annotation.RequestMapping
+              elements:
+                - name: method
+                  value: RequestMethod.GET
+        message: Consider using @GetMapping instead of @RequestMapping(method = GET)
+
+rule_testing:
+  description: "Guidelines for testing custom YAML rules"
+  reference: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide"
+
+  test_data_setup:
+    create_test_files: |-
+      # Create test directory and files
+      mkdir /home/<USER>/test-data/
+      touch /home/<USER>/test-data/jboss-web.xml
+      touch /home/<USER>/test-data/pom.xml
+
+    sample_xml: |-
+      <!DOCTYPE jboss-web PUBLIC "-//JBoss//DTD Web Application 4.2//EN" "http://www.jboss.org/j2ee/dtd/jboss-web_4_2.dtd">
+      <jboss-web>
+          <class-loading java2ClassLoadingCompliance="false">
+              <loader-repository>
+                  seam.jboss.org:loader=@projectName@
+                  <loader-repository-config>java2ParentDelegation=false</loader-repository-config>
+              </loader-repository>
+          </class-loading>
+      </jboss-web>
+
+  running_analysis:
+    single_rule: |-
+      mta-cli analyze \\
+        --input /home/<USER>/test-data/ \\
+        --output /home/<USER>/output/ \\
+        --rules /home/<USER>/rules.yaml
+
+    ruleset_directory: |-
+      mta-cli analyze \\
+        --input /home/<USER>/test-data/ \\
+        --output /home/<USER>/output/ \\
+        --rules /home/<USER>/custom-rules/
+
+    with_target_filter: |-
+      mta-cli analyze \\
+        --input /home/<USER>/test-data/ \\
+        --output /home/<USER>/output/ \\
+        --rules /home/<USER>/rules.yaml \\
+        --target=eap7
+
+  report_review:
+    access_report: |-
+      # CLI outputs report path:
+      INFO[0066] Static report created. Access it at this URL:
+      URL="file:/home/<USER>/output/static-report/index.html"
+
+    verification_steps:
+      - "Open static-report/index.html in web browser"
+      - "Navigate to Issues tab in left menu"
+      - "Search for rule description in Issues table"
+      - "Click affected file link to view issue location"
+      - "Verify issue details match expected results"
+
+migration_best_practices:
+  description: "Best practices for creating effective migration rules"
+
+  rule_quality:
+    - "Use descriptive ruleIDs that indicate source and target technologies"
+    - "Provide clear, actionable messages that explain the migration issue"
+    - "Include links to official documentation for remediation guidance"
+    - "Set appropriate effort values based on expected fix complexity"
+    - "Use correct category (mandatory/optional/potential) based on impact"
+    - "Add source and target labels for proper filtering"
+
+  condition_design:
+    - "Use most specific location possible for java.referenced (e.g., IMPORT vs TYPE)"
+    - "Combine conditions with AND when all criteria must match"
+    - "Use OR for alternative matching patterns"
+    - "Scope file searches with filePattern to improve performance"
+    - "Use XPath for structured XML/JSON queries instead of content patterns"
+
+  message_guidelines:
+    - "Start with what was detected, then explain why it's a problem"
+    - "Suggest specific remediation steps when possible"
+    - "Use custom variables to include relevant code context"
+    - "Keep messages concise but informative (2-3 sentences)"
+    - "Include version numbers or technology names for clarity"
+
+  performance_optimization:
+    - "Use specific file patterns to limit search scope"
+    - "Prefer provider-specific searches over generic content searches"
+    - "Group related conditions in AND blocks for early exit"
+    - "Use dependency checks before expensive code searches"
+    - "Test rules on representative sample before full analysis"
+
+  ruleset_organization:
+    - "Group rules by source/target technology pair"
+    - "Use consistent naming convention for rule files"
+    - "Add ruleset-level labels that apply to all rules"
+    - "Document ruleset purpose in description field"
+    - "Keep related rules in same directory for maintainability"
+
+cross_references:
+  internal:
+    - file: ".config/copilot/templates.yml"
+      description: "Standard anchor template patterns"
+
+    - file: ".config/copilot/naming-conventions.yml"
+      description: "Naming standards for anchors, categories, keywords"
+
+    - file: ".config/copilot/index.yml"
+      description: "Semantic search index structure"
+
+    - file: ".config/versions.yml"
+      description: "Centralized version numbers for dependencies"
+
+    - file: ".config/ports.yml"
+      description: "Centralized port definitions"
+
+  external:
+    - name: "Red Hat MTA 7.2 Rules Development Guide"
+      url: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide"
+      description: "Complete guide for creating YAML rules in Red Hat Migration Toolkit for Applications"
+
+    - name: "Red Hat MTA CLI Guide"
+      url: "https://access.redhat.com/documentation/en-us/migration_toolkit_for_applications/7.2/html-single/cli_guide"
+      description: "CLI installation, configuration, and usage instructions"
+
+    - name: "YAML Rule Structure and Syntax"
+      url: "https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide/creating-yaml-rules_rules-development-guide#yaml-rule-structure-syntax_rules-development-guide"
+      description: "Detailed syntax reference for MTA YAML rules"
+
+    - name: "Technology Preview Features Support Scope"
+      url: "https://access.redhat.com/support/offerings/techpreview/"
+      description: "Red Hat Technology Preview features and support policies"
+
+    - name: "YAML 1.2 Specification"
+      url: "https://yaml.org/spec/1.2/spec.html"
+      description: "Official YAML specification"
+
+    - name: "YAML Anchors and Aliases Guide"
+      url: "https://yaml.org/spec/1.2/spec.html#id2765878"
+      description: "Detailed anchor/alias syntax and usage"
+
+    - name: "Konveyor Project"
+      url: "https://www.konveyor.io/"
+      description: "Open source application modernization tools (MTA upstream)"
+
+related_documentation:
+  - ".config/copilot/templates.yml: YAML anchor templates"
+  - ".config/copilot/naming-conventions.yml: Naming standards"
+  - ".config/copilot/index.yml: Semantic search index"
+  - ".config/services.yml: Service configuration with resource templates"
+  - ".config/versions.yml: Centralized version management"
+  - ".config/ports.yml: Port allocation strategy"
+  - "Red Hat MTA Rules Development Guide: https://docs.redhat.com/en/documentation/migration_toolkit_for_applications/7.2/html/rules_development_guide"

@@ -1,0 +1,233 @@
+# Troubleshooting Quick Reference
+# Common issues and their solutions
+
+# Metadata
+metadata: &metadata
+  version: "1.0.0"
+  category: pattern
+  keywords:
+    - troubleshooting
+    - debugging
+    - errors
+    - solutions
+    - fixes
+
+<<: *metadata
+
+# Issue Template
+issue_template: &issue_template
+  symptom: null
+  cause: null
+  solution: null
+  verification: null
+  prevention: null
+
+issues:
+  crlf_issues:
+    <<: *issue_template
+    symptom: Git shows line ending changes in files
+    cause: Windows line endings (CRLF) vs Unix (LF)
+    solution: .editorconfig enforces end_of_line = lf
+    verification: git diff should not show line ending changes after fix
+    prevention: EditorConfig plugin in VS Code applies settings automatically
+
+pylint_drop:
+  symptom: "Pylint rating dropped below 10.00/10"
+  cause: "New code violates Python standards"
+  solution:
+    - "Run VS Code Task: 'Generate Pylint Report'"
+    - "Review reports/pylint_report.txt for violations"
+    - "Fix violations following pylint suggestions"
+    - "Re-run until 10.00/10 rating achieved"
+  prevention: "Run pre-commit hooks before git commit"
+
+docker_build_fail:
+  symptom: "Docker build fails with dependency or syntax errors"
+  cause: "Missing dependencies, syntax errors, or build context issues"
+  troubleshooting_steps:
+    - "Check Dockerfile syntax for typos or invalid commands"
+    - "Verify base image exists and is accessible"
+    - "Run docker build with --no-cache flag for clean build"
+    - "Check .dockerignore to ensure needed files aren't excluded"
+    - "Verify COPY paths match actual file structure"
+  common_fixes:
+    - "Update base image tag if outdated"
+    - "Fix COPY path typos"
+    - "Add missing RUN apt-get update before install"
+
+github_cli_field_error:
+  symptom: "Unknown JSON field error from gh CLI"
+  cause: "Incorrect field name (e.g., defaultBranch instead of defaultBranchRef)"
+  solution: "Reference docs/github-cli-reference.md for correct field names"
+  prevention: "Check .config/copilot/workflows/github-cli.yml before scripting"
+  common_mistakes:
+    - wrong: "defaultBranch"
+      correct: "defaultBranchRef"
+    - wrong: "headRef"
+      correct: "headRefName"
+
+tools_container_not_found:
+  symptom: "Docker error: image 'semantic-kernel-tools:latest' not found"
+  cause: "Tools container image not built yet"
+  solution: "docker build -f dockerfiles/tools.Dockerfile -t semantic-kernel-tools:latest ."
+  context: "Build from repository root directory"
+  rebuild_triggers:
+    - "First time setup"
+    - "Dockerfile changes"
+    - "Dependency version updates"
+
+npm_vulnerabilities:
+  symptom: "npm audit shows vulnerabilities"
+  solution:
+    - "Run npm audit for details"
+    - "For low severity: npm audit fix"
+    - "For high severity: Research breaking changes before updating"
+    - "If breaking: Create deferred item in docs/deferred/"
+  prevention: "Regular dependency updates and security scanning"
+
+dotnet_build_fail:
+  symptom: ".NET build fails with compilation errors"
+  troubleshooting_steps:
+    - "Run dotnet clean to remove build artifacts"
+    - "Run dotnet restore to refresh dependencies"
+    - "Check using directives for missing namespaces"
+    - "Verify NuGet packages are installed"
+    - "Check .csproj for correct target framework"
+  common_fixes:
+    - "Add missing using directives"
+    - "Update package versions in .csproj"
+    - "Fix syntax errors reported in compilation output"
+
+dotnet_package_issues:
+  symptom: "NuGet package restore failed or package not found"
+  troubleshooting_steps:
+    - "Clear NuGet cache: dotnet nuget locals all --clear"
+    - "Check NuGet.config for correct package feeds"
+    - "Verify internet connectivity to nuget.org"
+    - "Review .config/dotnet-dependencies.yml for required packages"
+  solutions:
+    package_restore_failed:
+      symptom: "Unable to resolve package dependencies"
+      fix: "dotnet nuget locals all --clear && dotnet restore"
+      prevention: "Use Central Package Management (Directory.Packages.props)"
+    sdk_version_mismatch:
+      symptom: "SDK version specified in global.json not found"
+      fix: "Install SDK: winget install Microsoft.DotNet.SDK.10"
+      reference: "global.json for version specification"
+    semantic_kernel_errors:
+      symptom: "Semantic Kernel operation failed"
+      fixes:
+        api_key_invalid: "Verify OPENAI_API_KEY environment variable"
+        model_not_found: "Check model ID matches available models (gpt-4o, text-embedding-3-small)"
+        rate_limited: "Implement retry with exponential backoff"
+        memory_error: "Reduce batch size or enable streaming responses"
+    docker_dotnet_build:
+      symptom: "Docker build fails during dotnet restore/build"
+      fixes:
+        - "Use multi-stage builds for layer caching"
+        - "Copy .csproj files first, then restore, then copy source"
+        - "Use --no-restore flag after initial restore step"
+  auto_provisioning:
+    config_file: ".config/dotnet-dependencies.yml"
+    restore_all: "dotnet restore"
+    verify_packages: "dotnet list package --include-transitive"
+    verify_semantic_kernel: "dotnet list package | Select-String SemanticKernel"
+
+semantic_kernel_issues:
+  symptom: "Semantic Kernel AI operations failing"
+  troubleshooting_steps:
+    - "Verify API key is set: echo $env:OPENAI_API_KEY"
+    - "Check model availability in OpenAI dashboard"
+    - "Review .config/semantic-kernel.yml configuration"
+    - "Check network connectivity to api.openai.com"
+  solutions:
+    kernel_creation_failed:
+      symptom: "Kernel.CreateBuilder() throws exception"
+      fix: "Verify all required packages are installed"
+      packages:
+        - "Microsoft.SemanticKernel"
+        - "Microsoft.SemanticKernel.Connectors.OpenAI"
+    embedding_generation_slow:
+      symptom: "Embeddings taking too long to generate"
+      fixes:
+        - "Enable batch processing (batch_size: 64)"
+        - "Use GPU acceleration if available"
+        - "Enable fp16 mixed precision"
+        - "Use streaming for large inputs"
+      config_reference: ".config/semantic-kernel.yml"
+    memory_store_connection:
+      symptom: "Cannot connect to vector store (Postgres/Qdrant)"
+      fixes:
+        - "Verify service is running: docker compose ps"
+        - "Check connection string in environment"
+        - "Verify pgvector extension is enabled"
+        - "Check Qdrant health: curl http://localhost:6333/health"
+    planner_errors:
+      symptom: "Planner fails to create execution plan"
+      fixes:
+        - "Verify all required plugins are registered"
+        - "Check function descriptions are clear and complete"
+        - "Reduce maxPlanningSteps if timeout occurs"
+        - "Use FunctionCallingStepwisePlanner for complex tasks"
+
+gpu_cuda_issues:
+  symptom: "CUDA or GPU not detected in containers or Python"
+  troubleshooting_steps:
+    - "Verify NVIDIA driver: nvidia-smi"
+    - "Check CUDA toolkit: nvcc --version"
+    - "Verify PyTorch GPU: python -c 'import torch; print(torch.cuda.is_available())'"
+    - "Check Docker GPU access: docker run --gpus all nvidia/cuda:13.0.0-base-ubuntu24.04 nvidia-smi"
+    - "Verify environment variables in .config/environment.yml"
+  common_fixes:
+    - "Install NVIDIA Container Toolkit: winget install NVIDIA.NVIDIAContainerToolkit"
+    - "Set CUDA_VISIBLE_DEVICES=0 in environment"
+    - "Reinstall PyTorch with CUDA: pip install torch --index-url https://download.pytorch.org/whl/cu130"
+    - "Update Docker daemon.json with nvidia runtime"
+  environment_reference: ".config/environment.yml"
+
+python_package_issues:
+  symptom: "ModuleNotFoundError or ImportError for Python packages"
+  troubleshooting_steps:
+    - "Check if package is installed: pip show <package>"
+    - "Verify Python version: python --version (should be 3.14)"
+    - "Check virtual environment is activated"
+    - "Review .config/python-dependencies.yml for required packages"
+  solutions:
+    missing_package:
+      symptom: "ModuleNotFoundError: No module named 'xxx'"
+      fix: "pip install xxx"
+      prevention: "Run pip install -r tools/requirements.txt on clone"
+    version_mismatch:
+      symptom: "Package version conflicts or incompatible APIs"
+      fix: "pip install --upgrade xxx==<version>"
+      reference: "tools/requirements.txt for pinned versions"
+    pylint_not_found:
+      symptom: "No module named pylint in pre-commit"
+      fix: "pip install pylint"
+      note: "pylint may have delayed Python 3.14 support"
+    optional_import_pattern:
+      symptom: "Want graceful degradation when package missing"
+      fix: |
+        _yaml: ModuleType | None
+        try:
+            import yaml as _yaml_module
+            _yaml = _yaml_module
+        except ImportError:
+            _yaml = None
+  auto_provisioning:
+    config_file: ".config/python-dependencies.yml"
+    install_all: "pip install -r tools/requirements.txt"
+    verify_core: 'python -c ''import yaml, jsonschema, click; print("Core OK")'''
+    verify_testing: 'python -c ''import pytest; print("Testing OK")'''
+    verify_quality: 'python -c ''import black, ruff, mypy; print("Quality OK")'''
+
+related_documentation:
+  - ".config/python-dependencies.yml: Python auto-provisioning configuration"
+  - ".config/dotnet-dependencies.yml: .NET auto-provisioning with Semantic Kernel optimizations"
+  - ".config/semantic-kernel.yml: Semantic Kernel configuration and GPU settings"
+  - ".config/environment.yml: Environment variables"
+  - ".config/copilot/standards/code-quality.yml: Code quality standards"
+  - "tools/requirements.txt: Pinned Python package versions"
+  - "pyproject.toml: Python tool configurations"
+  - "global.json: .NET SDK version specification"
+  - "docker-compose.yml: Container orchestration with GPU support"
