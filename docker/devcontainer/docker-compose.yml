@@ -168,12 +168,12 @@ services:
         GCM_VERSION: ${GCM_VERSION:-2.6.1}
       # Advanced BuildKit caching for optimal build performance
       target: ${BUILD_TARGET:-}
-      cache_from:
-        - type=gha
-        - type=registry,ref=ghcr.io/spec-kit/devcontainer:cache
-      cache_to:
-        - type=gha,mode=max
-        - type=registry,ref=ghcr.io/spec-kit/devcontainer:cache,mode=max
+      # cache_from:
+      #   - type=gha
+      #   - type=registry,ref=ghcr.io/spec-kit/devcontainer:cache
+      # cache_to:
+      #   - type=gha,mode=max
+      #   - type=registry,ref=ghcr.io/spec-kit/devcontainer:cache,mode=max
       # Network optimization for faster downloads
       network: default
     container_name: spec-kit-workspace
