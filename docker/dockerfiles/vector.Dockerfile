@@ -25,6 +25,7 @@ COPY semantic/vector/.config/config.yml /qdrant/config/production.yaml
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends wget && \
     rm -rf /var/lib/apt/lists/* && \
+    groupadd -r qdrant && useradd -r -g qdrant qdrant && \
     mkdir -p /qdrant/storage /qdrant/snapshots && \
     chown -R qdrant:qdrant /qdrant
 
