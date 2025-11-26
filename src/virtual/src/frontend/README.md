@@ -13,7 +13,7 @@ A React/TypeScript Single Page Application (SPA) for the Semantic Kernel Applica
 ## Project Structure
 
 ```
-src/frontend/
+src/virtual/src/frontend/
 ├── .config/              # Build configuration
 │   └── webpack.config.js # Webpack configuration
 ├── public/               # Static assets
@@ -39,7 +39,7 @@ src/frontend/
 
 ```bash
 # Navigate to frontend directory
-cd src/frontend
+cd src/virtual/src/frontend
 
 # Install dependencies
 npm install
