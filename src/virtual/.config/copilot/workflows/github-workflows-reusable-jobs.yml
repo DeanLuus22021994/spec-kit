@@ -71,11 +71,11 @@ reusable_jobs:
         run: "dotnet build --no-restore --configuration Release"
 
       - name: "Restore npm dependencies (with npm cache)"
-        working-directory: "src/frontend"
+        working-directory: "src/virtual/src/frontend"
         run: "npm ci"
 
       - name: "Build frontend (webpack)"
-        working-directory: "src/frontend"
+        working-directory: "src/virtual/src/frontend"
         run: "npm run build"
 
       - name: "Install Python dependencies (with pip cache)"
@@ -87,7 +87,7 @@ reusable_jobs:
           name: "build-artifacts"
           path: |
             src/*/bin/Release
-            src/frontend/dist
+            src/virtual/src/frontend/dist
 
     caching:
       nuget:
@@ -96,7 +96,7 @@ reusable_jobs:
 
       npm:
         path: "~/.npm"
-        key: "${{ runner.os }}-npm-${{ hashFiles('src/frontend/package-lock.json') }}"
+        key: "${{ runner.os }}-npm-${{ hashFiles('src/virtual/src/frontend/package-lock.json') }}"
 
       pip:
         path: "~/.cache/pip"

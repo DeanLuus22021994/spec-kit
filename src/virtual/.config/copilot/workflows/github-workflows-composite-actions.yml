@@ -4,7 +4,17 @@
 metadata: &metadata
   version: "1.0.0"
   category: workflow
-  keywords: [composite-actions, github-actions, setup, cleanup, utilities, dotnet, nodejs, docker]
+  keywords:
+    [
+      composite-actions,
+      github-actions,
+      setup,
+      cleanup,
+      utilities,
+      dotnet,
+      nodejs,
+      docker,
+    ]
 
 <<: *metadata
 
@@ -86,7 +96,7 @@ composite_actions:
         description: "Path to package-lock.json for cache key"
         type: string
         required: false
-        default: "src/frontend/package-lock.json"
+        default: "src/virtual/src/frontend/package-lock.json"
 
     runs:
       using: "composite"
@@ -115,7 +125,7 @@ composite_actions:
         - uses: ./.github/workflows/actions/setup-node
           with:
             node-version: "20"
-            cache-dependency-path: "src/frontend/package-lock.json"
+            cache-dependency-path: "src/virtual/src/frontend/package-lock.json"
 
     benefits:
       - "Automatic npm caching (managed by setup-node@v4)"
