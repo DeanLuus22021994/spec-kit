@@ -49,7 +49,7 @@ services:
     purpose: "User interface and client application"
     build_tool: Vite
     port: 3000 # See .config/ports.yml
-    location: src/frontend/
+    location: src/virtual/src/frontend/
     dockerfile: dockerfiles/frontend.Dockerfile
     resource_tier: medium # See .config/services.yml for allocation
 
@@ -59,7 +59,7 @@ services:
     purpose: "RESTful API for business operations"
     framework: ASP.NET Core
     port: 5000 # See .config/ports.yml
-    location: src/backend/
+    location: src/virtual/src/backend/
     dockerfile: dockerfiles/backend.Dockerfile
     resource_tier: large
 
@@ -69,7 +69,7 @@ services:
     purpose: "AI processing with plugins and planners"
     framework: ".NET + Semantic Kernel"
     port: 5001 # See .config/ports.yml
-    location: src/engine/
+    location: src/virtual/src/engine/
     dockerfile: dockerfiles/engine.Dockerfile
     resource_tier: xlarge
 
@@ -79,7 +79,7 @@ services:
     purpose: "Core business rules and domain logic"
     framework: ".NET class library"
     port: 5002 # See .config/ports.yml
-    location: src/business/
+    location: src/virtual/src/business/
     dockerfile: dockerfiles/business.Dockerfile
     resource_tier: large
 
@@ -119,7 +119,7 @@ services:
     purpose: "Generate and manage text embeddings"
     port: 8001 # See .config/ports.yml
     model: text-embedding-3-small # See .config/versions.yml
-    location: semantic/embeddings/
+    location: src/local/semantic/embeddings/
     dockerfile: dockerfiles/embeddings.Dockerfile
     resource_tier: large
 
@@ -245,14 +245,14 @@ semantic_kernel:
     stream_responses: true
 
 project_structure:
-  source_code: "src/"
-  infrastructure: "infrastructure/"
-  semantic: "semantic/"
+  source_code: "src/virtual/src/"
+  infrastructure: "src/local/infrastructure/"
+  semantic: "src/local/semantic/"
   tests: "tests/"
   documentation: "docs/"
   tools: "tools/"
-  dockerfiles: "dockerfiles/"
-  configuration: ".config/"
+  dockerfiles: "src/virtual/dockerfiles/"
+  configuration: "src/virtual/.config/"
   vscode: ".vscode/"
   github: ".github/"
 

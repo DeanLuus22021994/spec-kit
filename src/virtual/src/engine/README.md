@@ -103,10 +103,10 @@ semantic_kernel:
 
 ```bash
 # Build the engine project
-dotnet build src/engine/engine.csproj
+dotnet build src/virtual/src/engine/engine.csproj
 
 # Run locally
-dotnet run --project src/engine/engine.csproj
+dotnet run --project src/virtual/src/engine/engine.csproj
 ```
 
 ### Running with Docker
