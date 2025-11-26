@@ -159,6 +159,15 @@ class SubagentConfig:
     def _get_defaults(cls) -> dict[str, Any]:
         """Default configuration if file not found."""
         return {
+            "paths": {
+                "templates": str(
+                    Path(__file__).parents[5]
+                    / "src"
+                    / "virtual"
+                    / ".config"
+                    / "templates"
+                )
+            },
             "performance_targets": {
                 "max_parallel_agents": 8,
                 "target_utilization": 0.80,

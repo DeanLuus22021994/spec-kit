@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from pathlib import Path
 from typing import Any
 
 from .config import SubagentConfig, SubagentTask, TaskResult, TaskStatus, TaskType
 from .executors.base import TaskExecutor
+
+logger = logging.getLogger(__name__)
 
 
 class ExecutionPatternManager:
@@ -53,34 +56,46 @@ class SubagentOrchestrator:
         """Submit a task for execution."""
         if task.task_type not in self.executors:
             msg = f"No executor registered for task type: {task.task_type}"
+            logger.error(msg)
             raise ValueError(msg)
 
         executor = self.executors[task.task_type]
         if not executor.validate_task(task):
             msg = f"Invalid task payload for type: {task.task_type}"
+            logger.error(msg)
             raise ValueError(msg)
 
         await self.task_queue.put(task)
+        logger.debug("Task submitted: %s", task.task_id)
         return task.task_id
 
     async def execute_batch(self, tasks: list[SubagentTask]) -> list[TaskResult]:
         """Execute a batch of tasks in parallel."""
         max_parallel: int = self.profile_config.get("max_parallel_agents", 8)
+        logger.info(
+            "Executing batch of %d tasks (max_parallel=%d)", len(tasks), max_parallel
+        )
 
         independent_tasks = [t for t in tasks if not t.dependencies]
         dependent_tasks = [t for t in tasks if t.dependencies]
 
         results: list[TaskResult] = []
 
-        # Execute independent tasks in parallel batches
+        # Execute independent tasks in parallel batches (fixed)
         for i in range(0, len(independent_tasks), max_parallel):
             batch = independent_tasks[i:i + max_parallel]
+            logger.debug("Processing batch of %d independent tasks", len(batch))
             batch_results = await asyncio.gather(
                 *[self._execute_task(task) for task in batch],
                 return_exceptions=True,
             )
             for j, batch_result in enumerate(batch_results):
                 if isinstance(batch_result, BaseException):
+                    logger.error(
+                        "Task %s failed with exception: %s",
+                        batch[j].task_id,
+                        batch_result,
+                    )
                     task_result = TaskResult(
                         task_id=batch[j].task_id,
                         task_type=batch[j].task_type,
@@ -102,10 +117,12 @@ class SubagentOrchestrator:
                 for dep_id in task.dependencies
             )
             if deps_satisfied:
+                logger.debug("Dependencies satisfied for task %s", task.task_id)
                 result = await self._execute_task(task)
                 results.append(result)
                 self.results[task.task_id] = result
             else:
+                logger.warning("Dependencies not satisfied for task %s", task.task_id)
                 failed_result = TaskResult(
                     task_id=task.task_id,
                     task_type=task.task_type,
@@ -128,10 +145,12 @@ class SubagentOrchestrator:
             )
 
         try:
+            logger.debug("Starting task %s", task.task_id)
             return await asyncio.wait_for(
                 executor.execute(task), timeout=task.timeout_seconds
             )
         except TimeoutError:
+            logger.error("Task %s timed out", task.task_id)
             return TaskResult(
                 task_id=task.task_id,
                 task_type=task.task_type,
@@ -139,6 +158,7 @@ class SubagentOrchestrator:
                 error=f"Task timed out after {task.timeout_seconds}s",
             )
         except (OSError, ValueError, RuntimeError) as e:
+            logger.error("Task %s failed: %s", task.task_id, e)
             return TaskResult(
                 task_id=task.task_id,
                 task_type=task.task_type,
@@ -200,11 +220,15 @@ class XMLTemplateRenderer:
     def _load_file_templates(self) -> None:
         """Load templates from the virtual config directory."""
         # Try to locate the virtual config templates directory
-        # Assuming relative path from this script or a known location
-        # For now, we'll check the standard location mentioned by the user
-        template_dir = (
-            Path(__file__).parents[5] / "src" / "virtual" / ".config" / "templates"
-        )
+        # Use configured path or fallback to default
+        configured_path = self.config.get("paths.templates")
+        if configured_path:
+            template_dir = Path(configured_path)
+        else:
+            # Fallback to relative path
+            template_dir = (
+                Path(__file__).parents[5] / "src" / "virtual" / ".config" / "templates"
+            )
 
         if template_dir.exists():
             for template_file in template_dir.glob("*.xml"):
@@ -212,8 +236,8 @@ class XMLTemplateRenderer:
                     name = template_file.stem
                     content = template_file.read_text(encoding="utf-8")
                     self.templates[name] = content
-                except Exception:  # pylint: disable=broad-except
-                    pass
+                except Exception as e:  # pylint: disable=broad-except
+                    logger.warning("Failed to load template %s: %s", template_file, e)
 
     def render(self, template_name: str, **kwargs: Any) -> str:
         """Render a template with variables."""
