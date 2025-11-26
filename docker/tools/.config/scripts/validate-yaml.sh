@@ -128,6 +128,7 @@ run_validation() {
         --rules "${RULES_DIR}"
         --enable-default-rulesets=false
         --overwrite
+        --mode=source-only
         "${run_local_flag}"
     )
 

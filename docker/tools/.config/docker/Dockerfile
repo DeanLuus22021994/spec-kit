@@ -29,7 +29,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     maven \
     default-jdk \
+    podman \
+    fuse-overlayfs \
+    slirp4netns \
     && rm -rf /var/lib/apt/lists/*
+
+# Configure Podman for rootless operation
+RUN mkdir -p /home/toolsuser/.config/containers && \
+    chown -R toolsuser:toolsuser /home/toolsuser/.config
+
+# Copy Podman storage configuration
+RUN echo '[storage]' > /etc/containers/storage.conf && \
+    echo 'driver = "overlay"' >> /etc/containers/storage.conf && \
+    echo '[storage.options.overlay]' >> /etc/containers/storage.conf && \
+    echo 'mount_program = "/usr/bin/fuse-overlayfs"' >> /etc/containers/storage.conf
 
 # Create non-root user
 RUN groupadd -r toolsuser && useradd -r -g toolsuser -u 1001 toolsuser
