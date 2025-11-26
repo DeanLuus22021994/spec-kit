@@ -3,7 +3,7 @@
 # PRECOMPILED: All dependencies baked in
 
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:9.0-jammy AS build
+FROM mcr.microsoft.com/dotnet/nightly/sdk:10.0-preview AS build
 
 # Standard Build Arguments
 ARG IMAGE_VERSION=latest
@@ -35,7 +35,7 @@ WORKDIR /src/engine
 RUN dotnet publish engine.csproj -c Release -o /app/publish --no-restore
 
 # Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-jammy AS runtime
+FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0-preview AS runtime
 
 WORKDIR /app
 
