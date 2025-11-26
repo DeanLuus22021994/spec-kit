@@ -60,7 +60,7 @@ class ParallelExecutor(TaskExecutor, Generic[T, R]):
                     results.append(result)
                 except (OSError, ValueError, RuntimeError) as e:
                     errors.append(f"Processing {item} failed: {e}")
-                except Exception as e:  # noqa: BLE001
+                except Exception as e:  # pylint: disable=broad-except
                     errors.append(f"Unexpected error processing {item}: {e}")
 
         execution_time = (time.perf_counter() - start_time) * 1000
