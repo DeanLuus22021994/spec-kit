@@ -80,3 +80,37 @@ messages:
       - "○ [cyan]/speckit.clarify[/] [bright_black](optional)[/bright_black] - Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/speckit.plan[/] if used)"
       - "○ [cyan]/speckit.analyze[/] [bright_black](optional)[/bright_black] - Cross-artifact consistency & alignment report (after [cyan]/speckit.tasks[/], before [cyan]/speckit.implement[/])"
       - "○ [cyan]/speckit.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/speckit.plan[/])"
+
+  errors:
+    conflict_here_project: "Cannot specify both project name and --here flag"
+    missing_target: "Must specify either a project name, use '.' for current directory, or use --here flag"
+    directory_exists: "Directory '[cyan]{project_name}[/cyan]' already exists\nPlease choose a different project name or remove the existing directory."
+    invalid_ai: "Invalid AI assistant '{ai_assistant}'. Choose from: {choices}"
+    invalid_script: "Invalid script type '{script_type}'. Choose from: {choices}"
+    agent_not_found: "[cyan]{agent}[/cyan] not found\nInstall from: [cyan]{url}[/cyan]\n{name} is required to continue with this project type.\n\nTip: Use [cyan]--ignore-agent-tools[/cyan] to skip this check"
+
+  warnings:
+    dir_not_empty: "Current directory is not empty ({count} items)"
+    merge_warning: "Template files will be merged with existing content and may overwrite existing files"
+    git_not_found: "Git not found - will skip repository initialization"
+    git_init_failed: "Git repository initialization failed\n\n{error}\n\n[dim]You can initialize git manually later with:[/dim]\n[cyan]cd {path}[/cyan]\n[cyan]git init[/cyan]\n[cyan]git add .[/cyan]\n[cyan]git commit -m \"Initial commit\"[/cyan]"
+
+  prompts:
+    continue_merge: "Do you want to continue?"
+    choose_ai: "Choose your AI assistant:"
+    choose_script: "Choose script type (or press Enter)"
+
+  status:
+    force_skip: "[cyan]--force supplied: skipping confirmation and proceeding with merge[/cyan]"
+    cancelled: "Operation cancelled"
+    setup_title: "Specify Project Setup"
+    selected_ai: "Selected AI assistant:"
+    selected_script: "Selected script type:"
+    project_ready: "Project ready."
+    agent_security_title: "Agent Folder Security"
+    agent_security_body: "Some agents may store credentials, auth tokens, or other identifying and private artifacts in the agent folder within your project.\nConsider adding [cyan]{folder}[/cyan] (or parts of it) to [cyan].gitignore[/cyan] to prevent accidental credential leakage."
+
+  steps:
+    cd_project: "1. Go to the project folder: [cyan]cd {project_name}[/cyan]"
+    already_here: "1. You're already in the project directory!"
+    codex_home: "{step_num}. Set [cyan]CODEX_HOME[/cyan] environment variable before running Codex: [cyan]{cmd}[/cyan]"

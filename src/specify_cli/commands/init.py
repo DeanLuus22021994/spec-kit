@@ -45,6 +45,12 @@ def init(
     """
     Initialize a new Specify project from the latest template.
     """
+    messages = COMMANDS_INIT_YAML.get("messages", {})
+    errors = messages.get("errors", {})
+    warnings = messages.get("warnings", {})
+    prompts = messages.get("prompts", {})
+    status = messages.get("status", {})
+    steps = messages.get("steps", {})
 
     show_banner()
 
@@ -54,14 +60,16 @@ def init(
 
     if here and project_name:
         console.print(
-            "[red]Error:[/red] Cannot specify both project name and --here flag"
+            f"[red]Error:[/red] {errors.get('conflict_here_project', 'Cannot specify both project name and --here flag')}"
         )
         raise typer.Exit(1)
 
     if not here and not project_name:
-        console.print(
-            "[red]Error:[/red] Must specify either a project name, use '.' for current directory, or use --here flag"
+        msg = errors.get(
+            "missing_target",
+            "Must specify either a project name, use '.' for current directory, or use --here flag",
         )
+        console.print(f"[red]Error:[/red] {msg}")
         raise typer.Exit(1)
 
     if here:
@@ -71,19 +79,28 @@ def init(
         existing_items = list(project_path.iterdir())
         if existing_items:
             console.print(
-                f"[yellow]Warning:[/yellow] Current directory is not empty ({len(existing_items)} items)"
+                f"[yellow]Warning:[/yellow] {warnings.get('dir_not_empty', 'Current directory is not empty').format(count=len(existing_items))}"
             )
-            console.print(
-                "[yellow]Template files will be merged with existing content and may overwrite existing files[/yellow]"
+            msg = warnings.get(
+                "merge_warning",
+                "Template files will be merged with existing content and may overwrite existing files",
             )
+            console.print(f"[yellow]{msg}[/yellow]")
             if force:
                 console.print(
-                    "[cyan]--force supplied: skipping confirmation and proceeding with merge[/cyan]"
+                    status.get(
+                        "force_skip",
+                        "[cyan]--force supplied: skipping confirmation and proceeding with merge[/cyan]",
+                    )
                 )
             else:
-                response = typer.confirm("Do you want to continue?")
+                response = typer.confirm(
+                    prompts.get("continue_merge", "Do you want to continue?")
+                )
                 if not response:
-                    console.print("[yellow]Operation cancelled[/yellow]")
+                    console.print(
+                        f"[yellow]{status.get('cancelled', 'Operation cancelled')}[/yellow]"
+                    )
                     raise typer.Exit(0)
     else:
         if project_name is None:
@@ -91,9 +108,11 @@ def init(
             raise typer.Exit(1)
         project_path = Path(project_name).resolve()
         if project_path.exists():
+            error_msg = errors.get(
+                "directory_exists", "Directory '{project_name}' already exists"
+            ).format(project_name=project_name)
             error_panel = Panel(
-                f"Directory '[cyan]{project_name}[/cyan]' already exists\n"
-                "Please choose a different project name or remove the existing directory.",
+                error_msg,
                 title="[red]Directory Conflict[/red]",
                 border_style="red",
                 padding=(1, 2),
@@ -105,7 +124,7 @@ def init(
     current_dir = Path.cwd()
 
     setup_lines = [
-        "[cyan]Specify Project Setup[/cyan]",
+        f"[cyan]{status.get('setup_title', 'Specify Project Setup')}[/cyan]",
         "",
         f"{'Project':<15} [green]{project_path.name}[/green]",
         f"{'Working Path':<15} [dim]{current_dir}[/dim]",
@@ -121,22 +140,22 @@ def init(
         should_init_git = bool(check_tool("git"))
         if not should_init_git:
             console.print(
-                "[yellow]Git not found - will skip repository initialization[/yellow]"
+                f"[yellow]{warnings.get('git_not_found', 'Git not found - will skip repository initialization')}[/yellow]"
             )
 
     if ai_assistant:
         if ai_assistant not in AGENT_CONFIG:
-            console.print(
-                f"[red]Error:[/red] Invalid AI assistant '{ai_assistant}'. "
-                f"Choose from: {', '.join(AGENT_CONFIG.keys())}"
+            msg = errors.get("invalid_ai", "Invalid AI assistant").format(
+                ai_assistant=ai_assistant, choices=", ".join(AGENT_CONFIG.keys())
             )
+            console.print(f"[red]Error:[/red] {msg}")
             raise typer.Exit(1)
         selected_ai = ai_assistant
     else:
         # Create options dict for selection (agent_key: display_name)
         ai_choices = {key: config["name"] for key, config in AGENT_CONFIG.items()}
         selected_ai = select_with_arrows(
-            ai_choices, "Choose your AI assistant:", "copilot"
+            ai_choices, prompts.get("choose_ai", "Choose your AI assistant:"), "copilot"
         )
 
     if not ignore_agent_tools:
@@ -144,11 +163,11 @@ def init(
         if agent_config and agent_config["requires_cli"]:
             install_url = agent_config["install_url"]
             if not check_tool(selected_ai):
+                error_msg = errors.get("agent_not_found", "{agent} not found").format(
+                    agent=selected_ai, url=install_url, name=agent_config["name"]
+                )
                 error_panel = Panel(
-                    f"[cyan]{selected_ai}[/cyan] not found\n"
-                    f"Install from: [cyan]{install_url}[/cyan]\n"
-                    f"{agent_config['name']} is required to continue with this project type.\n\n"
-                    "Tip: Use [cyan]--ignore-agent-tools[/cyan] to skip this check",
+                    error_msg,
                     title="[red]Agent Detection Error[/red]",
                     border_style="red",
                     padding=(1, 2),
@@ -159,9 +178,10 @@ def init(
 
     if script_type:
         if script_type not in SCRIPT_TYPE_CHOICES:
-            console.print(
-                f"[red]Error:[/red] Invalid script type '{script_type}'. Choose from: {', '.join(SCRIPT_TYPE_CHOICES.keys())}"
+            msg = errors.get("invalid_script", "Invalid script type").format(
+                script_type=script_type, choices=", ".join(SCRIPT_TYPE_CHOICES.keys())
             )
+            console.print(f"[red]Error:[/red] {msg}")
             raise typer.Exit(1)
         selected_script = script_type
     else:
@@ -170,14 +190,18 @@ def init(
         if sys.stdin.isatty():
             selected_script = select_with_arrows(
                 SCRIPT_TYPE_CHOICES,
-                "Choose script type (or press Enter)",
+                prompts.get("choose_script", "Choose script type (or press Enter)"),
                 default_script,
             )
         else:
             selected_script = default_script
 
-    console.print(f"[cyan]Selected AI assistant:[/cyan] {selected_ai}")
-    console.print(f"[cyan]Selected script type:[/cyan] {selected_script}")
+    console.print(
+        f"[cyan]{status.get('selected_ai', 'Selected AI assistant:')}[/cyan] {selected_ai}"
+    )
+    console.print(
+        f"[cyan]{status.get('selected_script', 'Selected script type:')}[/cyan] {selected_script}"
+    )
 
     tracker = StepTracker("Initialize Specify Project")
 
@@ -282,14 +306,16 @@ def init(
     # Show git error details if initialization failed
     if git_error_message:
         console.print()
+        msg = warnings.get(
+            "git_init_failed",
+            "Git repository initialization failed\n\n{error}\n\n"
+            "[dim]You can initialize git manually later with:[/dim]\n"
+            "[cyan]cd {path}[/cyan]\n[cyan]git init[/cyan]\n"
+            "[cyan]git add .[/cyan]\n"
+            '[cyan]git commit -m "Initial commit"[/cyan]',
+        ).format(error=git_error_message, path=project_path if not here else ".")
         git_error_panel = Panel(
-            f"[yellow]Warning:[/yellow] Git repository initialization failed\n\n"
-            f"{git_error_message}\n\n"
-            f"[dim]You can initialize git manually later with:[/dim]\n"
-            f"[cyan]cd {project_path if not here else '.'}[/cyan]\n"
-            f"[cyan]git init[/cyan]\n"
-            f"[cyan]git add .[/cyan]\n"
-            f'[cyan]git commit -m "Initial commit"[/cyan]',
+            msg,
             title="[red]Git Initialization Failed[/red]",
             border_style="red",
             padding=(1, 2),
@@ -300,10 +326,14 @@ def init(
     agent_config = AGENT_CONFIG.get(selected_ai)
     if agent_config:
         agent_folder = agent_config["folder"]
+        msg = status.get(
+            "agent_security_body",
+            "Some agents may store credentials, auth tokens, or other identifying and private artifacts in the agent folder within your project.\n"
+            "Consider adding [cyan]{folder}[/cyan] (or parts of it) to [cyan].gitignore[/cyan] to prevent accidental credential leakage.",
+        ).format(folder=agent_folder)
         security_notice = Panel(
-            f"Some agents may store credentials, auth tokens, or other identifying and private artifacts in the agent folder within your project.\n"
-            f"Consider adding [cyan]{agent_folder}[/cyan] (or parts of it) to [cyan].gitignore[/cyan] to prevent accidental credential leakage.",
-            title="[yellow]Agent Folder Security[/yellow]",
+            msg,
+            title=f"[yellow]{status.get('agent_security_title', 'Agent Folder Security')}[/yellow]",
             border_style="yellow",
             padding=(1, 2),
         )
@@ -313,11 +343,16 @@ def init(
     steps_lines = []
     if not here:
         steps_lines.append(
-            f"1. Go to the project folder: [cyan]cd {project_name}[/cyan]"
+            steps.get(
+                "cd_project",
+                "1. Go to the project folder: [cyan]cd {project_name}[/cyan]",
+            ).format(project_name=project_name)
         )
         step_num = 2
     else:
-        steps_lines.append("1. You're already in the project directory!")
+        steps_lines.append(
+            steps.get("already_here", "1. You're already in the project directory!")
+        )
         step_num = 2
 
     # Add Codex-specific setup step if needed
@@ -330,7 +365,10 @@ def init(
             cmd = f"export CODEX_HOME={quoted_path}"
 
         steps_lines.append(
-            f"{step_num}. Set [cyan]CODEX_HOME[/cyan] environment variable before running Codex: [cyan]{cmd}[/cyan]"
+            steps.get(
+                "codex_home",
+                "{step_num}. Set [cyan]CODEX_HOME[/cyan] environment variable before running Codex: [cyan]{cmd}[/cyan]",
+            ).format(step_num=step_num, cmd=cmd)
         )
         step_num += 1
 
