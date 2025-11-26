@@ -3,10 +3,31 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from typing import Any
 
 from .config import SubagentConfig, SubagentTask, TaskResult, TaskStatus, TaskType
 from .executors.base import TaskExecutor
+
+
+class ExecutionPatternManager:
+    """Manage execution patterns from config."""
+
+    def __init__(self) -> None:
+        """Initialize with config."""
+        self.config = SubagentConfig.load()
+        self.patterns = self.config.get("execution_patterns", {})
+
+    def get_pattern(self, name: str) -> dict[str, Any]:
+        """Get a specific execution pattern."""
+        pattern = self.patterns.get(name, {})
+        if isinstance(pattern, dict):
+            return pattern
+        return {}
+
+    def list_patterns(self) -> list[str]:
+        """List available execution patterns."""
+        return list(self.patterns.keys())
 
 
 class SubagentOrchestrator:
@@ -53,7 +74,7 @@ class SubagentOrchestrator:
 
         # Execute independent tasks in parallel batches
         for i in range(0, len(independent_tasks), max_parallel):
-            batch = independent_tasks[i:i + max_parallel]
+            batch = independent_tasks[i : i + max_parallel]
             batch_results = await asyncio.gather(
                 *[self._execute_task(task) for task in batch],
                 return_exceptions=True,
@@ -174,6 +195,25 @@ class XMLTemplateRenderer:
         self.config = SubagentConfig.load()
         templates = self.config.get("xml_templates", {})
         self.templates: dict[str, str] = templates if templates else {}
+        self._load_file_templates()
+
+    def _load_file_templates(self) -> None:
+        """Load templates from the virtual config directory."""
+        # Try to locate the virtual config templates directory
+        # Assuming relative path from this script or a known location
+        # For now, we'll check the standard location mentioned by the user
+        template_dir = (
+            Path(__file__).parents[5] / "src" / "virtual" / ".config" / "templates"
+        )
+
+        if template_dir.exists():
+            for template_file in template_dir.glob("*.xml"):
+                try:
+                    name = template_file.stem
+                    content = template_file.read_text(encoding="utf-8")
+                    self.templates[name] = content
+                except Exception:  # pylint: disable=broad-except
+                    pass
 
     def render(self, template_name: str, **kwargs: Any) -> str:
         """Render a template with variables."""

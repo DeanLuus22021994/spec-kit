@@ -1,0 +1,12 @@
+# Orchestrator Settings
+# Overrides for subagent orchestration
+
+performance_targets:
+  max_parallel_agents: 12
+  timeout_seconds: 45
+
+profiles:
+  custom_validation:
+    max_parallel_agents: 16
+    timeout_seconds: 60
+    fail_fast: false

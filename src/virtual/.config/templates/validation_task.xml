@@ -1,0 +1,23 @@
+<subagent_task type="validation">
+  <context>
+    <workspace_root>{{workspace_root}}</workspace_root>
+    <target_files>{{target_files}}</target_files>
+    <validation_profile>{{profile}}</validation_profile>
+  </context>
+  <objectives>
+    <primary>Validate files against profile rules</primary>
+    <output_format>structured_json</output_format>
+    <severity_levels>error,warning,info</severity_levels>
+  </objectives>
+  <constraints>
+    <max_parallel_calls>{{max_parallel}}</max_parallel_calls>
+    <timeout_seconds>{{timeout}}</timeout_seconds>
+    <fail_fast>{{fail_fast}}</fail_fast>
+  </constraints>
+  <tools_allowed>
+    <tool>read_file</tool>
+    <tool>grep_search</tool>
+    <tool>get_errors</tool>
+    <tool>file_search</tool>
+  </tools_allowed>
+</subagent_task>

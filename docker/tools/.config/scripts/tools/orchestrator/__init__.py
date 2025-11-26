@@ -47,7 +47,11 @@ from .executors.file_ops import DownsertExecutor, UpsertExecutor
 from .executors.search import ParallelSearchExecutor, ValidationExecutor
 
 # Main orchestrator (depends on executors and config)
-from .orchestrator import SubagentOrchestrator, XMLTemplateRenderer
+from .orchestrator import (
+    ExecutionPatternManager,
+    SubagentOrchestrator,
+    XMLTemplateRenderer,
+)
 
 __all__ = [
     # Config & Types
@@ -69,6 +73,7 @@ __all__ = [
     "UpsertExecutor",
     "ValidationExecutor",
     # Orchestrator
+    "ExecutionPatternManager",
     "SubagentOrchestrator",
     "XMLTemplateRenderer",
     # API Functions
