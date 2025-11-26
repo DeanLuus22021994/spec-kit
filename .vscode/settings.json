@@ -161,5 +161,14 @@
   "python.analysis.autoFormatStrings": true,
 
   // Workspace Trust
-  "security.workspace.trust.untrustedFiles": "open"
+  "security.workspace.trust.untrustedFiles": "open",
+  "cSpell.words": [
+    "clippy",
+    "opencode",
+    "Prereqs",
+    "pytest",
+    "qwen",
+    "speckit",
+    "SPECKIT"
+  ]
 }
