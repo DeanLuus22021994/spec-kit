@@ -33,6 +33,16 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/specify_cli"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/specify_cli/templates",
+    "src/specify_cli/config",
+]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/specify_cli/templates" = "specify_cli/templates"
+"src/specify_cli/config" = "specify_cli/config"
+
 # Ruff configuration for optimal Copilot integration
 [tool.ruff]
 target-version = "py311"

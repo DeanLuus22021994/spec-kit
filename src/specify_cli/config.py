@@ -58,6 +58,7 @@ VERSIONS_YAML = load_config("versions.yaml")
 COMMANDS_INIT_YAML = load_config("commands/init.yaml")
 COMMANDS_CHECK_YAML = load_config("commands/check.yaml")
 COMMANDS_VERSION_YAML = load_config("commands/version.yaml")
+AGENT_COMMANDS_YAML = load_config("agent_commands.yaml")
 
 # Agent configuration with name, folder, install URL, and CLI tool requirement
 AGENT_CONFIG = AGENTS_YAML or {}

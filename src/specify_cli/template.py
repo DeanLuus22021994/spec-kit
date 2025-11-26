@@ -40,6 +40,36 @@ def download_and_extract_template(
     """
     current_dir = Path.cwd()
 
+    # Check if we are running from source and have local templates
+    package_root = Path(__file__).parent
+    local_templates = package_root / "templates"
+
+    if local_templates.exists() and local_templates.is_dir():
+        if tracker:
+            tracker.start("fetch", "Using local templates")
+            tracker.complete("fetch", "local")
+            tracker.add("extract", "Copying templates")
+            tracker.start("extract")
+        elif verbose:
+            console.print("[cyan]Using local templates from package[/cyan]")
+
+        try:
+            if not is_current_dir:
+                project_path.mkdir(parents=True, exist_ok=True)
+
+            # Copy templates directory to project_path/templates
+            dest_templates = project_path / "templates"
+            if dest_templates.exists():
+                shutil.rmtree(dest_templates)
+            shutil.copytree(local_templates, dest_templates)
+
+            if tracker:
+                tracker.complete("extract")
+        except Exception as e:
+            if tracker:
+                tracker.error("extract", str(e))
+            raise typer.Exit(1) from e
+
     if tracker:
         tracker.start("fetch", "contacting GitHub API")
     try:
