@@ -4,151 +4,93 @@
   "title": "Validation Report Schema",
   "description": "JSON Schema for validation report format",
   "type": "object",
+  "additionalProperties": false,
   "required": ["metadata", "summary", "incidents"],
+  "definitions": {
+    "category": {
+      "type": "string",
+      "enum": ["mandatory", "optional", "potential", "info"]
+    },
+    "incident": {
+      "type": "object",
+      "required": ["ruleID", "uri", "message", "category"],
+      "additionalProperties": false,
+      "properties": {
+        "ruleID": { "type": "string" },
+        "uri": { "type": "string" },
+        "message": { "type": "string" },
+        "category": { "$ref": "#/definitions/category" },
+        "effort": { "type": "integer", "enum": [0, 1, 3, 5, 7, 13] },
+        "lineNumber": { "type": "integer", "minimum": 1 },
+        "columnNumber": { "type": "integer", "minimum": 1 },
+        "snippet": { "type": "string", "description": "Code snippet causing the violation" },
+        "variables": { "type": "object" },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["url", "title"],
+            "properties": {
+              "url": { "type": "string", "format": "uri" },
+              "title": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
   "properties": {
     "metadata": {
       "type": "object",
       "required": ["timestamp", "status", "version"],
+      "additionalProperties": false,
       "properties": {
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Report generation timestamp"
-        },
+        "timestamp": { "type": "string", "format": "date-time" },
         "status": {
           "type": "string",
-          "enum": [
-            "success",
-            "mandatory_violations",
-            "optional_issues",
-            "error"
-          ],
-          "description": "Validation status"
+          "enum": ["success", "mandatory_violations", "optional_issues", "error"]
         },
-        "exit_code": {
-          "type": "integer",
-          "description": "Kantra exit code"
-        },
-        "command": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Kantra command executed"
-        },
-        "version": {
-          "type": "string",
-          "pattern": "^\\d+\\.\\d+\\.\\d+$",
-          "description": "Report format version"
+        "exit_code": { "type": "integer" },
+        "command": { "type": "array", "items": { "type": "string" } },
+        "version": { "type": "string" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "environment": {
+          "type": "object",
+          "properties": {
+            "os": { "type": "string" },
+            "tool_version": { "type": "string" }
+          }
         }
       }
     },
     "summary": {
       "type": "object",
       "required": ["total_incidents", "by_category", "files_with_issues"],
+      "additionalProperties": false,
       "properties": {
-        "total_incidents": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Total number of issues found"
-        },
+        "total_incidents": { "type": "integer", "minimum": 0 },
         "by_category": {
           "type": "object",
-          "required": ["mandatory", "optional", "potential"],
           "properties": {
-            "mandatory": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "optional": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "potential": {
-              "type": "integer",
-              "minimum": 0
-            }
+            "mandatory": { "type": "integer", "minimum": 0 },
+            "optional": { "type": "integer", "minimum": 0 },
+            "potential": { "type": "integer", "minimum": 0 },
+            "info": { "type": "integer", "minimum": 0 }
           }
         },
         "by_file": {
           "type": "object",
           "patternProperties": {
-            ".*": {
-              "type": "integer",
-              "minimum": 0
-            }
-          },
-          "description": "Issue count by file path"
+            ".*": { "type": "integer", "minimum": 0 }
+          }
         },
-        "files_with_issues": {
-          "type": "integer",
-          "minimum": 0,
-          "description": "Number of files with issues"
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Summary generation timestamp"
-        }
+        "files_with_issues": { "type": "integer", "minimum": 0 },
+        "timestamp": { "type": "string", "format": "date-time" }
       }
     },
     "incidents": {
       "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["ruleID", "uri", "message", "category"],
-        "properties": {
-          "ruleID": {
-            "type": "string",
-            "description": "Rule identifier"
-          },
-          "uri": {
-            "type": "string",
-            "description": "File path or URI"
-          },
-          "message": {
-            "type": "string",
-            "description": "Violation message"
-          },
-          "category": {
-            "type": "string",
-            "enum": ["mandatory", "optional", "potential"],
-            "description": "Severity category"
-          },
-          "effort": {
-            "type": "integer",
-            "enum": [0, 1, 3, 5, 7, 13],
-            "description": "Remediation effort"
-          },
-          "lineNumber": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Line number where issue occurs"
-          },
-          "variables": {
-            "type": "object",
-            "description": "Custom variables from rule"
-          },
-          "links": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": ["url", "title"],
-              "properties": {
-                "url": {
-                  "type": "string",
-                  "format": "uri"
-                },
-                "title": {
-                  "type": "string"
-                }
-              }
-            },
-            "description": "Documentation links"
-          }
-        }
-      },
-      "description": "List of validation incidents"
+      "items": { "$ref": "#/definitions/incident" }
     }
   },
   "examples": [
@@ -158,14 +100,20 @@
         "status": "mandatory_violations",
         "exit_code": 1,
         "command": ["kantra", "analyze", "--input", ".", "--rules", "rules/"],
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "duration_ms": 1500,
+        "environment": {
+          "os": "linux",
+          "tool_version": "1.2.3"
+        }
       },
       "summary": {
         "total_incidents": 5,
         "by_category": {
           "mandatory": 3,
           "optional": 2,
-          "potential": 0
+          "potential": 0,
+          "info": 0
         },
         "by_file": {
           "docker-compose.yml": 2,
@@ -181,7 +129,8 @@
           "message": "Add metadata block at the top of the file",
           "category": "mandatory",
           "effort": 1,
-          "lineNumber": 1
+          "lineNumber": 1,
+          "snippet": "version: '3.8'"
         }
       ]
     }

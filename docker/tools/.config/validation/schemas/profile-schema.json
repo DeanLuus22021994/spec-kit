@@ -4,10 +4,18 @@
   "title": "Validation Profile Schema",
   "description": "JSON Schema for validation profile definitions",
   "type": "object",
+  "additionalProperties": false,
   "required": ["metadata", "rules"],
+  "definitions": {
+    "severity": {
+      "type": "string",
+      "enum": ["mandatory", "optional", "potential", "info"]
+    }
+  },
   "properties": {
     "metadata": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["name", "description", "version"],
       "properties": {
         "name": {
@@ -24,27 +32,32 @@
           "type": "string",
           "pattern": "^\\d+\\.\\d+\\.\\d+$",
           "description": "Semantic version"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author or maintainer of the profile"
+        },
+        "extends": {
+          "type": "string",
+          "description": "Parent profile to inherit from"
         }
       }
     },
     "rules": {
       "type": "object",
+      "description": "Rule package configuration",
+      "additionalProperties": false,
       "patternProperties": {
-        "^[a-z0-9-]+$": {
+        "^[a-z0-9-.]+$": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "severity": {
               "oneOf": [
-                {
-                  "type": "string",
-                  "enum": ["mandatory", "optional", "potential"]
-                },
+                { "$ref": "#/definitions/severity" },
                 {
                   "type": "array",
-                  "items": {
-                    "type": "string",
-                    "enum": ["mandatory", "optional", "potential"]
-                  }
+                  "items": { "$ref": "#/definitions/severity" }
                 }
               ],
               "description": "Severity filter (single or multiple)"
@@ -52,14 +65,24 @@
             "all": {
               "type": "boolean",
               "description": "Include all rules from package"
+            },
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable or disable this rule package"
+            },
+            "tags": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Filter rules by tags"
             }
           }
         }
-      },
-      "description": "Rule package configuration"
+      }
     },
     "options": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "failOnWarning": {
           "type": "boolean",
@@ -75,6 +98,21 @@
           "type": "integer",
           "minimum": 0,
           "description": "Maximum allowed violations (0 = none)"
+        },
+        "includePaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns to include"
+        },
+        "excludePaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns to exclude"
+        },
+        "outputFormat": {
+          "type": "string",
+          "enum": ["json", "yaml", "text", "sarif"],
+          "default": "json"
         }
       },
       "description": "Profile-specific options"

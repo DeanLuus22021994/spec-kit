@@ -5,71 +5,45 @@
   "description": "JSON Schema for MTA ruleset definitions",
   "type": "object",
   "required": ["metadata"],
+  "additionalProperties": false,
   "properties": {
     "metadata": {
       "type": "object",
       "required": ["name", "version"],
+      "additionalProperties": false,
       "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^[a-z0-9-]+$",
-          "description": "Ruleset name"
-        },
-        "version": {
-          "type": "string",
-          "pattern": "^\\d+\\.\\d+\\.\\d+$",
-          "description": "Semantic version"
-        },
-        "description": {
-          "type": "string",
-          "description": "Ruleset description"
-        },
-        "profile": {
-          "type": "string",
-          "description": "Associated profile name"
-        },
-        "generated": {
-          "type": "boolean",
-          "description": "Whether ruleset was auto-generated"
-        }
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "description": { "type": "string" },
+        "profile": { "type": "string" },
+        "generated": { "type": "boolean" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "author": { "type": "string" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "include": { "type": "array", "items": { "type": "string" } },
+        "exclude": { "type": "array", "items": { "type": "string" } }
       }
     },
     "config_references": {
       "type": "array",
-      "items": {
-        "type": "string",
-        "format": "uri-reference"
-      },
-      "description": "References to configuration files"
+      "items": { "type": "string", "format": "uri-reference" }
     },
     "rules": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "References to rule definition files"
+      "items": { "type": "string" }
     },
     "rule_files": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Rule definition files"
+      "items": { "type": "string" }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other rulesets this one depends on"
     }
-  },
-  "examples": [
-    {
-      "metadata": {
-        "name": "yaml-validation-ruleset",
-        "version": "1.0.0",
-        "description": "YAML validation rules",
-        "profile": "recommended"
-      },
-      "config_references": [
-        "../../copilot/yaml-best-practices.yml",
-        "../../copilot/validation.yml"
-      ],
-      "rules": []
-    }
-  ]
+  }
 }

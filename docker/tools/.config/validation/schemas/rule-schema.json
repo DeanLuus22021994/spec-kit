@@ -2,73 +2,72 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/konveyor/kantra/schemas/rule-schema.json",
   "title": "MTA Rules File Schema",
-  "description": "JSON Schema for Migration Toolkit for Applications (MTA) rule definition files containing arrays of rules",
+  "description": "JSON Schema for Migration Toolkit for Applications (MTA) rule definition files",
   "type": "array",
   "items": {
     "type": "object",
     "required": ["ruleID", "description", "message"],
+    "additionalProperties": false,
     "properties": {
       "ruleID": {
         "type": "string",
         "pattern": "^[a-z0-9-]+$",
         "minLength": 3,
         "maxLength": 100,
-        "description": "Unique rule identifier (lowercase, hyphens allowed)",
-        "examples": ["yaml-metadata-missing", "indentation-inconsistent"]
+        "description": "Unique rule identifier"
       },
-      "description": {
-        "type": "string",
-        "minLength": 10,
-        "description": "Detailed rule description"
-      },
+      "description": { "type": "string", "minLength": 10 },
       "labels": {
         "type": "array",
-        "items": {
-          "type": "string"
-        },
+        "items": { "type": "string" },
         "minItems": 1,
-        "uniqueItems": true,
-        "description": "Rule classification labels"
+        "uniqueItems": true
+      },
+      "tags": {
+        "type": "array",
+        "items": { "type": "string" },
+        "uniqueItems": true
       },
       "when": {
         "type": "object",
-        "description": "Condition for rule activation"
+        "description": "Condition for rule activation",
+        "properties": {
+          "provider": { "type": "string" },
+          "or": { "type": "array", "items": { "$ref": "#/items/properties/when" } },
+          "and": { "type": "array", "items": { "$ref": "#/items/properties/when" } }
+        },
+        "additionalProperties": true
       },
-      "message": {
-        "type": "string",
-        "minLength": 10,
-        "description": "Message displayed when rule matches"
-      },
+      "message": { "type": "string", "minLength": 10 },
       "effort": {
         "type": "integer",
-        "enum": [0, 1, 3, 5, 7, 13],
-        "description": "Remediation effort (Fibonacci scale)"
+        "enum": [0, 1, 3, 5, 7, 13]
       },
       "category": {
         "type": "string",
-        "enum": ["mandatory", "optional", "potential"],
-        "description": "Rule severity category"
+        "enum": ["mandatory", "optional", "potential", "info"]
       },
-      "customVariables": {
-        "type": "array",
-        "description": "Custom variables for dynamic messages"
-      },
+      "customVariables": { "type": "array" },
       "links": {
         "type": "array",
         "items": {
           "type": "object",
           "required": ["url"],
           "properties": {
-            "url": {
-              "type": "string",
-              "format": "uri"
-            },
-            "title": {
-              "type": "string"
-            }
+            "url": { "type": "string", "format": "uri" },
+            "title": { "type": "string" }
           }
-        },
-        "description": "Documentation links"
+        }
+      },
+      "examples": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "content": { "type": "string" },
+            "valid": { "type": "boolean" }
+          }
+        }
       }
     }
   }
