@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from rich.console import Console
 
@@ -11,6 +12,27 @@ from specify_cli.ui import StepTracker, show_banner
 from specify_cli.utils import check_tool
 
 console = Console()
+
+
+def detect_project_structure() -> str | None:
+    """Detect the project structure based on directory layout."""
+    cwd = Path.cwd()
+
+    if (cwd / "src" / "local").exists() and (cwd / "src" / "virtual").exists():
+        return "Local/Virtual (Spec Kit Architecture)"
+
+    if (cwd / "backend").exists() and (cwd / "frontend").exists():
+        return "Web Application"
+
+    if (cwd / "api").exists() and (
+        (cwd / "ios").exists() or (cwd / "android").exists()
+    ):
+        return "Mobile Application"
+
+    if (cwd / "src").exists() and (cwd / "tests").exists():
+        return "Single Project"
+
+    return None
 
 
 def check(json_output: bool = False, verbose: bool = False) -> None:
@@ -24,6 +46,12 @@ def check(json_output: bool = False, verbose: bool = False) -> None:
                 "checking_header", "[bold]Checking for installed tools...[/bold]\n"
             )
         )
+
+        structure = detect_project_structure()
+        if structure:
+            console.print(
+                f"[bold]Project Structure:[/bold] [green]{structure}[/green]\n"
+            )
 
     tracker = (
         StepTracker(messages.get("tracker_title", "Check Available Tools"))
