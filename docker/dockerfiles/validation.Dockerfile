@@ -93,6 +93,7 @@ RUN chmod +x /usr/local/bin/validate-yaml
 RUN mkdir -p \
     /workspace/.config/validation/reports \
     /workspace/.config/validation/test-data \
+    /workspace/reports \
     /workspace/.local/share/containers \
     /workspace/.cache/kantra \
     && chown -R toolsuser:toolsuser /workspace
