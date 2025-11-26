@@ -103,8 +103,25 @@
     },
     "profiles": {
       "type": "object",
+      "properties": {
+        "active_profile": { "type": "string" }
+      },
       "patternProperties": {
-        "^[a-zA-Z0-9_-]+$": { "$ref": "definitions/toggles.schema.json#/definitions/profile" }
+        "^[a-zA-Z0-9_-]+$": {
+          "oneOf": [
+            { "$ref": "definitions/toggles.schema.json#/definitions/profile" },
+            {
+              "type": "object",
+              "properties": {
+                "services": { "type": "array", "items": { "type": "string" } },
+                "description": { "type": "string" },
+                "gpu_required": { "type": "boolean" }
+              },
+              "required": ["services", "description"]
+            },
+            { "type": "string" }
+          ]
+        }
       }
     },
     "subagent_tasks": {
@@ -166,7 +183,8 @@
       "description": "GPU Configuration or Report Data",
       "oneOf": [
         { "$ref": "definitions/gpu.schema.json#/definitions/gpu_config" },
-        { "$ref": "definitions/gpu.schema.json#/definitions/gpu_report" }
+        { "$ref": "definitions/gpu.schema.json#/definitions/gpu_report" },
+        { "$ref": "definitions/gpu.schema.json#/definitions/gpu_infrastructure" }
       ]
     },
 
