@@ -1,0 +1,114 @@
+# XML prompt templates for subagent invocation
+xml_templates:
+  code_hygiene_task: |
+    <subagent_task type="validation">
+      <context>
+        <scope>workspace_hygiene</scope>
+        <checks>
+          <check>shell_script_line_endings</check>
+          <check>python_linting</check>
+        </checks>
+      </context>
+      <objectives>
+        <primary>Ensure codebase meets hygiene standards</primary>
+        <output_format>status_report</output_format>
+      </objectives>
+      <tools_allowed>
+        <tool>run_in_terminal</tool>
+        <tool>get_errors</tool>
+      </tools_allowed>
+    </subagent_task>
+
+  validation_task: |
+    <subagent_task type="validation">
+      <context>
+        <workspace_root>{{workspace_root}}</workspace_root>
+        <target_files>{{target_files}}</target_files>
+        <validation_profile>{{profile}}</validation_profile>
+      </context>
+      <objectives>
+        <primary>Validate files against profile rules</primary>
+        <output_format>structured_json</output_format>
+        <severity_levels>error,warning,info</severity_levels>
+      </objectives>
+      <constraints>
+        <max_parallel_calls>{{max_parallel}}</max_parallel_calls>
+        <timeout_seconds>{{timeout}}</timeout_seconds>
+        <fail_fast>{{fail_fast}}</fail_fast>
+      </constraints>
+      <tools_allowed>
+        <tool>read_file</tool>
+        <tool>grep_search</tool>
+        <tool>get_errors</tool>
+        <tool>file_search</tool>
+      </tools_allowed>
+    </subagent_task>
+
+  diagnostics_task: |
+    <subagent_task type="diagnostics">
+      <context>
+        <services>{{services}}</services>
+        <check_types>{{check_types}}</check_types>
+      </context>
+      <objectives>
+        <primary>Diagnose service health and configuration</primary>
+        <output_format>markdown_report</output_format>
+        <include_recommendations>true</include_recommendations>
+      </objectives>
+      <constraints>
+        <max_parallel_calls>4</max_parallel_calls>
+        <timeout_seconds>30</timeout_seconds>
+      </constraints>
+      <tools_allowed>
+        <tool>run_in_terminal</tool>
+        <tool>read_file</tool>
+        <tool>grep_search</tool>
+      </tools_allowed>
+    </subagent_task>
+
+  batch_edit_task: |
+    <subagent_task type="batch_edit">
+      <context>
+        <files>{{files}}</files>
+        <operation>{{operation}}</operation>
+        <pattern>{{pattern}}</pattern>
+        <replacement>{{replacement}}</replacement>
+      </context>
+      <objectives>
+        <primary>Apply batch edits across files</primary>
+        <output_format>edit_summary</output_format>
+        <validate_after_edit>true</validate_after_edit>
+      </objectives>
+      <constraints>
+        <dry_run>{{dry_run}}</dry_run>
+        <backup_files>false</backup_files>
+      </constraints>
+      <tools_allowed>
+        <tool>multi_replace_string_in_file</tool>
+        <tool>read_file</tool>
+        <tool>get_errors</tool>
+      </tools_allowed>
+    </subagent_task>
+
+  research_task: |
+    <subagent_task type="research">
+      <context>
+        <query>{{query}}</query>
+        <scope>{{scope}}</scope>
+      </context>
+      <objectives>
+        <primary>Search and analyze codebase</primary>
+        <output_format>findings_report</output_format>
+        <max_results>{{max_results}}</max_results>
+      </objectives>
+      <constraints>
+        <max_parallel_calls>5</max_parallel_calls>
+        <timeout_seconds>20</timeout_seconds>
+      </constraints>
+      <tools_allowed>
+        <tool>semantic_search</tool>
+        <tool>grep_search</tool>
+        <tool>file_search</tool>
+        <tool>read_file</tool>
+      </tools_allowed>
+    </subagent_task>

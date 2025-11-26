@@ -1,0 +1,41 @@
+# Subagent capability matrix
+capability_matrix:
+  strengths:
+    parallel_execution:
+      description: "Batch 5-10 independent tool calls simultaneously"
+      optimal_use: "Data gathering, file searches, grep operations"
+      performance_gain: "2-3x speedup vs sequential"
+
+    focused_execution:
+      description: "No conversation history = no context switching"
+      optimal_use: "Single-purpose validation tasks"
+      anti_pattern: "Multi-step debugging sessions"
+
+    structured_processing:
+      description: "Raw tool output → formatted reports"
+      optimal_use: "Validation reports, metrics aggregation"
+      output_formats: ["json", "markdown", "yaml"]
+
+    repetitive_validation:
+      description: "Same check pattern across multiple targets"
+      optimal_use: "Linting, schema validation, config checks"
+      fatigue_resistant: true
+
+  weaknesses:
+    contextual_decisions:
+      description: "Cannot access conversation history"
+      mitigation: "Include context snapshot in prompt"
+      max_context_lines: 10
+
+    user_intent:
+      description: "Cannot interpret ambiguous requests"
+      mitigation: "Primary agent preprocesses request"
+
+    iterative_debugging:
+      description: "Stateless between invocations"
+      mitigation: "Use primary agent for debug loops"
+      max_iterations: 1
+
+    creative_solutions:
+      description: "Follows predefined patterns only"
+      mitigation: "Primary agent innovates, subagent executes"

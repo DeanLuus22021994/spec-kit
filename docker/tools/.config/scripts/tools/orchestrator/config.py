@@ -112,27 +112,37 @@ class SubagentConfig:
 
     @classmethod
     def load(cls, config_path: Path | None = None) -> dict[str, Any]:
-        """Load configuration from YAML file."""
+        """Load configuration from YAML file and definitions directory."""
         if cls._config:
             return cls._config
 
-        if config_path is None:
-            config_path = (
-                Path(__file__).parents[5]
-                / ".config"
-                / "copilot"
-                / "orchestration"
-                / "subagent-config.yml"
-            )
+        base_path = Path(__file__).parents[5] / ".config" / "copilot" / "orchestration"
 
+        if config_path is None:
+            config_path = base_path / "subagent-config.yml"
+
+        # Load base config
         if not config_path.exists():
             cls._config = cls._get_defaults()
         else:
             with open(config_path, encoding="utf-8") as f:
-                loaded_config = yaml.safe_load(f) or {}
-                cls.validate(loaded_config)
-                cls._config = loaded_config
+                cls._config = yaml.safe_load(f) or {}
 
+        # Load decomposed definitions
+        definitions_dir = base_path / "definitions"
+        if definitions_dir.exists():
+            for def_file in definitions_dir.glob("*.yml"):
+                try:
+                    with open(def_file, encoding="utf-8") as f:
+                        partial_config = yaml.safe_load(f) or {}
+                        # Deep merge or top-level update?
+                        # For now, top-level update is sufficient as files are distinct sections
+                        cls._config.update(partial_config)
+                except Exception as e:  # pylint: disable=broad-except
+                    # Log warning but continue? We don't have logger here yet.
+                    print(f"Warning: Failed to load definition {def_file}: {e}")
+
+        cls.validate(cls._config)
         return cls._config
 
     @classmethod

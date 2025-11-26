@@ -1,0 +1,65 @@
+# Parallel execution patterns
+execution_patterns:
+  parallel_file_search:
+    pattern: "Search multiple patterns across files simultaneously"
+    max_concurrent: 10 # Increased for freethreading
+    tool_calls:
+      - file_search
+      - grep_search
+      - semantic_search
+    example:
+      description: "Find all TODO, FIXME, and HACK comments"
+      parallel_calls:
+        - { tool: "grep_search", query: "TODO" }
+        - { tool: "grep_search", query: "FIXME" }
+        - { tool: "grep_search", query: "HACK" }
+
+  parallel_validation:
+    pattern: "Validate multiple files/configs in parallel"
+    max_concurrent: 16 # Increased for freethreading
+    tool_calls:
+      - read_file
+      - get_errors
+      - runTests
+    example:
+      description: "Validate all test files compile"
+      parallel_calls:
+        - { tool: "get_errors", path: "tests/business-tests/" }
+        - { tool: "get_errors", path: "tests/engine-tests/" }
+        - { tool: "get_errors", path: "tests/gateway-tests/" }
+
+  parallel_diagnostics:
+    pattern: "Run multiple diagnostic commands"
+    max_concurrent: 8
+    tool_calls:
+      - run_in_terminal
+    sequential_dependency: false
+    example:
+      description: "Docker health check"
+      commands:
+        - "docker ps --format 'table {{.Names}}\\t{{.Status}}'"
+        - "docker stats --no-stream"
+        - "docker-compose logs --tail=50"
+
+  batch_file_operations:
+    pattern: "Apply same operation to multiple files"
+    max_concurrent: 20 # High concurrency for IO bound
+    tool_calls:
+      - multi_replace_string_in_file
+      - replace_string_in_file
+    example:
+      description: "Update version in all csproj files"
+      operation: "replace_string_in_file"
+      targets: ["**/*.csproj"]
+
+  code_hygiene:
+    pattern: "Enforce code hygiene standards (linting, line endings)"
+    max_concurrent: 4
+    tool_calls:
+      - run_in_terminal
+      - get_errors
+    example:
+      description: "Verify shell scripts and python linting"
+      commands:
+        - "find . -name '*.sh' -exec file {} \\; | grep CRLF"
+        - "flake8 ."

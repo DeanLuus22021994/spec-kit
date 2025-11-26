@@ -1,0 +1,10 @@
+# Performance targets based on GPU/CPU specs from .config/infrastructure.yml
+performance_targets: &performance_targets
+  max_parallel_agents: 16 # Increased for freethreading readiness (2x core count)
+  target_utilization: 0.85 # Higher utilization target
+  safety_overhead: 0.05
+  effective_utilization: 0.80
+  timeout_seconds: 30
+  retry_attempts: 3
+  batch_size: 20 # Increased batch size
+  freethreading_enabled: true # Flag for future Python 3.13+ support

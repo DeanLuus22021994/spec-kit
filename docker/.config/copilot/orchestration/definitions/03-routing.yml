@@ -1,0 +1,25 @@
+# Task routing rules
+routing_rules:
+  delegate_to_subagent:
+    criteria:
+      - "Well-defined, self-contained tasks"
+      - "No user preference decisions required"
+      - "Parallelizable operations"
+      - "Structured output expected"
+    examples:
+      - "Check these 10 files for pattern X"
+      - "Validate all YAML configs"
+      - "Run lint checks across workspace"
+      - "Generate validation report"
+
+  keep_in_primary:
+    criteria:
+      - "Requires conversation history"
+      - "Ambiguous user intent"
+      - "Multi-iteration problem solving"
+      - "Creative solution needed"
+    examples:
+      - "Debug why tests are failing"
+      - "Should I use approach A or B?"
+      - "Improve the architecture"
+      - "Fix this bug (iterative)"

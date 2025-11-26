@@ -1,0 +1,34 @@
+# Tracing integration (from .config/tracing.yml)
+tracing:
+  enabled: true
+  provider: "opentelemetry"
+  exporter: "jaeger"
+  endpoint: "http://localhost:4318/v1/traces"
+  service_name: "subagent-orchestrator"
+  attributes:
+    - task_type
+    - parallel_calls
+    - execution_time_ms
+    - success_rate
+    - tool_calls_count
+
+# Performance metrics collection
+metrics:
+  enabled: true
+  collection_interval_ms: 1000
+  exporters:
+    - prometheus
+    - console
+  tracked_metrics:
+    - name: "subagent_task_duration_ms"
+      type: "histogram"
+      buckets: [100, 500, 1000, 2000, 5000, 10000, 30000]
+    - name: "subagent_parallel_efficiency"
+      type: "gauge"
+      description: "Ratio of parallel vs sequential execution time"
+    - name: "subagent_tool_calls_total"
+      type: "counter"
+      labels: ["tool_name", "task_type", "status"]
+    - name: "subagent_errors_total"
+      type: "counter"
+      labels: ["error_type", "task_type"]
