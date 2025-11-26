@@ -116,7 +116,7 @@ try {
             Write-Log "Initialized $agentName context file."
         }
         catch {
-            Write-Log "Failed to initialize $($agentName): $_" 'Error'
+            Write-Log "Failed to initialize ${agentName}: $_" 'Error'
         }
     }
 
@@ -175,7 +175,7 @@ try {
             Write-Log "✓ $agentName context file updated successfully"
         }
         catch {
-            Write-Log "Failed to update $($agentName): $_" 'Error'
+            Write-Log "Failed to update ${agentName}: $_" 'Error'
         }
     }
 
