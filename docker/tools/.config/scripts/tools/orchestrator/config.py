@@ -88,6 +88,15 @@ class SubagentTask:
     priority: int = 0
     dependencies: list[str] = field(default_factory=list)
 
+    def __post_init__(self) -> None:
+        """Convert task_type string to Enum if necessary."""
+        if isinstance(self.task_type, str):
+            try:
+                self.task_type = TaskType[self.task_type]
+            except KeyError as e:
+                msg = f"Invalid task type: {self.task_type}. Must be one of: {[t.name for t in TaskType]}"
+                raise ValueError(msg) from e
+
 
 class SubagentConfig:
     """Configuration loader for subagent orchestration."""
