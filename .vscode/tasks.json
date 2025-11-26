@@ -30,6 +30,14 @@
       "options": { "env": { "PYTHONPATH": "${workspaceFolder}/src" } }
     },
     {
+      "label": "CLI Check (JSON)",
+      "type": "shell",
+      "command": "python3",
+      "args": ["src/specify_cli/__init__.py", "check", "--json"],
+      "group": "test",
+      "options": { "env": { "PYTHONPATH": "${workspaceFolder}/src" } }
+    },
+    {
       "label": "Install Dependencies",
       "type": "shell",
       "command": "python3",

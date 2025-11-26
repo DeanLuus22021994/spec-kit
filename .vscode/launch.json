@@ -27,6 +27,19 @@
       }
     },
     {
+      "name": "Debug CLI - Check (JSON)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/specify_cli/__init__.py",
+      "args": ["check", "--json"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
       "name": "Debug Current Python File",
       "type": "debugpy",
       "request": "launch",
