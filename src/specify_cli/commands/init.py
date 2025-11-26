@@ -145,26 +145,44 @@ def init(
 
     if ai_assistant:
         if ai_assistant not in AGENT_CONFIG:
-            msg = errors.get("invalid_ai", "Invalid AI assistant").format(
-                ai_assistant=ai_assistant, choices=", ".join(AGENT_CONFIG.keys())
+            msg = errors.get(
+                "invalid_ai",
+                "Invalid AI assistant '{ai_assistant}'. Choose from: {choices}",
+            ).format(
+                ai_assistant=ai_assistant,
+                choices=", ".join(
+                    [k for k in AGENT_CONFIG.keys() if not k.startswith("_")]
+                ),
             )
             console.print(f"[red]Error:[/red] {msg}")
             raise typer.Exit(1)
         selected_ai = ai_assistant
     else:
         # Create options dict for selection (agent_key: display_name)
-        ai_choices = {key: config["name"] for key, config in AGENT_CONFIG.items()}
+        ai_choices = {
+            key: config["name"]
+            for key, config in AGENT_CONFIG.items()
+            if not key.startswith("_")
+        }
         selected_ai = select_with_arrows(
             ai_choices, prompts.get("choose_ai", "Choose your AI assistant:"), "copilot"
         )
 
     if not ignore_agent_tools:
         agent_config = AGENT_CONFIG.get(selected_ai)
-        if agent_config and agent_config["requires_cli"]:
-            install_url = agent_config["install_url"]
+        if agent_config and agent_config.get("requires_cli", False):
+            install_url = agent_config.get("install_url", "unknown")
             if not check_tool(selected_ai):
-                error_msg = errors.get("agent_not_found", "{agent} not found").format(
-                    agent=selected_ai, url=install_url, name=agent_config["name"]
+                error_msg = errors.get(
+                    "agent_not_found",
+                    "[cyan]{agent}[/cyan] not found\n"
+                    "Install from: [cyan]{url}[/cyan]\n"
+                    "{name} is required to continue with this project type.\n\n"
+                    "Tip: Use [cyan]--ignore-agent-tools[/cyan] to skip this check",
+                ).format(
+                    agent=selected_ai,
+                    url=install_url,
+                    name=agent_config["name"],
                 )
                 error_panel = Panel(
                     error_msg,
