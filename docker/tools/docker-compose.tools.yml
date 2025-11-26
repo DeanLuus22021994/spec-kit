@@ -64,8 +64,8 @@ services:
       - tools
     privileged: true
     volumes:
-      # Override workspace mount to use parent directory
-      - ..:/workspace:ro
+      # Override workspace mount to use named volume
+      - tools-workspace:/workspace:ro
 
       # Share validation reports with tools service
       - validation-reports:/workspace/tools/.config/validation/reports
@@ -74,7 +74,7 @@ services:
       - shared-reports:/workspace/reports
 
       # Test data for development
-      - ./.config/validation/test-data:/workspace/tools/.config/validation/test-data:rw
+      - tools-validation-test-data:/workspace/tools/.config/validation/test-data:rw
     networks:
       - tools-network
 
