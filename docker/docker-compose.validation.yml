@@ -71,7 +71,7 @@ services:
     working_dir: /workspace
 
     # Default command (can be overridden)
-    command: ["--profile=${VALIDATION_PROFILE:-recommended}"]
+    command: ["--profile", "${VALIDATION_PROFILE:-recommended}"]
 
     # Network configuration
     networks:

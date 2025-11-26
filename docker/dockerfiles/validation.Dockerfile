@@ -123,4 +123,4 @@ WORKDIR /workspace
 ENTRYPOINT ["validate-yaml"]
 
 # Default command runs recommended profile
-CMD ["--profile=recommended"]
+CMD ["--profile", "recommended"]
