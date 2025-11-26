@@ -45,6 +45,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     podman \
     fuse-overlayfs \
     slirp4netns \
+    uidmap \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Kantra binary from extraction stage
@@ -56,6 +57,10 @@ RUN kantra help
 
 # Create non-root user for security
 RUN groupadd -r toolsuser && useradd -r -g toolsuser -u 1001 -m -s /bin/bash toolsuser
+
+# Configure subuid/subgid for rootless Podman
+RUN echo "toolsuser:100000:65536" > /etc/subuid && \
+    echo "toolsuser:100000:65536" > /etc/subgid
 
 # Configure Podman for rootless operation
 RUN mkdir -p /home/toolsuser/.config/containers && \
