@@ -47,10 +47,10 @@ APPLIED_MIGRATIONS=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME
     "SELECT version FROM schema_migrations ORDER BY version;" 2>/dev/null || echo "")
 
 # Count applied migrations
-APPLIED_COUNT=$(echo "$APPLIED_MIGRATIONS" | grep -v '^$' | wc -l)
+APPLIED_COUNT=$(echo "$APPLIED_MIGRATIONS" | grep -c -v '^$')
 echo "Applied migrations: $APPLIED_COUNT"
 
-if [ $APPLIED_COUNT -gt 0 ]; then
+if [ "$APPLIED_COUNT" -gt 0 ]; then
     echo "Latest applied migration: $(echo "$APPLIED_MIGRATIONS" | tail -1 | tr -d '[:space:]')"
 fi
 echo ""
@@ -76,6 +76,7 @@ for migration_file in $MIGRATION_FILES; do
     # Extract version from filename (V001__description.sql -> 001)
     filename=$(basename "$migration_file")
     version=$(echo "$filename" | sed 's/V\([0-9]*\)__.*/\1/')
+    # shellcheck disable=SC2001
     description=$(echo "$filename" | sed 's/V[0-9]*__\(.*\)\.sql/\1/' | tr '_' ' ')
 
     # Check if migration is already applied
