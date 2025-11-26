@@ -3,9 +3,23 @@
 
 # Metadata
 metadata: &metadata
+  name: "cli-config"
+  description: "CLI Configuration for Semantic Kernel App"
   version: "1.1.0"
   category: config
-  keywords: [cli, sk-cli, commands, api, semantic-kernel, configuration, tools, endpoints, gpu, cuda]
+  keywords:
+    [
+      cli,
+      sk-cli,
+      commands,
+      api,
+      semantic-kernel,
+      configuration,
+      tools,
+      endpoints,
+      gpu,
+      cuda,
+    ]
   updated: "2025-11-25"
 
 <<: *metadata

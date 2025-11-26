@@ -4,6 +4,8 @@
 # Single source of truth for network configuration
 
 metadata: &metadata
+  name: "ports-config"
+  description: "Port Definitions Configuration"
   version: "1.1.0"
   category: config
   keywords: [ports, networking, services, endpoints, configuration, gpu]
