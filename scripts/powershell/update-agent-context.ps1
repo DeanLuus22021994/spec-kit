@@ -73,7 +73,6 @@ try {
 
     $newLang = Get-PlanValue 'Language/Version'
     $newFramework = Get-PlanValue 'Primary Dependencies'
-    $newTesting = Get-PlanValue 'Testing'
     $newDb = Get-PlanValue 'Storage'
     $newProjectType = Get-PlanValue 'Project Type'
 
@@ -104,8 +103,8 @@ try {
             else { $commands = "# Add commands for $newLang" }
 
             $content = $content.Replace('[ONLY COMMANDS FOR ACTIVE TECHNOLOGIES]', $commands)
-            $content = $content.Replace('[LANGUAGE-SPECIFIC, ONLY FOR LANGUAGES IN USE]', "${newLang}: Follow standard conventions")
-            $content = $content.Replace('[LAST 3 FEATURES AND WHAT THEY ADDED]', "- ${currentBranch}: Added ${newLang} + ${newFramework}")
+            $content = $content.Replace('[LANGUAGE-SPECIFIC, ONLY FOR LANGUAGES IN USE]', "$($newLang): Follow standard conventions")
+            $content = $content.Replace('[LAST 3 FEATURES AND WHAT THEY ADDED]', "- $($currentBranch): Added $($newLang) + $($newFramework)")
 
             # Ensure directory exists
             $parentDir = Split-Path $targetFile
@@ -155,7 +154,7 @@ try {
                 if ($match.Success) {
                     $changesBlock = $match.Groups[1].Value.Trim().Split("`n")
                     # Prepend new change
-                    $newChange = "- ${currentBranch}: Added ${newLang} + ${newFramework}"
+                    $newChange = "- $($currentBranch): Added $($newLang) + $($newFramework)"
                     $changesBlock = ,$newChange + $changesBlock
                     # Keep only top 3 unique non-empty lines
                     $changesBlock = $changesBlock | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique | Select-Object -First 3
