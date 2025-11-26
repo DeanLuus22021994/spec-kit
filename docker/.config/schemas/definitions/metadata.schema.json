@@ -32,9 +32,11 @@
     },
     "updated": {
       "type": "string",
+      "format": "date",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
       "description": "Last update date (YYYY-MM-DD)"
     }
   },
-  "required": ["version", "category", "keywords", "updated"]
+  "required": ["version", "category", "keywords", "updated"],
+  "additionalProperties": false
 }

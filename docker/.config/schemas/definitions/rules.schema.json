@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "rules.schema.json",
+  "title": "Validation Rules",
+  "type": "object",
+  "description": "Rules for PR validation and other checks",
+  "properties": {
+    "require_tests": {
+      "type": "boolean",
+      "description": "Whether tests are required"
+    },
+    "require_lint": {
+      "type": "boolean",
+      "description": "Whether linting is required"
+    },
+    "require_build": {
+      "type": "boolean",
+      "description": "Whether build is required"
+    },
+    "coverage_threshold": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Minimum code coverage percentage"
+    },
+    "forbidden_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of glob patterns for artifacts that should not be present"
+    }
+  },
+  "additionalProperties": false
+}

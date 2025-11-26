@@ -12,8 +12,92 @@
     "category": { "type": "string" },
     "keywords": { "type": "array", "items": { "type": "string" } },
     "updated": { "type": "string" },
+    "description": { "type": "string" },
     "cross_references": { "type": "array", "items": { "type": "string" } },
     "related_documentation": { "type": "array", "items": { "type": "string" } },
+
+    "rules": {
+      "$ref": "definitions/rules.schema.json"
+    },
+
+    "build": {
+      "type": "object",
+      "properties": {
+        "solution": { "type": "string" },
+        "configuration": { "type": "string" },
+        "verbosity": { "type": "string" }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "properties": {
+            "timeout": { "type": ["integer", "null"] },
+            "requires_services": { "type": "boolean" },
+            "enabled": { "type": "boolean" },
+            "browsers": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "lint": {
+      "type": "object",
+      "properties": {
+        "continue_on_error": { "type": "boolean" },
+        "python": { "type": "boolean" },
+        "frontend": { "type": "boolean" },
+        "sql": { "type": "boolean" },
+        "shell": { "type": "boolean" }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "properties": {
+        "retention_days": { "type": "integer" },
+        "format": { "type": "string" }
+      }
+    },
+
+    "categories": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": { "$ref": "definitions/toggles.schema.json#/definitions/category" }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": { "$ref": "definitions/toggles.schema.json#/definitions/profile" }
+      }
+    },
+    "env_template": { "type": "string" },
+    "quick_reference": { "type": "object" },
+
+    "wsl_memory_limit": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "wsl_processor_limit": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "wsl_swap_size": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "localhost_forwarding": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "docker_build_cache_cleanup": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "docker_prune_on_startup": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "registry_enabled": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "buildkit_enabled": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "gpu_enabled": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "mixed_precision": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "flash_attention": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "tf32_enabled": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "memory_pool": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "dynamic_batching": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "async_execution": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "stream_responses": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "connection_pooling": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "aggressive_gc": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "memory_efficient_attention": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "expandable_segments": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "embedding_cache": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "completion_cache": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
+    "memory_cache": { "$ref": "definitions/toggles.schema.json#/definitions/toggle" },
 
     "gpu": {
       "description": "GPU Configuration or Report Data",
@@ -23,20 +107,6 @@
       ]
     },
 
-    "system": { "type": "object", "additionalProperties": true },
-    "wsl2": { "type": "object", "additionalProperties": true },
-    "storage": { "type": "object", "additionalProperties": true },
-    "docker": { "type": "object", "additionalProperties": true },
-    "images": { "type": "object", "additionalProperties": true },
-    "processes": { "type": "object", "additionalProperties": true },
-    "critical_issues": { "type": "array" },
-    "recommendations": { "type": "object" },
-    "validation_commands": { "type": "object" },
-    "next_steps": { "type": "object" },
-
-    "resources": {
-      "$ref": "definitions/resources.schema.json"
-    },
     "service": {
       "type": "object",
       "properties": {

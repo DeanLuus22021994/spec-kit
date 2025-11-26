@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../schemas/config.schema.json
+# Local Settings Template
+# Copy this file to ../settings/local.yml and modify as needed
+
+metadata:
+  version: "1.0.0"
+  category: config
+  keywords: ["local", "settings", "override"]
+  updated: "2025-11-26"
+
+# WSL2 Overrides (if applicable)
+wsl_memory_limit:
+  default: "12GB"
+
+# Feature Toggles
+gpu_enabled:
+  default: true
+
+# Performance Tuning
+dynamic_batching:
+  default: true
+  configuration:
+    max_batch_size: 32
+
+# Debugging
+lint:
+  continue_on_error: true

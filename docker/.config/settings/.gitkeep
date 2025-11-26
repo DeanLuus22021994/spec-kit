@@ -7,23 +7,17 @@
 # - User preferences
 # - GPU/CUDA device-specific settings
 #
-# Planned files:
-# - local.yml: Local development overrides
-# - gpu.yml: GPU-specific configuration overrides
-# - cuda.yml: CUDA environment customization
-# - dev.yml: Development environment settings
-# - prod.yml: Production environment settings
+# Usage:
+# 1. Copy a template from ../templates/
+#    - cp ../templates/settings.template.yml ./local.yml
+# 2. Modify ./local.yml with your specific overrides
+# 3. The configuration system will load these overrides automatically
 #
-# Note: Most settings files should be gitignored.
-# Only template files should be committed.
+# Note: All *.yml files in this directory (except .gitkeep) are gitignored.
 #
 # GPU Configuration Reference:
 # - CUDA Version: 13.0
 # - PyTorch: 2.9.1+cu130
 # - Compute Capability: 8.6
 # - See .config/environment.yml for full environment variables
-#
-# Self-Hosted Runner:
-# - Label: self-hosted-gpu
-# - Token Required: No (already registered)
-# - GPU: RTX 3050 6GB
+
