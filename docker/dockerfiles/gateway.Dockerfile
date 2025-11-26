@@ -5,6 +5,23 @@
 # Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build
 
+# Standard Build Arguments
+ARG VERSION=latest
+ARG BUILD_DATE
+ARG BUILDKIT_INLINE_CACHE=1
+ARG DOCKER_BUILDKIT=1
+
+# OCI Labels
+LABEL org.opencontainers.image.title="spec-kit-gateway"
+LABEL org.opencontainers.image.description="API Gateway for Semantic Kernel Application"
+LABEL org.opencontainers.image.source="https://github.com/github/spec-kit"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.vendor="GitHub"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL cache.version="1.0"
+LABEL performance.optimized="true"
+
 WORKDIR /src
 
 # Copy csproj and restore dependencies (cached layer)
