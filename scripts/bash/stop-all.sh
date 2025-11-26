@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# shellcheck source=lib/speckit.sh
+#!/usr/bin/env bash
+# shellcheck source=./lib/speckit.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/speckit.sh"
 
 main() {

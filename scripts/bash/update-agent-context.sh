@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC1091
+#!/usr/bin/env bash
+# shellcheck source=./lib/speckit.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/speckit.sh"
-# shellcheck disable=SC1091
+# shellcheck source=./lib/plan_utils.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/plan_utils.sh"
-# shellcheck disable=SC1091
+# shellcheck source=./lib/agent_updater.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/agent_updater.sh"
 
 main() {
