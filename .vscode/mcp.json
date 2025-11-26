@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "docker",
+      "args": ["exec", "-i", "spec-kit-mcp-github", "node", "index.js"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    }
+  }
+}

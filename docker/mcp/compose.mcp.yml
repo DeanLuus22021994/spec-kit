@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  github-mcp:
+    container_name: spec-kit-mcp-github
+    build:
+      context: ../..
+      dockerfile: docker/dockerfiles/github-mcp.Dockerfile
+    environment:
+      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - mcp-github-cache:/app/.cache
+      - mcp-github-git:/app/.git-cache
+      - mcp-github-data:/app/data
+    # Keep container running so we can exec into it
+    entrypoint: ["/bin/sh", "-c", "tail -f /dev/null"]
+    networks:
+      - spec-kit-infra
+
+volumes:
+  mcp-github-cache:
+  mcp-github-git:
+  mcp-github-data:
+
+networks:
+  spec-kit-infra:
+    external: true
+    name: spec-kit-infra
