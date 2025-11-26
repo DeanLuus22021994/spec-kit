@@ -6,6 +6,23 @@
 # =====================================================
 FROM redis:7.2-alpine AS redis-server
 
+# Standard Build Arguments
+ARG VERSION=latest
+ARG BUILD_DATE
+ARG BUILDKIT_INLINE_CACHE=1
+ARG DOCKER_BUILDKIT=1
+
+# OCI Labels
+LABEL org.opencontainers.image.title="spec-kit-redis"
+LABEL org.opencontainers.image.description="Redis Server for Caching and Pub/Sub"
+LABEL org.opencontainers.image.source="https://github.com/github/spec-kit"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.vendor="GitHub"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL cache.version="1.0"
+LABEL performance.optimized="true"
+
 # Install runtime dependencies
 RUN apk add --no-cache \
     bash \
