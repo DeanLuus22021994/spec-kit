@@ -70,8 +70,8 @@ COPY --from=base /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy embedding service configuration and application
-COPY --chown=appuser:appuser semantic/embeddings/.config/config.yml /app/config/config.yml
-COPY --chown=appuser:appuser semantic/embeddings/main.py /app/main.py
+COPY --chown=appuser:appuser .config/config.yml /app/config/config.yml
+COPY --chown=appuser:appuser main.py /app/main.py
 
 # Create directories for persistent volumes
 RUN mkdir -p /app/cache /app/logs /app/models && \

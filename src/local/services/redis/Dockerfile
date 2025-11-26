@@ -38,7 +38,7 @@ RUN mkdir -p /data /var/log/redis && \
     chown -R redis-user:redis-user /data /var/log/redis
 
 # Copy custom Redis configuration
-COPY infrastructure/redis/redis.conf /usr/local/etc/redis/redis.conf
+COPY redis.conf /usr/local/etc/redis/redis.conf
 
 # Switch to non-root user
 USER redis-user

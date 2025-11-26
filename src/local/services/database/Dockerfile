@@ -57,16 +57,16 @@ RUN mkdir -p /migrations /seeds /scripts /backups \
     && chown -R postgres:postgres /migrations /seeds /scripts /backups
 
 # Copy initialization script (runs first on fresh database)
-COPY --chown=postgres:postgres infrastructure/database/init.sql /docker-entrypoint-initdb.d/01-init.sql
+COPY --chown=postgres:postgres init.sql /docker-entrypoint-initdb.d/01-init.sql
 
 # Copy migration files
-COPY --chown=postgres:postgres infrastructure/database/migrations/*.sql /migrations/
+COPY --chown=postgres:postgres migrations/*.sql /migrations/
 
 # Copy seed data files
-COPY --chown=postgres:postgres infrastructure/database/seeds/*.sql /seeds/
+COPY --chown=postgres:postgres seeds/*.sql /seeds/
 
 # Copy management scripts
-COPY --chown=postgres:postgres infrastructure/database/scripts/*.sh /scripts/
+COPY --chown=postgres:postgres scripts/*.sh /scripts/
 RUN chmod +x /scripts/*.sh && sed -i 's/\r$//' /scripts/*.sh
 
 # =====================================================
@@ -74,7 +74,7 @@ RUN chmod +x /scripts/*.sh && sed -i 's/\r$//' /scripts/*.sh
 # =====================================================
 
 # Use precreated initialization wrapper that runs additional migrations and seeds
-COPY --chown=postgres:postgres infrastructure/database/scripts/99-run-migrations-and-seeds.sh /docker-entrypoint-initdb.d/99-run-migrations-and-seeds.sh
+COPY --chown=postgres:postgres scripts/99-run-migrations-and-seeds.sh /docker-entrypoint-initdb.d/99-run-migrations-and-seeds.sh
 RUN chmod +x /docker-entrypoint-initdb.d/99-run-migrations-and-seeds.sh && sed -i 's/\r$//' /docker-entrypoint-initdb.d/99-run-migrations-and-seeds.sh
 
 # =====================================================

@@ -19,7 +19,7 @@ LABEL cache.version="1.0"
 LABEL performance.optimized="true"
 
 # Copy vector configuration
-COPY semantic/vector/.config/config.yml /qdrant/config/production.yaml
+COPY .config/config.yml /qdrant/config/production.yaml
 
 # Create storage directories and install wget for healthchecks
 USER root
