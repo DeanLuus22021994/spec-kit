@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-import click
 import readchar
 from rich.align import Align
 from rich.console import Console
@@ -13,7 +12,6 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
-from typer.core import TyperGroup
 
 from specify_cli.config import BANNER, TAGLINE
 
@@ -260,12 +258,3 @@ def show_banner() -> None:
     console.print(Align.center(styled_banner))
     console.print(Align.center(Text(TAGLINE, style="italic bright_yellow")))
     console.print()
-
-
-class BannerGroup(TyperGroup):
-    """Custom group that shows banner before help."""
-
-    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:  # type: ignore
-        # Show banner before help
-        show_banner()
-        super().format_help(ctx, formatter)
