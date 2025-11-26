@@ -62,7 +62,10 @@ VERSIONS_YAML = load_config("versions.yaml")
 # Agent configuration with name, folder, install URL, and CLI tool requirement
 AGENT_CONFIG = AGENTS_YAML or {}
 
-SCRIPT_TYPE_CHOICES = {"sh": "POSIX Shell (bash/zsh)", "ps": "PowerShell"}
+SCRIPT_TYPE_CHOICES = SETTINGS_YAML.get("script_types", {}) or {
+    "sh": "POSIX Shell (bash/zsh)",
+    "ps": "PowerShell",
+}
 
 BANNER = SETTINGS_YAML.get("cli", {}).get(
     "banner_text",

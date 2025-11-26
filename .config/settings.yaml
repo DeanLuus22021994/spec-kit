@@ -46,3 +46,7 @@ devcontainer:
       mount_options: ["noatime", "relatime"]
       tmp_size: "1G"
       shm_size: "2G"
+
+script_types:
+  sh: "POSIX Shell (bash/zsh)"
+  ps: "PowerShell"
