@@ -143,8 +143,39 @@ execution_patterns:
       operation: "replace_string_in_file"
       targets: ["**/*.csproj"]
 
+  code_hygiene:
+    pattern: "Enforce code hygiene standards (linting, line endings)"
+    max_concurrent: 2
+    tool_calls:
+      - run_in_terminal
+      - get_errors
+    example:
+      description: "Verify shell scripts and python linting"
+      commands:
+        - "find . -name '*.sh' -exec file {} \\; | grep CRLF"
+        - "flake8 ."
+
 # XML prompt templates for subagent invocation
 xml_templates:
+  code_hygiene_task: |
+    <subagent_task type="validation">
+      <context>
+        <scope>workspace_hygiene</scope>
+        <checks>
+          <check>shell_script_line_endings</check>
+          <check>python_linting</check>
+        </checks>
+      </context>
+      <objectives>
+        <primary>Ensure codebase meets hygiene standards</primary>
+        <output_format>status_report</output_format>
+      </objectives>
+      <tools_allowed>
+        <tool>run_in_terminal</tool>
+        <tool>get_errors</tool>
+      </tools_allowed>
+    </subagent_task>
+
   validation_task: |
     <subagent_task type="validation">
       <context>
