@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# shellcheck source=scripts/bash/lib/speckit.sh
+# shellcheck source=./lib/speckit.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/speckit.sh"
-# shellcheck source=scripts/bash/lib/plan_utils.sh
+# shellcheck source=./lib/plan_utils.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/plan_utils.sh"
-# shellcheck source=scripts/bash/lib/agent_updater.sh
+# shellcheck source=./lib/agent_updater.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib/agent_updater.sh"
 
 main() {
