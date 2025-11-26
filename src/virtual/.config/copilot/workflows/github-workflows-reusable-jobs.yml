@@ -4,7 +4,17 @@
 metadata: &metadata
   version: "1.0.0"
   category: workflow
-  keywords: [reusable-workflows, github-actions, jobs, build, test, docker, deploy, ci-cd]
+  keywords:
+    [
+      reusable-workflows,
+      github-actions,
+      jobs,
+      build,
+      test,
+      docker,
+      deploy,
+      ci-cd,
+    ]
 
 <<: *metadata
 

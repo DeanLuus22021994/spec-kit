@@ -1,9 +1,9 @@
 # GitHub Copilot Context: Frontend Configuration
-# Path: src/frontend/.config/
+# Path: src/virtual/src/frontend/.config/
 # Purpose: Centralized configuration for React + TypeScript frontend
 
 context:
-  directory: "src/frontend/.config/"
+  directory: "src/virtual/src/frontend/.config/"
   purpose: "Frontend build, lint, and type-checking configuration"
   pattern: "Aligns with tests/.config/ and tools/.config/ organization"
 

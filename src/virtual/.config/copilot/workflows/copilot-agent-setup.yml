@@ -4,7 +4,8 @@
 metadata: &metadata
   version: "1.0.0"
   category: workflow
-  keywords: [copilot, agent, setup, dependencies, caching, dotnet, python, nodejs]
+  keywords:
+    [copilot, agent, setup, dependencies, caching, dotnet, python, nodejs]
 
 <<: *metadata
 
@@ -112,7 +113,7 @@ dependency_installation:
       type: string
       default: "20"
     cache_paths:
-      - src/frontend/package-lock.json
+      - src/virtual/src/frontend/package-lock.json
       - tests/package-lock.json
     steps:
       - name: "Setup Node.js"
@@ -121,12 +122,12 @@ dependency_installation:
           node-version: "20"
           cache: npm
           cache-dependency-path: |
-            src/frontend/package-lock.json
+            src/virtual/src/frontend/package-lock.json
             tests/package-lock.json
       - name: "Install frontend dependencies"
         run: npm ci
         shell: pwsh
-        working-directory: src/frontend
+        working-directory: src/virtual/src/frontend
       - name: "Install test dependencies"
         run: npm ci
         shell: pwsh
@@ -154,7 +155,7 @@ caching_strategy:
   npm:
     enabled: true
     dependency_paths:
-      - "src/frontend/package-lock.json"
+      - "src/virtual/src/frontend/package-lock.json"
       - "tests/package-lock.json"
     managed_by: "actions/setup-node@v4"
     estimated_size: "~200MB"
