@@ -1,5 +1,5 @@
 name: check
-handler: specify_cli.handlers:check
+handler: specify_cli.commands.check:check
 help: "Check that all required tools are installed."
 options:
   - name: json_output

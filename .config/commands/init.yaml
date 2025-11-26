@@ -1,5 +1,5 @@
 name: init
-handler: specify_cli.handlers:init
+handler: specify_cli.commands.init:init
 help: "Initialize a new Specify project from the latest template."
 description: |
   This command will:
