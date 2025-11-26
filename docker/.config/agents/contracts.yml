@@ -2,25 +2,50 @@
 # Agent Responsibility Contracts & Interface Definitions
 # Defines clear boundaries, contracts, and responsibilities for each agent
 
-metadata: &metadata
-  name: "agent-contracts"
-  description: "Agent Responsibility Contracts & Interface Definitions"
-  version: "1.0.0"
-  updated: "2025-11-25"
-  category: config
-  keywords:
-    [
-      agents,
-      contracts,
-      interfaces,
-      boundaries,
-      responsibilities,
-      soap,
-      wsdl,
-      orchestration,
-    ]
+_definitions:
+  metadata: &metadata
+    name: "agent-contracts"
+    description: "Agent Responsibility Contracts & Interface Definitions"
+    version: "1.0.0"
+    updated: "2025-11-25"
+    category: config
+    keywords:
+      [
+        agents,
+        contracts,
+        interfaces,
+        boundaries,
+        responsibilities,
+        soap,
+        wsdl,
+        orchestration,
+      ]
 
-<<: *metadata
+  protocols:
+    http: &http_proto "HTTP/REST"
+    soap: &soap_proto "SOAP"
+    grpc: &grpc_proto "gRPC"
+    redis: &redis_proto "Redis"
+
+  tiers:
+    core: &tier_core "core"
+    ai: &tier_ai "ai"
+    business: &tier_business "business"
+
+  boundaries:
+    standard: &std_boundaries
+      timeout_ms: 30000
+      retry_policy:
+        max_retries: 3
+        backoff_multiplier: 2.0
+
+  interfaces:
+    standard_inbound: &std_inbound
+      - protocol: *http_proto
+        methods: ["POST"]
+      - protocol: *soap_proto
+
+metadata: *metadata
 
 description: |
   Enterprise agent architecture with clear responsibility contracts,
@@ -35,7 +60,7 @@ agents:
     id: "agent-orchestrator"
     name: "Orchestrator Agent"
     version: "1.0.0"
-    tier: "core"
+    tier: *tier_core
 
     responsibility: |
       Primary coordination agent responsible for decomposing complex tasks,
@@ -43,33 +68,47 @@ agents:
       multi-agent workflows. Acts as the central nervous system for all
       agent-based operations.
 
-    capabilities:
-      - task_decomposition
-      - agent_routing
-      - result_aggregation
-      - workflow_coordination
-      - error_recovery
-      - parallel_execution
+    sub_tasks:
+      task_decomposition:
+        description: "Decompose complex user requests into executable sub-tasks"
+        input: { required: ["user_request"], optional: ["context"] }
+        output: { fields: ["execution_plan", "dependency_graph"] }
+
+      agent_routing:
+        description: "Route sub-tasks to appropriate specialized agents"
+        input: { required: ["sub_task", "available_agents"] }
+        output: { fields: ["target_agent_id", "routing_strategy"] }
+
+      result_aggregation:
+        description: "Synthesize results from multiple agents into final response"
+        input: { required: ["partial_results"] }
+        output: { fields: ["final_response", "confidence_score"] }
+
+      workflow_coordination:
+        description: "Manage state and flow of multi-step agent processes"
+        input: { required: ["workflow_id", "current_state"] }
+        output: { fields: ["next_action", "state_update"] }
+
+      error_recovery:
+        description: "Handle agent failures and attempt recovery strategies"
+        input: { required: ["error_context", "failed_step"] }
+        output: { fields: ["recovery_action", "retry_status"] }
 
     interfaces:
       inbound:
-        - protocol: "HTTP/REST"
+        - protocol: *http_proto
           endpoint: "/api/orchestrator/execute"
           methods: ["POST"]
-        - protocol: "SOAP"
+        - protocol: *soap_proto
           endpoint: "/soap/orchestrator"
           wsdl: "/wsdl/orchestrator.wsdl"
-        - protocol: "gRPC"
+        - protocol: *grpc_proto
           service: "OrchestratorService"
       outbound:
-        - target: "semantic-agent"
-          protocol: "HTTP/REST"
-        - target: "embedding-agent"
-          protocol: "HTTP/REST"
-        - target: "retrieval-agent"
-          protocol: "HTTP/REST"
-        - target: "validation-agent"
-          protocol: "HTTP/REST"
+        - { target: "semantic-agent", protocol: *http_proto }
+        - { target: "embedding-agent", protocol: *http_proto }
+        - { target: "retrieval-agent", protocol: *http_proto }
+        - { target: "validation-agent", protocol: *http_proto }
 
     contracts:
       input:
@@ -82,12 +121,10 @@ agents:
             ["task_id", "status", "result", "execution_time_ms", "agent_trace"]
 
     boundaries:
+      <<: *std_boundaries
       max_concurrent_tasks: 100
       max_task_depth: 10
-      timeout_ms: 300000
-      retry_policy:
-        max_retries: 3
-        backoff_multiplier: 2.0
+      timeout_ms: 300000 # Override standard
 
     dependencies:
       required: ["redis", "database"]
@@ -97,34 +134,45 @@ agents:
     id: "agent-semantic"
     name: "Semantic Processing Agent"
     version: "1.0.0"
-    tier: "ai"
+    tier: *tier_ai
 
     responsibility: |
       Handles natural language understanding, semantic analysis,
       intent classification, and context management. Processes
       user queries and generates semantic representations.
 
-    capabilities:
-      - intent_classification
-      - entity_extraction
-      - sentiment_analysis
-      - context_management
-      - query_reformulation
-      - semantic_similarity
+    sub_tasks:
+      intent_classification:
+        description: "Identify user intent from natural language input"
+        input: { required: ["text"] }
+        output: { fields: ["intent_label", "confidence"] }
+
+      entity_extraction:
+        description: "Extract named entities and parameters"
+        input: { required: ["text"] }
+        output: { fields: ["entities", "spans"] }
+
+      sentiment_analysis:
+        description: "Analyze emotional tone of input"
+        input: { required: ["text"] }
+        output: { fields: ["sentiment_score", "label"] }
+
+      context_management:
+        description: "Maintain and update conversation context"
+        input: { required: ["session_id", "new_interaction"] }
+        output: { fields: ["updated_context"] }
 
     interfaces:
       inbound:
-        - protocol: "HTTP/REST"
+        - protocol: *http_proto
           endpoint: "/api/semantic/process"
           methods: ["POST"]
-        - protocol: "SOAP"
+        - protocol: *soap_proto
           endpoint: "/soap/semantic"
           wsdl: "/wsdl/semantic.wsdl"
       outbound:
-        - target: "embedding-agent"
-          protocol: "HTTP/REST"
-        - target: "llm-provider"
-          protocol: "HTTP/REST"
+        - { target: "embedding-agent", protocol: *http_proto }
+        - { target: "llm-provider", protocol: *http_proto }
 
     contracts:
       input:
@@ -136,8 +184,8 @@ agents:
           fields: ["intent", "entities", "confidence", "context_id"]
 
     boundaries:
+      <<: *std_boundaries
       max_text_length: 32000
-      timeout_ms: 30000
       rate_limit: "100/minute"
 
     dependencies:
@@ -148,7 +196,7 @@ agents:
     id: "agent-embedding"
     name: "Embedding Generation Agent"
     version: "1.0.0"
-    tier: "ai"
+    tier: *tier_ai
     gpu_required: true
 
     responsibility: |
@@ -156,27 +204,33 @@ agents:
       and code. Manages embedding model lifecycle and provides
       efficient batch processing capabilities.
 
-    capabilities:
-      - text_embedding
-      - document_embedding
-      - code_embedding
-      - batch_processing
-      - model_caching
-      - dimension_reduction
+    sub_tasks:
+      text_embedding:
+        description: "Generate vector embeddings for text strings"
+        input: { required: ["text"] }
+        output: { fields: ["vector"] }
+
+      document_embedding:
+        description: "Chunk and embed large documents"
+        input: { required: ["document_content"] }
+        output: { fields: ["chunk_vectors", "metadata"] }
+
+      batch_processing:
+        description: "Process multiple embedding requests efficiently"
+        input: { required: ["items_list"] }
+        output: { fields: ["vectors_list"] }
 
     interfaces:
       inbound:
-        - protocol: "HTTP/REST"
+        - protocol: *http_proto
           endpoint: "/api/embeddings/generate"
           methods: ["POST"]
-        - protocol: "SOAP"
+        - protocol: *soap_proto
           endpoint: "/soap/embeddings"
           wsdl: "/wsdl/embeddings.wsdl"
       outbound:
-        - target: "vector-store"
-          protocol: "HTTP/REST"
-        - target: "cache"
-          protocol: "Redis"
+        - { target: "vector-store", protocol: *http_proto }
+        - { target: "cache", protocol: *redis_proto }
 
     contracts:
       input:
@@ -188,9 +242,10 @@ agents:
           fields: ["embeddings", "dimensions", "model_used", "tokens_processed"]
 
     boundaries:
+      <<: *std_boundaries
       max_batch_size: 100
       max_text_length: 8192
-      timeout_ms: 60000
+      timeout_ms: 60000 # Override
       gpu_memory_fraction: 0.40
 
     dependencies:
@@ -201,34 +256,40 @@ agents:
     id: "agent-retrieval"
     name: "Retrieval Agent"
     version: "1.0.0"
-    tier: "ai"
+    tier: *tier_ai
 
     responsibility: |
       Handles vector similarity search, document retrieval,
       and RAG (Retrieval Augmented Generation) operations.
       Manages retrieval strategies and result ranking.
 
-    capabilities:
-      - vector_search
-      - hybrid_search
-      - reranking
-      - context_expansion
-      - source_attribution
-      - relevance_scoring
+    sub_tasks:
+      vector_search:
+        description: "Perform semantic search using vector similarity"
+        input: { required: ["query_vector"] }
+        output: { fields: ["matches", "scores"] }
+
+      hybrid_search:
+        description: "Combine keyword and vector search results"
+        input: { required: ["query_text", "query_vector"] }
+        output: { fields: ["ranked_results"] }
+
+      reranking:
+        description: "Re-rank retrieved results for relevance"
+        input: { required: ["candidates", "query"] }
+        output: { fields: ["reranked_list"] }
 
     interfaces:
       inbound:
-        - protocol: "HTTP/REST"
+        - protocol: *http_proto
           endpoint: "/api/retrieval/search"
           methods: ["POST"]
-        - protocol: "SOAP"
+        - protocol: *soap_proto
           endpoint: "/soap/retrieval"
           wsdl: "/wsdl/retrieval.wsdl"
       outbound:
-        - target: "vector-store"
-          protocol: "HTTP/REST"
-        - target: "embedding-agent"
-          protocol: "HTTP/REST"
+        - { target: "vector-store", protocol: *http_proto }
+        - { target: "embedding-agent", protocol: *http_proto }
 
     contracts:
       input:
@@ -240,8 +301,9 @@ agents:
           fields: ["results", "total_count", "search_time_ms"]
 
     boundaries:
+      <<: *std_boundaries
       max_top_k: 100
-      timeout_ms: 10000
+      timeout_ms: 10000 # Override
       min_threshold: 0.5
 
     dependencies:
@@ -252,34 +314,40 @@ agents:
     id: "agent-generation"
     name: "Generation Agent"
     version: "1.0.0"
-    tier: "ai"
+    tier: *tier_ai
 
     responsibility: |
       Handles text generation, completion, and response synthesis.
       Manages LLM interactions, prompt engineering, and output
       quality control including hallucination detection.
 
-    capabilities:
-      - text_generation
-      - completion
-      - summarization
-      - prompt_engineering
-      - output_validation
-      - hallucination_check
+    sub_tasks:
+      text_generation:
+        description: "Generate text from prompt"
+        input: { required: ["prompt"] }
+        output: { fields: ["generated_text"] }
+
+      summarization:
+        description: "Summarize input text"
+        input: { required: ["text", "length_constraint"] }
+        output: { fields: ["summary"] }
+
+      hallucination_check:
+        description: "Verify generated content against source"
+        input: { required: ["generated_text", "source_context"] }
+        output: { fields: ["is_grounded", "citations"] }
 
     interfaces:
       inbound:
-        - protocol: "HTTP/REST"
+        - protocol: *http_proto
           endpoint: "/api/generation/complete"
           methods: ["POST"]
-        - protocol: "SOAP"
+        - protocol: *soap_proto
           endpoint: "/soap/generation"
           wsdl: "/wsdl/generation.wsdl"
       outbound:
-        - target: "llm-provider"
-          protocol: "HTTP/REST"
-        - target: "retrieval-agent"
-          protocol: "HTTP/REST"
+        - { target: "llm-provider", protocol: *http_proto }
+        - { target: "retrieval-agent", protocol: *http_proto }
 
     contracts:
       input:
@@ -292,9 +360,10 @@ agents:
             ["response", "tokens_used", "finish_reason", "grounding_score"]
 
     boundaries:
+      <<: *std_boundaries
       max_prompt_tokens: 8000
       max_output_tokens: 4000
-      timeout_ms: 60000
+      timeout_ms: 60000 # Override
       temperature_range: [0.0, 2.0]
 
     dependencies:
@@ -305,32 +374,39 @@ agents:
     id: "agent-validation"
     name: "Validation Agent"
     version: "1.0.0"
-    tier: "business"
+    tier: *tier_business
 
     responsibility: |
       Ensures data quality, schema compliance, and business rule
       validation. Validates inputs, outputs, and intermediate
       results throughout the agent pipeline.
 
-    capabilities:
-      - schema_validation
-      - business_rule_validation
-      - content_moderation
-      - pii_detection
-      - quality_scoring
-      - compliance_check
+    sub_tasks:
+      schema_validation:
+        description: "Validate data against JSON/YAML schemas"
+        input: { required: ["data", "schema_id"] }
+        output: { fields: ["is_valid", "validation_errors"] }
+
+      business_rule_validation:
+        description: "Apply domain-specific business rules"
+        input: { required: ["data", "rule_set"] }
+        output: { fields: ["passed", "violations"] }
+
+      pii_detection:
+        description: "Detect and flag PII in data"
+        input: { required: ["text"] }
+        output: { fields: ["detected_pii_types", "locations"] }
 
     interfaces:
       inbound:
-        - protocol: "HTTP/REST"
+        - protocol: *http_proto
           endpoint: "/api/validation/validate"
           methods: ["POST"]
-        - protocol: "SOAP"
+        - protocol: *soap_proto
           endpoint: "/soap/validation"
           wsdl: "/wsdl/validation.wsdl"
       outbound:
-        - target: "rules-engine"
-          protocol: "HTTP/REST"
+        - { target: "rules-engine", protocol: *http_proto }
 
     contracts:
       input:
@@ -342,8 +418,9 @@ agents:
           fields: ["valid", "errors", "warnings", "score"]
 
     boundaries:
+      <<: *std_boundaries
       max_payload_size: "10MB"
-      timeout_ms: 5000
+      timeout_ms: 5000 # Override
 
     dependencies:
       required: ["business"]
