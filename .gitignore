@@ -72,3 +72,5 @@ docker/publish/
 **/playwright-report/
 **/test-results/
 **/TestResults/
+
+.fake
