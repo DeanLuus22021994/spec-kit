@@ -7,12 +7,23 @@ docker:
   base_image: "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm"
 
 dependencies:
-  system:
+  core:
     git: "1.3.4"
     uv: "latest"
     docker_buildx: "latest"
     eslint: "latest"
     gcm: "2.6.1"
+
+  ai_infrastructure:
+    cuda: "13.0"
+    pytorch: "2.2.0"
+    triton: "2.1.0"
+    onnxruntime: "1.17.0"
+
+  observability:
+    opentelemetry: "1.24.0"
+    jaeger: "1.56.0"
+    prometheus: "2.51.0"
 
   features:
     git: "1.3.4"
@@ -31,3 +42,5 @@ dependencies:
     platformdirs: "latest"
     readchar: "latest"
     truststore: ">=0.10.4"
+    opentelemetry-api: "latest"
+    opentelemetry-sdk: "latest"

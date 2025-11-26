@@ -8,6 +8,36 @@ cli:
     ╚══════╝╚═╝     ╚══════╝ ╚═════╝╚═╝╚═╝        ╚═╝
   tagline: "GitHub Spec Kit - Spec-Driven Development Toolkit"
 
+features:
+  experimental:
+    subagents: false
+    tracing: false
+    advanced_planning: false
+  preview:
+    new_parser: true
+
+telemetry:
+  enabled: false
+  provider: "opentelemetry"
+  endpoint: "http://localhost:4318"
+  sampling_ratio: 1.0
+  service_name: "specify-cli"
+
+performance:
+  concurrency:
+    max_workers: 4
+    network_timeout: 30
+  caching:
+    enabled: true
+    ttl_seconds: 3600
+    directory: ".specify/cache"
+
+security:
+  secret_patterns:
+    - "ghp_[a-zA-Z0-9]+"
+    - "sk-[a-zA-Z0-9]+"
+  scan_on_init: true
+
 optional_tools:
   code: "Visual Studio Code"
   code-insiders: "Visual Studio Code Insiders"

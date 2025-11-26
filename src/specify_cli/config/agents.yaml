@@ -1,31 +1,58 @@
 _definitions:
   cli_agent: &cli_agent
+    provider: "cli"
     requires_cli: true
+    capabilities:
+      tools: true
+      streaming: true
+      images: false
   ide_agent: &ide_agent
+    provider: "ide"
     requires_cli: false
     install_url: null
+    capabilities:
+      tools: false
+      streaming: true
+      images: false
 
 copilot:
   <<: *ide_agent
   name: "GitHub Copilot"
   folder: ".github/"
+  models:
+    default: "gpt-4o"
+    fast: "gpt-3.5-turbo"
 
 claude:
   <<: *cli_agent
   name: "Claude Code"
   folder: ".claude/"
   install_url: "https://docs.anthropic.com/en/docs/claude-code/setup"
+  capabilities:
+    tools: true
+    streaming: true
+    images: true
+  models:
+    default: "claude-3-5-sonnet-20241022"
+    fast: "claude-3-haiku-20240307"
+  environment:
+    required: ["ANTHROPIC_API_KEY"]
 
 gemini:
   <<: *cli_agent
   name: "Gemini CLI"
   folder: ".gemini/"
   install_url: "https://github.com/google-gemini/gemini-cli"
+  models:
+    default: "gemini-1.5-pro"
+    fast: "gemini-1.5-flash"
 
 cursor-agent:
   <<: *ide_agent
   name: "Cursor"
   folder: ".cursor/"
+  models:
+    default: "claude-3-5-sonnet"
 
 qwen:
   <<: *cli_agent

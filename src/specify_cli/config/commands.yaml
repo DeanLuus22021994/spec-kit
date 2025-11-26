@@ -2,3 +2,16 @@ commands:
   - !include commands/init.yaml
   - !include commands/check.yaml
   - !include commands/version.yaml
+
+groups:
+  project_management:
+    name: "Project Management"
+    commands: ["init", "check", "version"]
+  ai_agents:
+    name: "AI Agents"
+    commands: ["specify", "plan", "tasks", "implement"]
+
+aliases:
+  i: "init"
+  c: "check"
+  v: "version"
