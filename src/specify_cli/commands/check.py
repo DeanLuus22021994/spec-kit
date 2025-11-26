@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from rich.console import Console
@@ -81,11 +82,19 @@ def check(json_output: bool = False, verbose: bool = False) -> None:
         else:
             # IDE-based agent - skip CLI check and mark as optional
             if tracker:
-                tracker.skip(
-                    agent_key, messages.get("ide_skip", "IDE-based, no CLI check")
-                )
-            # Don't count IDE agents as "found"
-            results[agent_key] = None
+                # For Copilot, if we are in VS Code, we can assume it's likely available or at least the user is in the right environment
+                if (
+                    agent_key == "copilot"
+                    and os.environ.get("TERM_PROGRAM") == "vscode"
+                ):
+                    tracker.complete(agent_key, "IDE Extension (VS Code detected)")
+                    results[agent_key] = "VS Code Extension"
+                else:
+                    tracker.skip(
+                        agent_key, messages.get("ide_skip", "IDE-based, no CLI check")
+                    )
+                    # Don't count IDE agents as "found" unless we detected the environment
+                    results[agent_key] = None
 
     # Check Optional Tools from Settings
     optional_tools = SETTINGS_YAML.get("optional_tools", {})
