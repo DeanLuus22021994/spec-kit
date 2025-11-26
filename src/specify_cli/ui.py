@@ -89,6 +89,7 @@ class StepTracker:
                 pass
 
     def render(self) -> Tree:
+        """Render the step tracker as a Rich Tree."""
         tree = Tree(f"[cyan]{self.title}[/cyan]", guide_style="grey50")
         for step in self.steps:
             label = step["label"]
