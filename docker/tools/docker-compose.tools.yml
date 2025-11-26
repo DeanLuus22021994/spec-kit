@@ -19,8 +19,8 @@ version: "3.8"
 services:
   tools:
     build:
-      context: ..
-      dockerfile: tools/.config/docker/Dockerfile
+      context: .
+      dockerfile: .config/docker/Dockerfile
     container_name: semantic-kernel-app-tools
     working_dir: /app/tools
     environment:
