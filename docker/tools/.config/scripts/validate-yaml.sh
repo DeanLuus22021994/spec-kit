@@ -16,7 +16,7 @@ readonly NC='\033[0m' # No Color
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 readonly RULES_DIR="${WORKSPACE_ROOT}/tools/.config/validation/rules"
-readonly REPORTS_DIR="${WORKSPACE_ROOT}/tools/.config/validation/reports"
+readonly REPORTS_DIR="${WORKSPACE_ROOT}/tools/.config/validation/reports/latest"
 readonly INPUT_DIR="${WORKSPACE_ROOT}"
 
 # Configuration
@@ -127,6 +127,7 @@ run_validation() {
         --output "${REPORTS_DIR}"
         --rules "${RULES_DIR}"
         --enable-default-rulesets=false
+        --overwrite
         "${run_local_flag}"
     )
 

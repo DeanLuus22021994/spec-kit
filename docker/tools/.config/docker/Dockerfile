@@ -27,6 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     build-essential \
+    maven \
+    default-jdk \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
