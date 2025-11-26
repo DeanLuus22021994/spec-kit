@@ -115,6 +115,22 @@ def download_template_from_github(
     debug: bool = False,
     github_token: str | None = None,
 ) -> tuple[Path, dict]:
+    """
+    Download the latest template release from GitHub.
+
+    Args:
+        ai_assistant: The AI assistant identifier (e.g., 'copilot', 'claude').
+        download_dir: Directory to save the downloaded zip file.
+        script_type: Type of script to use ('sh' or 'ps').
+        verbose: Whether to print verbose output.
+        show_progress: Whether to show a progress bar.
+        http_client: Optional pre-configured HTTP client.
+        debug: Whether to print debug information on failure.
+        github_token: Optional GitHub token for authentication.
+
+    Returns:
+        A tuple containing the path to the downloaded zip file and metadata dict.
+    """
     repo_owner = "github"
     repo_name = "spec-kit"
     if http_client is None:

@@ -81,6 +81,7 @@ class StepTracker:
         self._maybe_refresh()
 
     def _maybe_refresh(self) -> None:
+        """Trigger a refresh if a callback is attached."""
         if self._refresh_cb:
             try:
                 self._refresh_cb()
