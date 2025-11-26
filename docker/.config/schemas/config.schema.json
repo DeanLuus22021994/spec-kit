@@ -16,6 +16,28 @@
     "cross_references": { "type": "array", "items": { "type": "string" } },
     "related_documentation": { "type": "array", "items": { "type": "string" } },
 
+    "test_template": {
+      "type": "object",
+      "properties": {
+        "timeout": { "type": ["integer", "null"] },
+        "requires_services": { "type": "boolean" },
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "docker": {
+      "type": "object",
+      "properties": {
+        "startup_wait": { "type": "integer" },
+        "health_checks": {
+          "type": "object",
+          "properties": {
+            "interval": { "type": "integer" },
+            "timeout": { "type": "integer" },
+            "retries": { "type": "integer" }
+          }
+        }
+      }
+    },
     "rules": {
       "$ref": "definitions/rules.schema.json"
     },
