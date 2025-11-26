@@ -103,8 +103,6 @@ def create_command_from_yaml(config: dict[str, Any]) -> click.Command:
             # "name" is available in Parameter, but Option overrides it?
             #
             # Let's check Click docs or source.
-            # Option(param_decls, show_default=None, prompt=None, confirmation_prompt=None, prompt_required=True, hide_input=False, is_flag=None, flag_value=None, multiple=False, count=False, allow_from_autoenv=True, type=None, help=None, hidden=False, show_choices=True, show_envvar=False, **attrs)
-            #
             # It seems we can't easily force the name.
             #
             # EASIEST FIX: Update the YAML to use flags that match the variable name,
