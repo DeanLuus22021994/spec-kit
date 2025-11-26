@@ -8,6 +8,7 @@ It serves as a regression test for the CLI-to-Orchestrator interface.
 
 import json
 import sys
+from typing import Any
 
 from orchestrator.config import SubagentTask, TaskType
 from orchestrator.orchestrator import SubagentOrchestrator
@@ -32,7 +33,10 @@ def verify_task_creation() -> SubagentTask:
         print(f"Task type type: {type(task.task_type)}")
 
         # Verify the fix: task_type should be an Enum, not a string
-        if not isinstance(task.task_type, TaskType):
+        # Mypy thinks this is unreachable because it knows task_type is TaskType
+        # We cast to Any to bypass the static check for this runtime verification
+        val: Any = task.task_type
+        if not isinstance(val, TaskType):
             print("FAILURE: task_type is not an Enum member")
             sys.exit(1)
 
