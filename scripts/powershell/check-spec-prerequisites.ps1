@@ -20,14 +20,14 @@ if ($Json) {
     [PSCustomObject]@{
         FEATURE_SPEC = $paths.FEATURE_SPEC
         IMPL_PLAN = $paths.IMPL_PLAN
-        TASKS_FILE = $paths.TASKS_FILE
+        TASKS_FILE = $paths.TASKS
         SPECS_DIR = $paths.FEATURE_DIR
         BRANCH = $paths.CURRENT_BRANCH
     } | ConvertTo-Json -Compress
 } else {
     Write-Output "FEATURE_SPEC: $($paths.FEATURE_SPEC)"
     Write-Output "IMPL_PLAN: $($paths.IMPL_PLAN)"
-    Write-Output "TASKS_FILE: $($paths.TASKS_FILE)"
+    Write-Output "TASKS_FILE: $($paths.TASKS)"
     Write-Output "SPECS_DIR: $($paths.FEATURE_DIR)"
     Write-Output "BRANCH: $($paths.CURRENT_BRANCH)"
 }

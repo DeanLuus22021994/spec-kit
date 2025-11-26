@@ -44,7 +44,7 @@ generate_commands() {
   # Read the config file
   local config_file=".config/agent_commands.yaml"
 
-  for template in templates/commands/*.md; do
+  for template in .specify/templates/commands/*.md; do
     [[ -f "$template" ]] || continue
     local name description script_command agent_script_command body
     name=$(basename "$template" .md)
@@ -154,6 +154,16 @@ build_variant() {
 
   [[ -d templates ]] && { mkdir -p "$SPEC_DIR/templates"; find templates -type f -not -path "templates/commands/*" -not -name "vscode-settings.json" -exec cp --parents {} "$SPEC_DIR"/ \; ; echo "Copied templates -> .specify/templates"; }
 
+  if [[ -d .specify/templates ]]; then
+    mkdir -p "$SPEC_DIR/templates"
+    # Copy everything from .specify/templates to destination
+    cp -r .specify/templates/* "$SPEC_DIR/templates/"
+    # Remove excluded items from destination
+    rm -rf "$SPEC_DIR/templates/commands"
+    rm -f "$SPEC_DIR/templates/vscode-settings.json"
+    echo "Copied .specify/templates -> .specify/templates"
+  fi
+
   # NOTE: We substitute {ARGS} internally. Outward tokens differ intentionally:
   #   * Markdown/prompt (claude, copilot, cursor-agent, opencode): $ARGUMENTS
   #   * TOML (gemini, qwen): {{args}}
@@ -173,15 +183,14 @@ build_variant() {
       generate_copilot_prompts "$base_dir/.github/agents" "$base_dir/.github/prompts"
       # Create VS Code workspace settings
       mkdir -p "$base_dir/.vscode"
-      [[ -f templates/vscode-settings.json ]] && cp templates/vscode-settings.json "$base_dir/.vscode/settings.json"
+      [[ -f .specify/templates/vscode-settings.json ]] && cp .specify/templates/vscode-settings.json "$base_dir/.vscode/settings.json"
       ;;
     cursor-agent)
       mkdir -p "$base_dir/.cursor/commands"
       generate_commands cursor-agent md "\$ARGUMENTS" "$base_dir/.cursor/commands" "$script" ;;
     qwen)
       mkdir -p "$base_dir/.qwen/commands"
-      generate_commands qwen toml "{{args}}" "$base_dir/.qwen/commands" "$script"
-      [[ -f agent_templates/qwen/QWEN.md ]] && cp agent_templates/qwen/QWEN.md "$base_dir/QWEN.md" ;;
+      generate_commands qwen toml "{{args}}" "$base_dir/.qwen/commands" "$script" ;;
     opencode)
       mkdir -p "$base_dir/.opencode/command"
       generate_commands opencode md "\$ARGUMENTS" "$base_dir/.opencode/command" "$script" ;;

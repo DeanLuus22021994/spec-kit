@@ -28,11 +28,11 @@ check_feature_branch "$CURRENT_BRANCH" || exit 1
 # Output results
 if $JSON_MODE; then
   printf '{"FEATURE_SPEC":"%s","IMPL_PLAN":"%s","TASKS_FILE":"%s","SPECS_DIR":"%s","BRANCH":"%s"}\n' \
-    "$FEATURE_SPEC" "$IMPL_PLAN" "$TASKS_FILE" "$FEATURE_DIR" "$CURRENT_BRANCH"
+    "$FEATURE_SPEC" "$IMPL_PLAN" "$TASKS" "$FEATURE_DIR" "$CURRENT_BRANCH"
 else
   echo "FEATURE_SPEC: $FEATURE_SPEC"
   echo "IMPL_PLAN: $IMPL_PLAN"
-  echo "TASKS_FILE: $TASKS_FILE"
+  echo "TASKS_FILE: $TASKS"
   echo "SPECS_DIR: $FEATURE_DIR"
   echo "BRANCH: $CURRENT_BRANCH"
 fi

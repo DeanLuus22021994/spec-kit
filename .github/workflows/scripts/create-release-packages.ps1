@@ -78,7 +78,7 @@ function Generate-Commands {
 
     New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 
-    $templates = Get-ChildItem -Path "templates/commands/*.md" -File -ErrorAction SilentlyContinue
+    $templates = Get-ChildItem -Path ".specify/templates/commands/*.md" -File -ErrorAction SilentlyContinue
     $configFile = ".config/agent_commands.yaml"
     $configContent = (Get-Content -Path $configFile -Raw) -replace "`r`n", "`n"
 
@@ -229,20 +229,20 @@ function Build-Variant {
     }
 
     # Copy templates (excluding commands directory and vscode-settings.json)
-    if (Test-Path "templates") {
+    if (Test-Path ".specify/templates") {
         $templatesDestDir = Join-Path $specDir "templates"
         New-Item -ItemType Directory -Path $templatesDestDir -Force | Out-Null
 
-        Get-ChildItem -Path "templates" -Recurse -File | Where-Object {
-            $_.FullName -notmatch 'templates[/\\]commands[/\\]' -and $_.Name -ne 'vscode-settings.json'
+        Get-ChildItem -Path ".specify/templates" -Recurse -File | Where-Object {
+            $_.FullName -notmatch '.specify[/\\]templates[/\\]commands[/\\]' -and $_.Name -ne 'vscode-settings.json'
         } | ForEach-Object {
-            $relativePath = $_.FullName.Substring((Resolve-Path "templates").Path.Length + 1)
+            $relativePath = $_.FullName.Substring((Resolve-Path ".specify/templates").Path.Length + 1)
             $destFile = Join-Path $templatesDestDir $relativePath
             $destFileDir = Split-Path $destFile -Parent
             New-Item -ItemType Directory -Path $destFileDir -Force | Out-Null
             Copy-Item -Path $_.FullName -Destination $destFile -Force
         }
-        Write-Host "Copied templates -> .specify/templates"
+        Write-Host "Copied .specify/templates -> .specify/templates"
     }
 
     # Generate agent-specific command files
@@ -254,9 +254,6 @@ function Build-Variant {
         'gemini' {
             $cmdDir = Join-Path $baseDir ".gemini/commands"
             Generate-Commands -Agent 'gemini' -Extension 'toml' -ArgFormat '{{args}}' -OutputDir $cmdDir -ScriptVariant $Script
-            if (Test-Path "agent_templates/gemini/GEMINI.md") {
-                Copy-Item -Path "agent_templates/gemini/GEMINI.md" -Destination (Join-Path $baseDir "GEMINI.md")
-            }
         }
         'copilot' {
             $agentsDir = Join-Path $baseDir ".github/agents"
@@ -269,8 +266,8 @@ function Build-Variant {
             # Create VS Code workspace settings
             $vscodeDir = Join-Path $baseDir ".vscode"
             New-Item -ItemType Directory -Path $vscodeDir -Force | Out-Null
-            if (Test-Path "templates/vscode-settings.json") {
-                Copy-Item -Path "templates/vscode-settings.json" -Destination (Join-Path $vscodeDir "settings.json")
+            if (Test-Path ".specify/templates/vscode-settings.json") {
+                Copy-Item -Path ".specify/templates/vscode-settings.json" -Destination (Join-Path $vscodeDir "settings.json")
             }
         }
         'cursor-agent' {
@@ -280,9 +277,6 @@ function Build-Variant {
         'qwen' {
             $cmdDir = Join-Path $baseDir ".qwen/commands"
             Generate-Commands -Agent 'qwen' -Extension 'toml' -ArgFormat '{{args}}' -OutputDir $cmdDir -ScriptVariant $Script
-            if (Test-Path "agent_templates/qwen/QWEN.md") {
-                Copy-Item -Path "agent_templates/qwen/QWEN.md" -Destination (Join-Path $baseDir "QWEN.md")
-            }
         }
         'opencode' {
             $cmdDir = Join-Path $baseDir ".opencode/command"
