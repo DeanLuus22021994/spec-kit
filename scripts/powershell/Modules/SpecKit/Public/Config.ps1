@@ -18,6 +18,18 @@ function Get-SpecKitConfig {
         AGENTS_FILE_PATH     = 'AGENTS.md'
         WINDSURF_FILE_PATH   = '.windsurf/rules/specify-rules.md'
 
+        # Agent Definitions
+        Agents = @{
+            claude   = @{ File = 'CLAUDE.md'; Name = 'Claude Code' }
+            gemini   = @{ File = 'GEMINI.md'; Name = 'Gemini CLI' }
+            copilot  = @{ File = '.github/copilot-instructions.md'; Name = 'GitHub Copilot' }
+            cursor   = @{ File = '.cursor/rules/specify-rules.mdc'; Name = 'Cursor IDE' }
+            qwen     = @{ File = 'QWEN.md'; Name = 'Qwen Code' }
+            opencode = @{ File = 'AGENTS.md'; Name = 'opencode' }
+            codex    = @{ File = 'AGENTS.md'; Name = 'Codex CLI' }
+            windsurf = @{ File = '.windsurf/rules/specify-rules.md'; Name = 'Windsurf' }
+        }
+
         # Limits
         MAX_FILE_SIZE        = 1MB
     }
