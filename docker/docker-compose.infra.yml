@@ -52,7 +52,7 @@ services:
   database:
     container_name: spec-kit-database
     build:
-      context: .
+      context: ../src/local
       dockerfile: dockerfiles/database.Dockerfile
     ports:
       - "5432:5432"
@@ -80,7 +80,7 @@ services:
     container_name: spec-kit-embeddings
     image: localhost:5000/spec-kit/embeddings:latest
     build:
-      context: .
+      context: ../src/local
       dockerfile: dockerfiles/embeddings.Dockerfile
     deploy:
       resources:
@@ -112,7 +112,7 @@ services:
     container_name: spec-kit-face-matcher
     image: localhost:5000/spec-kit/face-matcher:latest
     build:
-      context: .
+      context: ../src/local
       dockerfile: dockerfiles/face-matcher.Dockerfile
     deploy:
       resources:
@@ -141,7 +141,7 @@ services:
     container_name: spec-kit-vector
     image: localhost:5000/spec-kit/vector:latest
     build:
-      context: .
+      context: ../src/local
       dockerfile: dockerfiles/vector.Dockerfile
     ports:
       - "6333:6333"

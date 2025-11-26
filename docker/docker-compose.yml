@@ -9,14 +9,15 @@ services:
     container_name: spec-kit-backend
     image: localhost:5000/spec-kit/backend:latest
     build:
-      context: .
+      context: ../src/virtual
       dockerfile: dockerfiles/backend.Dockerfile
     ports:
       - "8080:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=spec-kit-database;Port=5432;Database=speckit;Username=user;Password=password
+      - ConnectionStrings__Database=Host=spec-kit-database;Port=5432;Database=speckit;Username=user;Password=password
       - Redis__ConnectionString=spec-kit-redis:6379
+      - Qdrant__Url=http://spec-kit-vector:6333
     networks:
       - spec-kit-infra
     healthcheck:
@@ -36,7 +37,7 @@ services:
     container_name: spec-kit-engine
     image: localhost:5000/spec-kit/engine:latest
     build:
-      context: .
+      context: ../src/virtual
       dockerfile: dockerfiles/engine.Dockerfile
     environment:
       - REDIS_HOST=spec-kit-redis
@@ -59,7 +60,7 @@ services:
     container_name: spec-kit-frontend
     image: localhost:5000/spec-kit/frontend:latest
     build:
-      context: .
+      context: ../src/virtual
       dockerfile: dockerfiles/frontend.Dockerfile
     ports:
       - "3000:3000"

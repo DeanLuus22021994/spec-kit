@@ -86,6 +86,25 @@ Use **`/speckit.implement`** to execute all tasks and build your feature accordi
 
 For detailed step-by-step instructions, see our [comprehensive guide](./spec-driven.md).
 
+## 🏗️ Architecture & Local Development
+
+Spec Kit uses a split architecture to separate heavy infrastructure from your application code, ensuring a fast and lightweight development loop.
+
+### 1. Local Infrastructure (The "Real" World)
+This layer hosts stable, resource-intensive services that rarely change. It runs on a dedicated Docker network (`spec-kit-infra`).
+*   **Services**: PostgreSQL, Redis, Qdrant (Vector Store), GPU Embeddings, Face Matcher, Jaeger.
+*   **Start**: `pwsh scripts/powershell/start-local.ps1`
+
+### 2. Virtual Application (The "Dev" World)
+This layer contains your active application code. It connects to the Local Infrastructure via the shared network.
+*   **Services**: Backend API (.NET), Engine (.NET), Frontend (React).
+*   **Start**: `pwsh scripts/powershell/start-virtual.ps1`
+
+### 3. Development Workflow
+1.  **One-time Setup**: Run `start-local.ps1` to spin up your database and AI services. Leave them running.
+2.  **Daily Dev**: Run `start-virtual.ps1` to start your app. Rebuild and restart this layer as often as needed without waiting for the heavy infrastructure to restart.
+3.  **Stop All**: Run `pwsh scripts/powershell/stop-all.ps1` to shut down everything.
+
 ## 📽️ Video Overview
 
 Want to see Spec Kit in action? Watch our [video overview](https://www.youtube.com/watch?v=a9eR1xsfvHg&pp=0gcJCckJAYcqIYzv)!

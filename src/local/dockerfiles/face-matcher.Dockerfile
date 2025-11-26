@@ -57,7 +57,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
 WORKDIR /app
 
 # Copy requirements first for layer caching
-COPY face-matcher/pyproject.toml /app/
+COPY semantic/face-matcher/pyproject.toml /app/
 
 # Install Python dependencies with ONNX Runtime GPU
 RUN python -m pip install --upgrade pip setuptools wheel && \
@@ -73,8 +73,8 @@ RUN python -m pip install --upgrade pip setuptools wheel && \
   mcp>=1.0.0
 
 # Copy Face-Matcher source code
-COPY face-matcher/src /app/src
-COPY face-matcher/config /app/config
+COPY semantic/face-matcher/src /app/src
+COPY semantic/face-matcher/config /app/config
 
 # Create models directory for downloaded models
 RUN mkdir -p /app/models /app/data
