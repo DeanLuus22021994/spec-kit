@@ -169,6 +169,7 @@
     "pytest",
     "qwen",
     "speckit",
-    "SPECKIT"
+    "SPECKIT",
+    "toplevel"
   ]
 }
