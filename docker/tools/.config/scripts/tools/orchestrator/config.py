@@ -120,9 +120,31 @@ class SubagentConfig:
             cls._config = cls._get_defaults()
         else:
             with open(config_path, encoding="utf-8") as f:
-                cls._config = yaml.safe_load(f) or {}
+                loaded_config = yaml.safe_load(f) or {}
+                cls.validate(loaded_config)
+                cls._config = loaded_config
 
         return cls._config
+
+    @classmethod
+    def validate(cls, config: dict[str, Any]) -> None:
+        """Validate configuration structure."""
+        required_keys = ["performance_targets"]
+        for key in required_keys:
+            if key not in config:
+                msg = f"Missing required config key: {key}"
+                raise ValueError(msg)
+
+        perf = config.get("performance_targets", {})
+        if not isinstance(perf, dict):
+            msg = "performance_targets must be a dictionary"
+            raise ValueError(msg)
+
+        required_perf_keys = ["max_parallel_agents", "timeout_seconds"]
+        for key in required_perf_keys:
+            if key not in perf:
+                msg = f"Missing required performance target: {key}"
+                raise ValueError(msg)
 
     @classmethod
     def _get_defaults(cls) -> dict[str, Any]:

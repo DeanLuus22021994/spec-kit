@@ -2,60 +2,37 @@
 
 from __future__ import annotations
 
-import concurrent.futures
-import time
 from collections.abc import Callable
 from typing import Any, cast
 
-from ..config import SubagentConfig, SubagentTask, TaskResult, TaskStatus
-from .base import TaskExecutor
-
-ThreadPoolExecutor = concurrent.futures.ThreadPoolExecutor
-as_completed = concurrent.futures.as_completed
+from ..config import SubagentTask
+from .parallel import ParallelExecutor
 
 
-class ParallelSearchExecutor(TaskExecutor):
+class ParallelSearchExecutor(ParallelExecutor[str, "list[dict[str, Any]]"]):
     """Executor for parallel file/grep searches."""
 
     def __init__(self, search_func: Callable[[str], list[dict[str, Any]]]) -> None:
         """Initialize with search function."""
+        super().__init__()
         self.search_func = search_func
-        self.config = SubagentConfig.load()
-        perf = self.config.get("performance_targets", {})
-        self.max_workers: int = perf.get("max_parallel_agents", 8) if perf else 8
 
-    async def execute(self, task: SubagentTask) -> TaskResult:
-        """Execute parallel searches."""
-        start_time = time.perf_counter()
-        results: list[dict[str, Any]] = []
-        errors: list[str] = []
-        patterns = cast(list[str], task.payload)
+    def get_items(self, task: SubagentTask) -> list[str]:
+        """Get search patterns from task."""
+        return cast(list[str], task.payload)
 
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = {
-                executor.submit(self.search_func, pattern): pattern
-                for pattern in patterns
-            }
+    def process_item(self, item: str, **kwargs: Any) -> list[dict[str, Any]]:
+        """Execute search for a single pattern."""
+        return self.search_func(item)
 
-            for future in as_completed(futures, timeout=task.timeout_seconds):
-                pattern = futures[future]
-                try:
-                    result = future.result()
-                    results.extend(result)
-                except (OSError, ValueError, RuntimeError) as e:
-                    errors.append(f"Search '{pattern}' failed: {e}")
-
-        execution_time = (time.perf_counter() - start_time) * 1000
-
-        return TaskResult(
-            task_id=task.task_id,
-            task_type=task.task_type,
-            status=TaskStatus.COMPLETED if not errors else TaskStatus.FAILED,
-            result=results,
-            error="; ".join(errors) if errors else None,
-            execution_time_ms=execution_time,
-            parallel_calls=len(patterns),
-        )
+    def aggregate_results(
+        self, results: list[list[dict[str, Any]]]
+    ) -> list[dict[str, Any]]:
+        """Flatten search results."""
+        flat_results = []
+        for r in results:
+            flat_results.extend(r)
+        return flat_results
 
     def validate_task(self, task: SubagentTask) -> bool:
         """Validate search patterns."""
@@ -67,62 +44,46 @@ class ParallelSearchExecutor(TaskExecutor):
         )
 
 
-class ValidationExecutor(TaskExecutor):
+class ValidationExecutor(ParallelExecutor[str, "tuple[str, dict[str, Any]]"]):
     """Executor for validation tasks."""
 
     def __init__(self, validator_func: Callable[[str, str], dict[str, Any]]) -> None:
         """Initialize with validation function."""
+        super().__init__()
         self.validator_func = validator_func
-        self.config = SubagentConfig.load()
 
-    async def execute(self, task: SubagentTask) -> TaskResult:
-        """Execute validation task."""
-        start_time = time.perf_counter()
+    def get_items(self, task: SubagentTask) -> list[str]:
+        """Get files to validate from task."""
         payload = cast(dict[str, Any], task.payload)
-        files: list[str] = payload.get("files", [])
-        profile: str = payload.get("profile", "development")
-        results: dict[str, Any] = {"files": {}, "summary": {}}
-        errors: list[str] = []
-        perf = self.config.get("performance_targets", {})
-        max_workers: int = perf.get("max_parallel_agents", 8) if perf else 8
+        return cast(list[str], payload.get("files", []))
 
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {
-                executor.submit(self.validator_func, f, profile): f for f in files
-            }
+    def process_item(self, item: str, **kwargs: Any) -> tuple[str, dict[str, Any]]:
+        """Validate a single file."""
+        task = cast(SubagentTask, kwargs.get("task"))
+        payload = cast(dict[str, Any], task.payload)
+        profile = payload.get("profile", "development")
+        return item, self.validator_func(item, profile)
 
-            for future in as_completed(futures, timeout=task.timeout_seconds):
-                file_path = futures[future]
-                try:
-                    result = future.result()
-                    results["files"][file_path] = result
-                except (OSError, ValueError, RuntimeError) as e:
-                    errors.append(f"Validation '{file_path}' failed: {e}")
+    def aggregate_results(
+        self, results: list[tuple[str, dict[str, Any]]]
+    ) -> dict[str, Any]:
+        """Aggregate validation results."""
+        file_results = {path: res for path, res in results}
 
         # Aggregate summary
-        total_errors = sum(len(r.get("errors", [])) for r in results["files"].values())
-        total_warnings = sum(
-            len(r.get("warnings", [])) for r in results["files"].values()
-        )
-        results["summary"] = {
-            "total_files": len(files),
-            "validated": len(results["files"]),
-            "errors": total_errors,
-            "warnings": total_warnings,
-            "passed": not total_errors,
+        total_errors = sum(len(r.get("errors", [])) for r in file_results.values())
+        total_warnings = sum(len(r.get("warnings", [])) for r in file_results.values())
+
+        return {
+            "files": file_results,
+            "summary": {
+                "total_files": len(results),
+                "validated": len(file_results),
+                "errors": total_errors,
+                "warnings": total_warnings,
+                "passed": not total_errors,
+            },
         }
-
-        execution_time = (time.perf_counter() - start_time) * 1000
-
-        return TaskResult(
-            task_id=task.task_id,
-            task_type=task.task_type,
-            status=TaskStatus.COMPLETED if not errors else TaskStatus.FAILED,
-            result=results,
-            error="; ".join(errors) if errors else None,
-            execution_time_ms=execution_time,
-            parallel_calls=len(files),
-        )
 
     def validate_task(self, task: SubagentTask) -> bool:
         """Validate task structure."""

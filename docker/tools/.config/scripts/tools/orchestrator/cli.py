@@ -11,10 +11,11 @@ from pathlib import Path
 from .api import (
     batch_downsert,
     batch_upsert,
+    create_full_orchestrator,
     run_gpu_inference,
     sync_registry,
 )
-from .config import GPU_CONFIG, PRECOMPILED_IMAGES, SubagentConfig
+from .config import GPU_CONFIG, PRECOMPILED_IMAGES, SubagentConfig, SubagentTask
 from .orchestrator import XMLTemplateRenderer
 
 
@@ -25,6 +26,10 @@ def main() -> None:
     )
     parser.add_argument("--profile", default="development", help="Execution profile")
     parser.add_argument("--config", type=Path, help="Config file path")
+    parser.add_argument(
+        "--task-config",
+        help="JSON string containing task configuration for generic execution",
+    )
     parser.add_argument("--list-templates", action="store_true", help="List templates")
     parser.add_argument(
         "--list-images", action="store_true", help="List precompiled images"
@@ -55,6 +60,20 @@ def main() -> None:
 
     if args.config:
         SubagentConfig.load(args.config)
+
+    if args.task_config:
+        try:
+            task_data = json.loads(args.task_config)
+            task = SubagentTask(**task_data)
+            orchestrator = create_full_orchestrator()
+            print(f"Executing task: {task.task_type}")
+            results = asyncio.run(orchestrator.execute_batch([task]))
+            print(json.dumps(results[0], default=lambda o: o.__dict__, indent=2))
+        except json.JSONDecodeError:
+            print("Error: --task-config must be a valid JSON string")
+        except Exception as e:  # noqa: BLE001
+            print(f"Error executing task: {e}")
+        return
 
     if args.list_templates:
         renderer = XMLTemplateRenderer()
