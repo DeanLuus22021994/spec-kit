@@ -138,16 +138,17 @@ At this stage, your project folder contents should resemble the following:
 │    │    └── constitution_update_checklist.md
 │    ├── scripts
 │    │    └── bash (or powershell)
-│    │         ├── check-task-prerequisites.sh
-│    │         ├── common.sh
-│    │         ├── create-new-feature.sh
-│    │         ├── get-feature-paths.sh
-│    │         ├── setup-plan.sh
-│    │         └── update-agent-context.sh
+│    │         ├── check-task-prerequisites.sh (or .ps1)
+│    │         ├── common.sh (or .ps1)
+│    │         ├── create-new-feature.sh (or .ps1)
+│    │         ├── get-feature-paths.sh (or .ps1)
+│    │         ├── setup-plan.sh (or .ps1)
+│    │         └── update-agent-context.sh (or .ps1)
 │    └── templates
 │         ├── plan-template.md
 │         ├── spec-template.md
 │         └── tasks-template.md
+
 ├── specs
 │	 └── 001-create-taskify
 │	     └── spec.md

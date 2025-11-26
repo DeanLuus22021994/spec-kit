@@ -74,3 +74,6 @@ docker/publish/
 **/TestResults/
 
 .fake
+
+# Allow Bash Library
+!scripts/bash/lib/

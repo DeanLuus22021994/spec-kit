@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
-set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/common.sh"
-eval $(get_feature_paths)
-check_feature_branch "$CURRENT_BRANCH" || exit 1
-echo "REPO_ROOT: $REPO_ROOT"; echo "BRANCH: $CURRENT_BRANCH"; echo "FEATURE_DIR: $FEATURE_DIR"; echo "FEATURE_SPEC: $FEATURE_SPEC"; echo "IMPL_PLAN: $IMPL_PLAN"; echo "TASKS: $TASKS"
+# shellcheck source=scripts/bash/lib/speckit.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/speckit.sh"
+
+main() {
+    get_feature_paths_env
+    check_feature_branch "$CURRENT_BRANCH" || return 1
+
+    logger_info "REPO_ROOT: $REPO_ROOT"
+    logger_info "BRANCH: $CURRENT_BRANCH"
+    logger_info "FEATURE_DIR: $FEATURE_DIR"
+    logger_info "FEATURE_SPEC: $FEATURE_SPEC"
+    logger_info "IMPL_PLAN: $IMPL_PLAN"
+    logger_info "TASKS: $TASKS"
+}
+
+invoke_speckit_block "Get-Feature-Paths" main "$@"

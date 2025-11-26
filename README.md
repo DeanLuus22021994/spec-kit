@@ -93,17 +93,18 @@ Spec Kit uses a split architecture to separate heavy infrastructure from your ap
 ### 1. Local Infrastructure (The "Real" World)
 This layer hosts stable, resource-intensive services that rarely change. It runs on a dedicated Docker network (`spec-kit-infra`).
 *   **Services**: PostgreSQL, Redis, Qdrant (Vector Store), GPU Embeddings, Face Matcher, Jaeger.
-*   **Start**: `pwsh scripts/powershell/start-local.ps1`
+*   **Start**: `pwsh scripts/powershell/start-local.ps1` (or `bash scripts/bash/start-local.sh`)
 
 ### 2. Virtual Application (The "Dev" World)
 This layer contains your active application code. It connects to the Local Infrastructure via the shared network.
 *   **Services**: Backend API (.NET), Engine (.NET), Frontend (React).
-*   **Start**: `pwsh scripts/powershell/start-virtual.ps1`
+*   **Start**: `pwsh scripts/powershell/start-virtual.ps1` (or `bash scripts/bash/start-virtual.sh`)
 
 ### 3. Development Workflow
-1.  **One-time Setup**: Run `start-local.ps1` to spin up your database and AI services. Leave them running.
-2.  **Daily Dev**: Run `start-virtual.ps1` to start your app. Rebuild and restart this layer as often as needed without waiting for the heavy infrastructure to restart.
-3.  **Stop All**: Run `pwsh scripts/powershell/stop-all.ps1` to shut down everything.
+1.  **One-time Setup**: Run `start-local.ps1` (or `.sh`) to spin up your database and AI services. Leave them running.
+2.  **Daily Dev**: Run `start-virtual.ps1` (or `.sh`) to start your app. Rebuild and restart this layer as often as needed without waiting for the heavy infrastructure to restart.
+3.  **Stop All**: Run `pwsh scripts/powershell/stop-all.ps1` (or `bash scripts/bash/stop-all.sh`) to shut down everything.
+
 
 ## 📽️ Video Overview
 
