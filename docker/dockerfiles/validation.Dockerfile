@@ -62,16 +62,6 @@ RUN groupadd -r toolsuser && useradd -r -g toolsuser -u 1001 -m -s /bin/bash too
 RUN echo "toolsuser:100000:65536" > /etc/subuid && \
     echo "toolsuser:100000:65536" > /etc/subgid
 
-# Configure Podman for rootless operation
-RUN mkdir -p /home/toolsuser/.config/containers && \
-    chown -R toolsuser:toolsuser /home/toolsuser/.config
-
-# Copy Podman storage configuration
-RUN echo '[storage]' > /etc/containers/storage.conf && \
-    echo 'driver = "overlay"' >> /etc/containers/storage.conf && \
-    echo '[storage.options.overlay]' >> /etc/containers/storage.conf && \
-    echo 'mount_program = "/usr/bin/fuse-overlayfs"' >> /etc/containers/storage.conf
-
 # Install Python dependencies for validation framework
 COPY tools/.config/validation/requirements.txt /workspace/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
