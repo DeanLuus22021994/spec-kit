@@ -12,10 +12,22 @@
 # Use pgvector-enabled PostgreSQL image
 FROM pgvector/pgvector:pg16 AS base
 
-# Metadata
-LABEL maintainer="Semantic Kernel App Team"
-LABEL description="PostgreSQL database with semantic kernel capabilities and pgvector"
-LABEL version="1.0.0"
+# Standard Build Arguments
+ARG VERSION=latest
+ARG BUILD_DATE
+ARG BUILDKIT_INLINE_CACHE=1
+ARG DOCKER_BUILDKIT=1
+
+# OCI Labels
+LABEL org.opencontainers.image.title="spec-kit-database"
+LABEL org.opencontainers.image.description="PostgreSQL database with semantic kernel capabilities and pgvector"
+LABEL org.opencontainers.image.source="https://github.com/github/spec-kit"
+LABEL org.opencontainers.image.version="${VERSION}"
+LABEL org.opencontainers.image.vendor="GitHub"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL cache.version="1.0"
+LABEL performance.optimized="true"
 
 # =====================================================
 # Stage 1: Install Dependencies
