@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fuse-overlayfs \
     slirp4netns \
     uidmap \
+    passt \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user with home directory (normal user for subuid/subgid)
