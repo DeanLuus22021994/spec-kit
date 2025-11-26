@@ -24,7 +24,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-import redis  # type: ignore[import-untyped,import-not-found]
+import redis
 
 # Add orchestrator package to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -223,14 +223,18 @@ async def test_hash_upsert() -> dict[str, Any]:
     client = get_redis_client()
     print("\n🔍 Verifying HASH structure:")
     for item in test_items:
-        key = item["target"]
+        key = str(item["target"])
         hash_data = client.hgetall(key)
         ttl = client.ttl(key)
         print(f"   {key}:")
         print(f"      Fields: {len(hash_data)}")
         print(f"      TTL: {ttl}s")
         for field, value in list(hash_data.items())[:3]:
-            print(f"      - {field}: {value[:30]}..." if len(str(value)) > 30 else f"      - {field}: {value}")
+            print(
+                f"      - {field}: {value[:30]}..."
+                if len(str(value)) > 30
+                else f"      - {field}: {value}"
+            )
 
     return {"status": result.status.name, "execution_time_ms": elapsed}
 
@@ -296,7 +300,9 @@ async def test_conditional_upsert() -> dict[str, Any]:
     print("\n📊 Results:")
     for item in result.result.get("items", []):
         emoji = "✅" if item["action"] in ("created", "updated") else "⏭️"
-        print(f"   {emoji} {item['target']}: {item['action']} ({item.get('status', 'n/a')})")
+        print(
+            f"   {emoji} {item['target']}: {item['action']} ({item.get('status', 'n/a')})"
+        )
 
     return {"status": result.status.name}
 
@@ -460,7 +466,10 @@ async def test_performance_comparison() -> dict[str, Any]:
 
     # Create 100 items for testing
     num_items = 100
-    test_items = [{"target": f"test:perf:item:{i}", "data": {"id": i, "value": f"data_{i}" * 10}} for i in range(num_items)]
+    test_items = [
+        {"target": f"test:perf:item:{i}", "data": {"id": i, "value": f"data_{i}" * 10}}
+        for i in range(num_items)
+    ]
 
     # Test with pipeline
     task_pipeline = SubagentTask(

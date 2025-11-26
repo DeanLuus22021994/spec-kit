@@ -191,8 +191,11 @@ async def test_upsert_operations() -> dict[str, Any]:
     # Verify data in Redis
     print("\n🔍 Verifying data in Redis:")
     for item in test_items:
-        key = item["target"]
+        key = str(item["target"])
         value = redis_client.get(key)
+        if value is None:
+            print(f"   {key}: None")
+            continue
         print(
             f"   {key}: {value[:50]}..."
             if len(str(value)) > 50
@@ -259,7 +262,7 @@ async def test_upsert_update() -> dict[str, Any]:
     # Verify updates
     print("\n🔍 Verifying updates:")
     for item in update_items:
-        key = item["target"]
+        key = str(item["target"])
         value = redis_client.get(key)
         data = json.loads(value) if value else None
         if data:
